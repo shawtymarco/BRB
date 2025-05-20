@@ -1,0 +1,35 @@
+{
+  "Prefix": "<lapis>BRB</lapis><gold>»</gold><green>",
+  "Servers": [
+    "home.json",
+    "tower_wars.json",
+    "build.json"
+  ],
+  "Names": [
+    "home",
+    "tw",
+    "build"
+  ],
+  "Languages": {
+    "eng.json": [
+      "en-GB",
+      "en-US"
+    ],
+    "spa.json": [
+      "es-ES",
+      "es-MX"
+    ],
+    "por.json": [
+      "pt-PT",
+      "pt-BR"
+    ],
+    "tur.json": [
+      "tr-TR"
+    ]
+  },
+  "Pvp": {
+    "HitRegistration": 9,
+    "HorizontalKB": 1.0,
+    "VerticalKB": 1.0
+  }
+}

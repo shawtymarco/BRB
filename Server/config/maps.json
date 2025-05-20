@@ -1,0 +1,9 @@
+{
+  "TowerWars": {
+    "./server/data/maps/twmap.zip": {
+      "Name": "Debugging Map",
+      "Author": "Stodgy",
+      "Mode": 0
+    }
+  }
+}

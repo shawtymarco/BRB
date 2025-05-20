@@ -1,0 +1,27 @@
+{
+  "Global": {
+    "PingSuccess": "OwO in eng",
+    "WEPosSet": "%v <dark-green>Position <dark-aqua>%v</dark-aqua> set to <dark-aqua>%v</dark-aqua>.</dark-green>",
+    "WEWand": "%v <dark-green>Added <emerald><bold>WT Wand</bold></emerald> to your inventory.</dark-green>",
+    "WEFill": "%v <dark-green>Filled blocks successfully.</dark-green>",
+    "WEPaste": "%v <dark-green>Pasted successfully.</dark-green>",
+    "WEReplace": "%v <dark-green>Replaced successfully.</dark-green>",
+    "WERotate": "%v <dark-green>Rotated Successfully.</dark-green>",
+    "WEMirror": "%v <dark-green>Mirrored Successfully.</dark-green>",
+    "WEWall": "%v <dark-green>Created walls successfully.</dark-green>",
+    "WEUndo": "%v <dark-green>Undid successfully.</dark-green>",
+    "WERedo": "%v <dark-green>Redid successfully.</dark-green>",
+    "WEUp": "%v <dark-green>Poof!</dark-green>",
+    "WaitingForPlayers": "<dark-yellow>Waiting for players</dark-yellow>",
+    "JoinGame": "<lapis>»</lapis> <dark-aqua>%v</dark-aqua> <yellow>joined the game<yellow> <diamond>[<gold>%v</gold>/<gold>%v</gold>]</diamond>",
+    "QuitGame": "<lapis>»</lapis> <dark-aqua>%v</dark-aqua> <yellow>left the game<yellow> <diamond>[<gold>%v</gold>/<gold>%v</gold>]</diamond>",
+    "Countdown": "<lapis>»</lapis> <gold>Game starts in <dark-aqua>%v</dark-aqua>!</gold>",
+    "Error": {
+      "SomethingWentWrong": "<redstone>Something went wrong...\\nPlease contact support @ <gold><discord vanity link></gold> if the issue persists!</redstone>",
+      "WEPosNotSet": "<redstone>You did not set first or second position.</redstone>",
+      "WEBlockNotExist": "<redstone>Block <dark-grey>%v</dark-grey> does not exist.</redstone>",
+      "WENothingToUndo": "<redstone>There is nothing to undo.</redstone>",
+      "WENothingToRedo": "<redstone>There is nothing to redo.</redstone>"
+    }
+  }
+}
