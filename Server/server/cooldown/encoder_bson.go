@@ -1,5 +1,7 @@
 package cooldown
 
+import "github.com/rcrowley/go-bson"
+
 // bsonMarshaler is a Marshaler that uses the go-bson package to marshal and unmarshal data.
 type bsonMarshaler struct{}
 

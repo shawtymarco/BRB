@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"server/server"
+	"server/server/cooldown"
 	"server/server/database"
 	"server/server/language"
 	"server/server/utils"
@@ -29,11 +30,13 @@ var (
 )
 
 type User struct {
-	pl         *player.Player
-	h          *world.EntityHandle
-	Scoreboard *scoreboard.Scoreboard
-	Data       *database.PlayerData
-	FirstTime  bool
+	pl *player.Player
+	h  *world.EntityHandle
+
+	cooldownMap cooldown.MappedCoolDown[PlayerCoolDowns]
+	Scoreboard  *scoreboard.Scoreboard
+	Data        *database.PlayerData
+	FirstTime   bool
 }
 
 func New(pl *player.Player, isBot bool) (*User, error) {
@@ -131,15 +134,31 @@ func (u *User) H() *world.EntityHandle {
 	return u.h
 }
 
+// IsCooldownActive sets a cooldown for the given type if it doesn't already exist or renews it if specified.
+// It returns true if the cooldown is initially active (to be used for conditional command execution).
+func (u *User) IsCooldownActive(cooldown PlayerCoolDowns, duration time.Duration, renew, sendMessage bool) bool {
+	coolDown := u.cooldownMap[cooldown]
+	exists := coolDown.Active()
+	if renew || !coolDown.Active() {
+		coolDown.Set(duration)
+	}
+
+	if sendMessage {
+		u.pl.Message(text.Colourf(language.Translate(u.pl).Commands.Error.CoolDown, coolDown.Remaining()))
+	}
+
+	return exists
+}
+
 func (u *User) AddItem(its ...item.Stack) bool {
 	if len(u.pl.Inventory().Items())+len(its) > 36 {
-		u.pl.Message(text.Colourf(language.Translate(u.pl).Global.Error.InventoryFull))
+		u.pl.Message(text.Colourf(language.Translate(u.pl).Error.InventoryFull))
 		return false
 	}
 	for _, it := range its {
 		_, err := u.pl.Inventory().AddItem(it)
 		if err != nil {
-			u.pl.Message(text.Colourf(language.Translate(u.pl).Global.Error.InventoryFull))
+			u.pl.Message(text.Colourf(language.Translate(u.pl).Error.InventoryFull))
 			return false
 		}
 	}
@@ -154,17 +173,17 @@ func (u *User) DropItem(it item.Stack, tx *world.Tx) {
 	tx.AddEntity(ent)
 }
 
-func (u *User) PlaySound(sound CustomSound, title, author string, volume, pitch float64) {
+func (u *User) PlaySound(sound string, title, author string, volume, pitch float64) {
 	pos := u.pl.Position()
 	pk := &packet.PlaySound{
-		SoundName: string(sound),
+		SoundName: sound,
 		Position:  mgl32.Vec3{float32(pos.X()), float32(pos.Y()), float32(pos.Z())},
 		Volume:    float32(volume),
 		Pitch:     float32(pitch),
 	}
 	utils.WritePacket(utils.Session(u.pl), pk)
 	if title != "" && author != "" {
-		u.pl.Message(text.Colourf(language.Translate(u.pl).Global.Misc.NowPlaying, server.Config.Prefix, title, author))
+		u.pl.Message(text.Colourf(language.Translate(u.pl).Misc.NowPlaying, server.Config.Prefix, title, author))
 	}
 }
 

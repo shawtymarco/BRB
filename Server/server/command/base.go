@@ -45,7 +45,7 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 		for r, perms := range rankPermissions {
 			for _, perm := range perms {
 				if perm == p {
-					return text.Colourf(language.Translate(pl).Global.Commands.Error.Permission, r.Icon(), r.Prefix())
+					return text.Colourf(language.Translate(pl).Commands.Error.Permission, r.Prefix())
 				}
 			}
 		}
@@ -54,16 +54,14 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 }
 
 var rankPermissions = map[database.Rank][]Permission{
-	database.Owner:     {},
-	database.Council:   {WorldEdit, GiveRank, Gamemode, GameForceStart},
-	database.Sheriff:   {},
-	database.Mason:     {},
-	database.Developer: {},
-	database.Artist:    {},
-	database.Partner:   {},
-	database.Platinum:  {},
-	database.Gold:      {},
-	database.Silver:    {ChangeNickname},
-	database.VIP:       {ChatColor},
-	database.Player:    {},
+	database.Owner:        {},
+	database.Manager:      {},
+	database.Admin:        {},
+	database.Moderator:    {},
+	database.Helper:       {},
+	database.Prime:        {},
+	database.Premium:      {},
+	database.MediaPartner: {},
+	database.Booster:      {},
+	database.Player:       {},
 }

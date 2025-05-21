@@ -6,45 +6,30 @@ type Rank int
 
 const (
 	Owner Rank = iota
-	Council
-	Sheriff
-	Mason
-	Developer
-	Artist
-	Partner
-	Platinum
-	Gold
-	Silver
-	VIP
+	Manager
+	Admin
+	Moderator
+	Helper
+	Prime
+	Premium
+	MediaPartner
+	Booster
 	Player
 )
 
-var RankIcons = []string{
-	"\uE000", "\uE001", "", "\uE002", "\uE003",
-	"\uE004", "\uE005", "\uE006", "\uE007", "\uE008",
-	"\uE009", "",
-}
-
 var ShortenedRanks = []string{
-	"owner", "council", "sheriff", "mason", "developer",
-	"artist", "partner", "platinum", "gold", "silver",
-	"vip", "player",
+	"owner", "manager", "admin", "moderator", "helper",
+	"prime", "premium", "media_partner", "booster", "player",
 }
 
 var ChatPrefixes = []string{
-	"<lapis>", "<diamond>", "<dark-green>", "<amethyst>", "<amethyst>",
-	"<copper", "<dark-purple>", "<aqua>", "<gold>", "<quartz>",
-	"<emerald>", "<grey>",
+	"<lapis>", "<diamond>", "<dark-green>", "<amethyst>", "<copper>",
+	"<dark-purple>", "<aqua>", "<gold>", "<quartz>", "<grey>",
 }
 
 var RankPrefixes = []string{
-	"<lapis>Owner</lapis>", "<diamond>Council</diamond>", "<dark-green>Sheriff</dark-green>", "<amethyst>Mason</amethyst>", "<amethyst>Developer</amethyst>",
-	"<copper>Artist</copper>", "<dark-purple>Partner</dark-purple>", "<aqua>Platinum</aqua>", "<gold>Gold</gold>", "<quartz>Silver</quartz>",
-	"<emerald>VIP</emerald>", "<grey>Player</grey>",
-}
-
-func (r Rank) Icon() string {
-	return RankIcons[r]
+	"<lapis>Owner</lapis>", "<diamond>Manager</diamond>", "<dark-green>Admin</dark-green>", "<amethyst>Moderator</amethyst>", "<copper>Helper</copper>",
+	"<dark-purple>Prime</dark-purple>", "<aqua>Premium</aqua>", "<gold>Media Partner</gold>", "<quartz>Booster</quartz>", "<grey>Player</grey>",
 }
 
 func (r Rank) Shortened() string {

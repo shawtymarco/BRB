@@ -13,6 +13,8 @@ import (
 	"server/server/utils"
 
 	"github.com/df-mc/dragonfly/server/player/chat"
+
+	_ "server/server/api"
 )
 
 func main() {

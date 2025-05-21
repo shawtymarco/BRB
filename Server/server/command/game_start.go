@@ -25,7 +25,7 @@ func (GameStartCommand) PermissionMessage(src cmd.Source) string {
 
 func (gsc GameStartCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		pl.Message(text.Colourf(language.Translate(pl).Global.Game.ForceStartGame, server.Config.Prefix))
+		pl.Message(text.Colourf(language.Translate(pl).Game.ForceStartGame, server.Config.Prefix))
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))
 	}

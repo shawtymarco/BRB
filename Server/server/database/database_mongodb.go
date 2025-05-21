@@ -34,7 +34,7 @@ func (*MongoDBDatabase) String() string {
 }
 
 func (d *MongoDBDatabase) playerCollection() *mongo.Collection {
-	return d.client.Database("tmc").Collection("player_data")
+	return d.client.Database("brb").Collection("user_data")
 }
 
 func (d *MongoDBDatabase) CreatePlayer(data *PlayerData) error {

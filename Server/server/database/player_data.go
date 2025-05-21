@@ -2,11 +2,9 @@ package database
 
 import (
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
 type PlayerData struct {
@@ -40,10 +38,6 @@ type GlobalStats struct {
 	Xp    int
 	RR    int
 	Coins int
-}
-
-func (gs GlobalStats) LevelDisplay() string {
-	return text.Colourf(Lvls[gs.Level/10](strconv.Itoa(gs.Level)))
 }
 
 func (gs GlobalStats) MaxXP() int {

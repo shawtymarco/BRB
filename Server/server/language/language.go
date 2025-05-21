@@ -23,84 +23,51 @@ func TranslateWithH(entityHandle *world.EntityHandle, tx *world.Tx) LangConfig {
 }
 
 type LangConfig struct {
-	Global struct {
-		Misc struct {
-			NowPlaying string
-		}
-		Commands struct {
-			Success struct {
-				Hub      string
-				Ping     string
-				PingSelf string
-				GameMode string
-				GiveRank string
-			}
-			Error struct {
-				Permission    string
-				CoolDown      string
-				OnlyOneTarget string
-				RankHierarchy string
-			}
-		}
+	Misc struct {
+		NowPlaying string
+	}
 
-		WorldEdit struct {
-			Success struct {
-				Cylinder string
-				Fill     string
-				Mirror   string
-				Paste    string
-				PosSet   string
-				Redo     string
-				Replace  string
-				Rotate   string
-				Sphere   string
-				Undo     string
-				Up       string
-				Wall     string
-				Wand     string
-			}
-
-			Error struct {
-				PosNotSet     string
-				BlockNotExist string
-				NothingToUndo string
-				NothingToRedo string
-			}
-		}
-
-		Game struct {
-			WaitingForPlayers string
-			JoinGame          string
-			QuitGame          string
-			Countdown         string
-			ForceStartGame    string
-			ChangeTeams       string
-			NicknameSaved     string
-			ChatColorSaved    string
-			CosmeticEquipped  string
-			CosmeticOwned     string
-			CosmeticUnowned   string
-
-			Error struct {
-				NotInAGame         string
-				TeamIsFull         string
-				GameAlreadyStarted string
-				CosmeticNotOwned   string
-			}
+	Commands struct {
+		Success struct {
+			Hub      string
+			Ping     string
+			PingSelf string
+			GiveRank string
 		}
 
 		Error struct {
-			InventoryFull string
+			Permission    string
+			CoolDown      string
+			OnlyOneTarget string
+			RankHierarchy string
 		}
 	}
-	TowerWars struct {
+
+	Game struct {
+		WaitingForPlayers string
+		JoinGame          string
+		QuitGame          string
+		Countdown         string
+		ForceStartGame    string
+		ChangeTeams       string
+
+		Error struct {
+			NotInAGame         string
+			TeamIsFull         string
+			GameAlreadyStarted string
+		}
+	}
+
+	BedWars struct {
 		YouDied      string
 		RespawningIn string
-		ShieldMana   string
 		Error        struct {
-			CannotAttackSummoner  string
-			CannotAttackAllyTower string
+			CannotBreakBed string
 		}
+	}
+
+	Error struct {
+		InventoryFull string
 	}
 }
 

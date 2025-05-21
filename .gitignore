@@ -1,5 +1,7 @@
 .idea
+/certs
 Bot/node_modules
 Bot/.env
 Bot/package-lock.json
 Server/maps
+Server/server/worlds

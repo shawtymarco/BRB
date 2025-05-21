@@ -1,76 +1,44 @@
 {
   "Global": {
     "Misc": {
-      "NowPlaying": "%v <black>♫</black> <blue>Now playing <dark-aqua>%v</dark-aqua> <italic>by <bold><dark-aqua>%v</dark-aqua></bold></italic>.</blue>"
+      "NowPlaying": ""
     },
     "Commands": {
       "Success": {
-        "Hub": "%v <dark-green> Teleporting to hub..</dark-green>",
-        "Ping": "%v <dark-green> %v's ping is <dark-aqua>%v</dark-aqua>ms.</dark-green>",
-        "PingSelf": "%v <dark-green> Your ping is <dark-aqua>%v</dark-aqua>ms.</dark-green>",
-        "GameMode": "%v <dark-green>Your game mode is set to <dark-aqua>%v</dark-aqua></dark-green>",
-        "GiveRank": "%v <dark-green>The player <dark-aqua>%v</dark-aqua>'s rank is now <dark-aqua>%v</dark-aqua>.</dark-green>"
+        "Hub": "",
+        "Ping": "",
+        "PingSelf": "",
+        "GiveRank": ""
       },
       "Error": {
-        "Permission": "<redstone>You are not allowed to use this feature.</redstone>\\n<gold>To access this command, you need to purchase </gold>%v %v<gold> at <store-link>></gold>",
-        "CoolDown": "<redstone>You must wait <dark-grey>%v</dark-grey> before doing this again!</redstone>",
-        "OnlyOneTarget": "<redstone>You must specify only one player.</redstone>",
-        "RankHierarchy": "<redstone>You cannot do that because you are below that player in the hierarchy!</redstone>"
-      }
-    },
-    "WorldEdit": {
-      "Success": {
-        "Cylinder": "%v <dark-green>Cylinder created successfully.</dark-green>",
-        "Fill": "%v <dark-green>Filled blocks successfully.</dark-green>",
-        "Mirror": "%v <dark-green>Mirrored Successfully.</dark-green>",
-        "Paste": "%v <dark-green>Pasted successfully.</dark-green>",
-        "PosSet": "%v <dark-green>Position <dark-aqua>%v</dark-aqua> set to <dark-aqua>%v</dark-aqua>.</dark-green>",
-        "Redo": "%v <dark-green>Redid successfully.</dark-green>",
-        "Replace": "%v <dark-green>Replaced successfully.</dark-green>",
-        "Rotate": "%v <dark-green>Rotated Successfully.</dark-green>",
-        "Sphere": "%v <dark-green>Sphere created successfully.</dark-green>",
-        "Undo": "%v <dark-green>Undid successfully.</dark-green>",
-        "Up": "%v <dark-green>Poof!</dark-green>",
-        "Wall": "%v <dark-green>Created walls successfully.</dark-green>",
-        "Wand": "%v <dark-green>Added <emerald><bold>WT Wand</bold></emerald> to your inventory.</dark-green>"
-      },
-      "Error": {
-        "PosNotSet": "<redstone>You did not set first or second position.</redstone>",
-        "BlockNotExist": "<redstone>Block <dark-grey>%v</dark-grey> does not exist.</redstone>",
-        "NothingToUndo": "<redstone>There is nothing to undo.</redstone>",
-        "NothingToRedo": "<redstone>There is nothing to redo.</redstone>"
+        "Permission": "",
+        "CoolDown": "",
+        "OnlyOneTarget": "",
+        "RankHierarchy": ""
       }
     },
     "Game": {
-      "WaitingForPlayers": "<dark-yellow>Waiting for players%v</dark-yellow>",
-      "JoinGame": "<lapis>»</lapis> <dark-aqua>%v</dark-aqua> <yellow>joined the game</yellow> <diamond>[<gold>%v</gold>/<gold>%v</gold>]</diamond>",
-      "QuitGame": "<lapis>»</lapis> <dark-aqua>%v</dark-aqua> <yellow>left the game</yellow> <diamond>[<gold>%v</gold>/<gold>%v</gold>]</diamond>",
-      "Countdown": "<lapis>»</lapis> <gold>Game starts in <dark-aqua>%v</dark-aqua>!</gold>",
-      "ForceStartGame": "%v <dark-green>The game has been forcefully started.</dark-green>",
-      "ChangeTeams": "%v <dark-green>You changed teams to <dark-aqua>%v</dark-aqua>.</dark-green>",
-      "NicknameSaved": "%v <dark-green>Nickname settings saved.</dark-green>",
-      "ChatColorSaved": "%v <dark-green>Chat color changed to <dark-aqua>%v</dark-aqua></dark-green>",
-      "CosmeticEquipped": "%v <dark-green>Equipped the <dark-aqua>%v</dark-aqua></dark-green>",
-      "CosmeticOwned": "<italic><lapis>OWNED</lapis></italic>",
-      "CosmeticUnowned": "<italic><red>UNOWNED</red></italic>",
+      "WaitingForPlayers": "",
+      "JoinGame": "",
+      "QuitGame": "",
+      "Countdown": "",
+      "ForceStartGame": "",
+      "ChangeTeams": "",
       "Error": {
-        "NotInAGame": "<redstone>You are currently not in a game!</redstone>",
-        "TeamIsFull": "<redstone>This team is currently full. Please choose another team</redstone>",
-        "GameAlreadyStarted": "<redstone>The game has already started.</redstone>",
-        "CosmeticNotOwned": "<redstone>You do not own this cosmetic.</redstone>\n<dark-yellow>You need to buy it from the Cosmetics Shop by executing the command <dark-aqua>/cosmetics</dark-aqua>!</dark-yellow>"
+        "NotInAGame": "",
+        "TeamIsFull": "",
+        "GameAlreadyStarted": ""
       }
     },
     "Error": {
-      "InventoryFull": "<redstone>Your inventory is currently full. Please empty it for this to work!</redstone>"
+      "InventoryFull": ""
     }
   },
-  "TowerWars": {
-    "YouDied": "<dark-red>YOU DIED</dark-red>\n<dark-yellow>Respawning after 10 seconds</dark-yellow>",
-    "RespawningIn": "<dark-yellow>Respawning in <dark-grey>%v</dark-grey> seconds</dark-yellow>",
-    "ShieldMana": "<dark-yellow>Shield Mana: <dark-grey>%v</dark-grey></dark-yellow>",
+  "BedWars": {
+    "YouDied": "",
+    "RespawningIn": "",
     "Error": {
-      "CannotAttackSummoner": "<redstone>You cannot attach the minion summoner.</redstone>",
-      "CannotAttackAllyTower": "<redstone>This is your team's tower. No need to attack it silly!.</redstone>"
+      "CannotBreakBed": ""
     }
   }
 }
