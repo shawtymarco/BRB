@@ -13,19 +13,15 @@ import (
 type Permission int
 
 const (
-	WorldEdit Permission = iota
-	GiveRank
-	Gamemode
-	GameForceStart
-	ChangeNickname
-	ChatColor
+	GiveRank Permission = iota
+	GameMode
 )
 
 func (p Permission) Test(src cmd.Source) bool {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.LookupPlayer(pl)
 		if u != nil {
-			pRank := u.Data.GroupSettings.Rank()
+			pRank := u.Data.Rank()
 			for pRank <= database.Player {
 				for _, perm := range rankPermissions[pRank] {
 					if perm == p {

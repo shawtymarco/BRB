@@ -14,7 +14,7 @@ import (
 
 type HubCommand struct{}
 
-func (h HubCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
+func (HubCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.LookupPlayer(pl)
 		if u.IsCooldownActive(user.CommandHub, 5*time.Second, false, true) {

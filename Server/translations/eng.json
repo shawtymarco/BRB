@@ -1,44 +1,44 @@
 {
-  "Global": {
-    "Misc": {
-      "NowPlaying": ""
-    },
-    "Commands": {
-      "Success": {
-        "Hub": "",
-        "Ping": "",
-        "PingSelf": "",
-        "GiveRank": ""
-      },
-      "Error": {
-        "Permission": "",
-        "CoolDown": "",
-        "OnlyOneTarget": "",
-        "RankHierarchy": ""
-      }
-    },
-    "Game": {
-      "WaitingForPlayers": "",
-      "JoinGame": "",
-      "QuitGame": "",
-      "Countdown": "",
-      "ForceStartGame": "",
-      "ChangeTeams": "",
-      "Error": {
-        "NotInAGame": "",
-        "TeamIsFull": "",
-        "GameAlreadyStarted": ""
-      }
+  "Misc": {
+    "NowPlaying": "%v %v %v"
+  },
+  "Commands": {
+    "Success": {
+      "Hub": "%v",
+      "Ping": "%v %v %v",
+      "PingSelf": "%v %v",
+      "GiveRank": "%v %v %v",
+      "Link": "%v %v"
     },
     "Error": {
-      "InventoryFull": ""
+      "Permission": "%v",
+      "CoolDown": "%v",
+      "OnlyOneTarget": "",
+      "RankHierarchy": "",
+      "LinkExpired": ""
+    }
+  },
+  "Game": {
+    "WaitingForPlayers": "%v",
+    "JoinGame": "%v %v %v",
+    "QuitGame": "%v %v %v",
+    "Countdown": "%v",
+    "ForceStartGame": "%v",
+    "ChangeTeams": "%v %v",
+    "Error": {
+      "NotInAGame": "",
+      "TeamIsFull": "",
+      "GameAlreadyStarted": ""
     }
   },
   "BedWars": {
     "YouDied": "",
-    "RespawningIn": "",
+    "RespawningIn": "%v",
     "Error": {
       "CannotBreakBed": ""
     }
+  },
+  "Error": {
+    "InventoryFull": ""
   }
 }

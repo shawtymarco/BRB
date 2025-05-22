@@ -2,8 +2,10 @@ package listener
 
 import (
 	"fmt"
+	"server/server/database"
 	"server/server/items"
 	"server/server/user"
+	"server/server/utils"
 	"strings"
 	"time"
 
@@ -15,19 +17,32 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
-func HandleGlobalChat(pl *player.Player, ctx *player.Context, msg *string) {
+type LobbyHandler struct {
+	player.NopHandler
+}
+
+func (LobbyHandler) HandleJoin(pl *player.Player) {
+	utils.Panics(user.New(pl, false))
+	pl.Handle(LobbyHandler{})
+
+	pl.SetGameMode(world.GameModeSurvival)
+}
+
+func (LobbyHandler) HandleChat(ctx *player.Context, msg *string) {
 	ctx.Cancel()
 
+	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
 
 	*msg = strings.ReplaceAll(*msg, "§r", "")
-	newMsg := fmt.Sprintf("%v %v<white>:</white> %v", pl.NameTag(), *msg)
+	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
 	*msg = text.Colourf(newMsg)
 
 	_, _ = fmt.Fprintf(chat.Global, *msg)
 }
 
-func HandleStartBreak(pl *player.Player, ctx *player.Context, pos cube.Pos) {
+func (LobbyHandler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
+	pl := ctx.Val()
 	mainItem, _ := pl.HeldItems()
 	if action, ok := mainItem.Value("action"); ok {
 		action := action.(int)
@@ -36,7 +51,8 @@ func HandleStartBreak(pl *player.Player, ctx *player.Context, pos cube.Pos) {
 	}
 }
 
-func HandlePunchAir(pl *player.Player, ctx *player.Context) {
+func (LobbyHandler) HandlePunchAir(ctx *player.Context) {
+	pl := ctx.Val()
 	mainItem, _ := pl.HeldItems()
 	if action, ok := mainItem.Value("action"); ok {
 		action := action.(int)
@@ -45,9 +61,10 @@ func HandlePunchAir(pl *player.Player, ctx *player.Context) {
 	}
 }
 
-func HandleItemUse(pl *player.Player, ctx *player.Context) {
+func (LobbyHandler) HandleItemUse(ctx *player.Context) {
+	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
-	if u.IsCooldownActive(user.INTERACT, 50*time.Millisecond, false) {
+	if u.IsCooldownActive(user.INTERACT, 50*time.Millisecond, false, false) {
 		return
 	}
 
@@ -59,9 +76,10 @@ func HandleItemUse(pl *player.Player, ctx *player.Context) {
 	}
 }
 
-func HandleItemUseOnBlock(pl *player.Player, ctx *player.Context, pos cube.Pos, _ cube.Face, _ mgl64.Vec3) {
+func (LobbyHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, _ cube.Face, _ mgl64.Vec3) {
+	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
-	if u.IsCooldownActive(user.INTERACT, 50*time.Millisecond, false) {
+	if u.IsCooldownActive(user.INTERACT, 50*time.Millisecond, false, false) {
 		return
 	}
 
@@ -73,7 +91,8 @@ func HandleItemUseOnBlock(pl *player.Player, ctx *player.Context, pos cube.Pos, 
 	}
 }
 
-func HandleItemUseOnEntity(pl *player.Player, ctx *player.Context, e world.Entity) {
+func (LobbyHandler) HandleItemUseOnEntity(ctx *player.Context, e world.Entity) {
+	pl := ctx.Val()
 	mainItem, _ := pl.HeldItems()
 	if action, ok := mainItem.Value("action"); ok {
 		action := action.(int)

@@ -1,6 +1,6 @@
 import { Events, Client } from "discord.js";
 import { deploy } from "../deploy";
-import { Request } from "../api";
+import { APIEndpoints, Request } from "../api";
 
 module.exports = {
     name: Events.ClientReady,
@@ -9,6 +9,7 @@ module.exports = {
         await deploy();
         console.log(`Ready! Logged in as ${client.user?.tag}`);
 
-        Request.get("hello");
+        const data = await Request.get(APIEndpoints.CONNECT);
+        console.log(data.message);
     },
 };

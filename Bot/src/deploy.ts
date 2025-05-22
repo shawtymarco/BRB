@@ -1,6 +1,6 @@
 import { REST, Routes } from "discord.js";
 import { slashCommands } from ".";
-import { token, config } from "./config";
+import { token, dconfig } from "./config";
 
 const rest = new REST().setToken(token);
 
@@ -9,7 +9,7 @@ export async function deploy() {
 		console.log(`Started refreshing ${slashCommands.size} application (/) commands.`);
 
 		const data: any = await rest.put(
-            Routes.applicationGuildCommands(config.clientId, config.guildId),
+            Routes.applicationGuildCommands(dconfig.clientId, dconfig.guildId),
 			{ body: [...slashCommands.values()].map(cmd => cmd.data.toJSON()) }
 		);
 

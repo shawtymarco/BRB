@@ -33,6 +33,7 @@ type LangConfig struct {
 			Ping     string
 			PingSelf string
 			GiveRank string
+			Link     string
 		}
 
 		Error struct {
@@ -40,6 +41,7 @@ type LangConfig struct {
 			CoolDown      string
 			OnlyOneTarget string
 			RankHierarchy string
+			LinkExpired   string
 		}
 	}
 

@@ -34,7 +34,7 @@ func (*MongoDBDatabase) String() string {
 }
 
 func (d *MongoDBDatabase) playerCollection() *mongo.Collection {
-	return d.client.Database("brb").Collection("user_data")
+	return d.client.Database("brb").Collection("player_data")
 }
 
 func (d *MongoDBDatabase) CreatePlayer(data *PlayerData) error {
@@ -71,7 +71,7 @@ func (d *MongoDBDatabase) FindPlayerFromName(playerName string, opts *PlayerName
 	if !opts.PartialMatch {
 		pattern = fmt.Sprintf("^%v$", pattern)
 	}
-	query := bson.D{{"PlayerNames", bson.M{"$elemMatch": bson.M{"$regex": primitive.Regex{Pattern: pattern, Options: regexOptions(opts)}}}}}
+	query := bson.D{{"username", primitive.Regex{Pattern: pattern, Options: regexOptions(opts)}}}
 	return d.findPlayerFromQuery(query, playerName)
 }
 

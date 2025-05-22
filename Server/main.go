@@ -9,7 +9,7 @@ import (
 	"server/server/database"
 	"server/server/game/maps"
 	"server/server/language"
-	"server/server/user"
+	"server/server/listener"
 	"server/server/utils"
 
 	"github.com/df-mc/dragonfly/server/player/chat"
@@ -41,7 +41,7 @@ func main() {
 
 	log.Info("Successfully connected to the database!", "type", core.Database.String())
 
-	command.GlobalCommands()
+	command.RegisterCommands()
 
 	c := core.DefaultConfig()
 	conf := utils.Panics(c.Config(log))
@@ -58,7 +58,7 @@ func main() {
 	srv.CloseOnProgramEnd()
 
 	for pl := range srv.Accept() {
-		utils.Panics(user.New(pl, false))
+		listener.LobbyHandler{}.HandleJoin(pl)
 	}
 
 	for identifier, err := range core.Database.SaveAll() {

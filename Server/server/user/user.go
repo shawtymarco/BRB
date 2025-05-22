@@ -34,9 +34,10 @@ type User struct {
 	h  *world.EntityHandle
 
 	cooldownMap cooldown.MappedCoolDown[PlayerCoolDowns]
-	Scoreboard  *scoreboard.Scoreboard
-	Data        *database.PlayerData
-	FirstTime   bool
+
+	Scoreboard *scoreboard.Scoreboard
+	Data       *database.PlayerData
+	FirstTime  bool
 }
 
 func New(pl *player.Player, isBot bool) (*User, error) {
@@ -54,11 +55,9 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 			Username:  pl.Name(),
 			FirstJoin: time.Now(),
 			LastJoin:  time.Now(),
-			GroupSettings: database.GroupSettings{
+			Statistics: database.Statistics{
 				RankId: database.Player.Shortened(),
-			},
-			GlobalStats: database.GlobalStats{
-				Level: 1,
+				Level:  1,
 			},
 			Games: database.Games{},
 		}
@@ -82,8 +81,11 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 	}
 
 	u := &User{
-		pl:        pl,
-		h:         pl.H(),
+		pl: pl,
+		h:  pl.H(),
+
+		cooldownMap: cooldown.NewMappedCoolDown[PlayerCoolDowns](),
+
 		Data:      d,
 		FirstTime: ft,
 	}
@@ -136,14 +138,19 @@ func (u *User) H() *world.EntityHandle {
 
 // IsCooldownActive sets a cooldown for the given type if it doesn't already exist or renews it if specified.
 // It returns true if the cooldown is initially active (to be used for conditional command execution).
-func (u *User) IsCooldownActive(cooldown PlayerCoolDowns, duration time.Duration, renew, sendMessage bool) bool {
-	coolDown := u.cooldownMap[cooldown]
+func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Duration, renew, sendMessage bool) bool {
+	coolDown := u.cooldownMap[cooldownType]
+
+	if coolDown == nil {
+		coolDown = cooldown.NewCoolDown()
+		u.cooldownMap[cooldownType] = coolDown
+	}
 	exists := coolDown.Active()
 	if renew || !coolDown.Active() {
 		coolDown.Set(duration)
 	}
 
-	if sendMessage {
+	if sendMessage && exists {
 		u.pl.Message(text.Colourf(language.Translate(u.pl).Commands.Error.CoolDown, coolDown.Remaining()))
 	}
 

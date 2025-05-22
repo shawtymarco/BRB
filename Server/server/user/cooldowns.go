@@ -6,4 +6,5 @@ const (
 	INTERACT PlayerCoolDowns = iota
 	CommandPing
 	CommandHub
+	CommandLink
 )

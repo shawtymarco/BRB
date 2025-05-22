@@ -8,15 +8,14 @@ import (
 )
 
 type nameConfig struct {
-	Level      bool
+	ELO        bool
 	TeamColour string
 }
 
 func (nc nameConfig) Name(pd *PlayerData) string {
-	var levelStr string
-	if nc.Level {
-		l := pd.GlobalStats.Level
-		levelStr = fmt.Sprintf("<dark-grey>[%v]</dark-grey> ", l)
+	var eloStr string
+	if nc.ELO {
+		eloStr = fmt.Sprintf("<dark-grey>[%v]</dark-grey> ", pd.Statistics.ELO)
 	}
 
 	var teamColourStr string
@@ -26,16 +25,15 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 
 	n := pd.Username
 
-	if pd.GroupSettings.Rank() == Player {
-		return text.Colourf("%v%v%v%v", levelStr, teamColourStr, pd.GroupSettings.Rank().ChatPrefix(), n)
+	if pd.Rank() == Player {
+		return text.Colourf("%v%v%v%v", eloStr, teamColourStr, pd.Rank().ChatPrefix(), n)
 	}
 
-	r := pd.GroupSettings.Rank()
-	return text.Colourf("%v%v%v %v", teamColourStr, levelStr, r.ChatPrefix(), n)
+	r := pd.Rank()
+	return text.Colourf("%v%v%v %v", teamColourStr, eloStr, r.ChatPrefix(), n)
 }
 
-var BasicNameDisplay = nameConfig{}
-var LobbyNameDisplay = nameConfig{Level: true}
+var LobbyNameDisplay = nameConfig{ELO: true}
 var BedWarsNameDisplay = func(teamColour string) nameConfig {
-	return nameConfig{Level: true, TeamColour: teamColour}
+	return nameConfig{ELO: true, TeamColour: teamColour}
 }

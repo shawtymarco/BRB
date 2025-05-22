@@ -1,44 +1,59 @@
 {
-  "Global": {
-    "Misc": {
-      "NowPlaying": "Display the currently playing song with its name and author" // server name | song name | song author
-    },
-    "Commands": {
-      "Success": {
-        "Hub": "Notify player that they're being teleported to the hub", // server name
-        "Ping": "Show another player's ping", // server name | player name | ping in ms
-        "PingSelf": "Show the player's own ping", // server name | ping in ms
-        "GiveRank": "Inform that a player's rank has been changed" // server name | player name | new rank
-      },
-      "Error": {
-        "Permission": "Show no-permission message and suggest purchasing a required rank", // rank name
-        "CoolDown": "Warn that the player must wait before using the command again", // duration in seconds
-        "OnlyOneTarget": "Tell the player that only one target is allowed",
-        "RankHierarchy": "Warn that the action can't be performed due to rank hierarchy"
-      }
-    },
-    "Game": {
-      "WaitingForPlayers": "Indicate the game is waiting for more players", // it keeps changing to . or .. or ... etc (just a visual)
-      "JoinGame": "Announce a player has joined the game, showing current/max players", // player name | player count | game max count
-      "QuitGame": "Announce a player has left the game, showing current/max players", // player name | player count | game max count
-      "Countdown": "Show countdown until game starts", // time in seconds
-      "ForceStartGame": "Notify players that the game was force-started", // server name
-      "ChangeTeams": "Inform the player that they've switched to a new team", // server name | team color
-      "Error": {
-        "NotInAGame": "Notify player they are not in a game",
-        "TeamIsFull": "Tell the player the team is full",
-        "GameAlreadyStarted": "Warn the player the game has already started"
-      }
+  "Misc": {
+    "NowPlaying": "Display the currently playing song with its name and author %v %v %v"
+    // server name | song name | song author
+  },
+  "Commands": {
+    "Success": {
+      "Hub": "Notify player that they're being teleported to the hub %v",
+      // server name
+      "Ping": "Show another player's ping %v %v %v",
+      // server name | player name | ping in ms
+      "PingSelf": "Show the player's own ping %v %v",
+      // server name | ping in ms
+      "GiveRank": "Inform that a player's rank has been changed %v %v %v",
+      // server name | player name | new rank
+      "Link": "Gives the player code to register with on Discord %v %v"
+      // server name |registration code
     },
     "Error": {
-      "InventoryFull": "Alert that the player's inventory is full"
+      "Permission": "Show no-permission message and suggest purchasing a required rank %v",
+      // rank name,
+      "CoolDown": "Warn that the player must wait before using the command again %v",
+      // duration in seconds,
+      "OnlyOneTarget": "Tell the player that only one target is allowed",
+      "RankHierarchy": "Warn that the action can't be performed due to rank hierarchy",
+      "LinkExpired": "Warn the player that the registration code has expired"
+    }
+  },
+  "Game": {
+    "WaitingForPlayers": "Indicate the game is waiting for more players %v",
+    // dots: keeps changing to . or .. or ... etc (just a visual)
+    "JoinGame": "Announce a player has joined the game, showing current/max players %v %v %v",
+    // player name | player count | game max count
+    "QuitGame": "Announce a player has left the game, showing current/max players %v %v %v",
+    // player name | player count | game max count
+    "Countdown": "Show countdown until game starts %v",
+    // time in seconds
+    "ForceStartGame": "Notify players that the game was force-started %v",
+    // server name
+    "ChangeTeams": "Inform the player that they've switched to a new team %v %v",
+    // server name | team color
+    "Error": {
+      "NotInAGame": "Notify player they are not in a game",
+      "TeamIsFull": "Tell the player the team is full",
+      "GameAlreadyStarted": "Warn the player the game has already started"
     }
   },
   "BedWars": {
     "YouDied": "Show death message with respawn delay",
-    "RespawningIn": "Countdown for player respawn", // time in seconds
+    "RespawningIn": "Countdown for player respawn %v",
+    // time in seconds
     "Error": {
       "CannotBreakBed": "Warn the player that they can't place or interact with bed/minion"
     }
+  },
+  "Error": {
+    "InventoryFull": "Alert that the player's inventory is full"
   }
 }

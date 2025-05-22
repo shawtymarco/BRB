@@ -10,19 +10,37 @@ const httpsAgent = new https.Agent({
     rejectUnauthorized: true
 });
 
+export enum APIEndpoints {
+    CONNECT = "api/connect",
+    GET_PLAYER = "api/players",
+    VERIFY = "api/verify"
+}
+
 export class Request {
     static async get(endpoint: string) {
-        try {
-            const res = await axios.get(`https://localhost:8080/${endpoint}`, {
-                headers: {
-                    'Authorization': `Bearer ${jwtSecret}`,
-                },
-                httpsAgent
-            });
+        const res = await axios.get(`https://localhost:8080/${endpoint}`, {
+            headers: {
+                'Authorization': `Bearer ${jwtSecret}`,
+            },
+            httpsAgent
+        });
 
-            console.log('GET response:', res.data);
-        } catch (err: any) {
-            console.error('Failed to send GET:', err.message);
-          }
+        return res.data;
+    }
+
+    static async post(endpoint: string, data: object) {
+        const res = await axios.post(
+            `https://localhost:8080/${endpoint}`,
+            data,
+            {
+                httpsAgent,
+                headers: {
+                    Authorization: `Bearer ${jwtSecret}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+
+        return res.data;
     }
 }

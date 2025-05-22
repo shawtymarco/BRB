@@ -34,12 +34,12 @@ func (r RankCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 		t := r.Targets[0].(*player.Player)
 		oldName := t.NameTag()
 		r := database.RankFromPrefix(string(r.Rank))
-		if user.DataFromPlayer(pl).GroupSettings.RankId >= r.Shortened() {
+		if user.DataFromPlayer(pl).Statistics.RankId >= r.Shortened() {
 			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
 			return
 		}
-		user.DataFromPlayer(t).GroupSettings.RankId = r.Shortened()
-		pl.SetNameTag(database.BasicNameDisplay.Name(user.DataFromPlayer(pl)))
+		user.DataFromPlayer(t).Statistics.RankId = r.Shortened()
+		pl.SetNameTag(database.LobbyNameDisplay.Name(user.DataFromPlayer(pl)))
 		pl.Message(text.Colourf(language.Translate(pl).Commands.Success.GiveRank, server.Config.Prefix, oldName, r.Prefix()))
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))
