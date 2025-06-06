@@ -1,0 +1,64 @@
+package ui
+
+import (
+	"server/server"
+	"server/server/game"
+	"server/server/games/bedwars"
+	"server/server/games/buildffa"
+	"time"
+
+	"github.com/df-mc/dragonfly/server/player"
+	"github.com/df-mc/dragonfly/server/player/form"
+	"github.com/df-mc/dragonfly/server/world"
+)
+
+type GameSelectorForm struct {
+}
+
+func NewGamesForm() GameSelectorForm {
+	return GameSelectorForm{}
+}
+
+func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _ *world.Tx) {
+	pl := submitter.(*player.Player)
+	gt := Load[game.TypeGame](pl, button.Text)
+	switch gt {
+	case game.TypeBuildFFA:
+		buildffa.Join(pl, pl.Tx())
+
+		if server.Bot != nil {
+			go func() {
+				time.Sleep(5 * time.Second)
+				server.Bot.H().ExecWorld(func(tx2 *world.Tx, e world.Entity) {
+					buildffa.Join(e.(*player.Player), tx2)
+				})
+			}()
+		}
+		break
+	case game.TypeBedFight:
+		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false)
+
+		if server.Bot != nil {
+			go func() {
+				time.Sleep(5 * time.Second)
+				server.Bot.H().ExecWorld(func(tx2 *world.Tx, e world.Entity) {
+					bedwars.Join(e.(*player.Player), tx2, 1, 2, game.TypeBedFight, false)
+				})
+			}()
+		}
+		break
+	}
+}
+
+func (g GameSelectorForm) Close(submitter form.Submitter) {
+	g.SendTo(submitter.(*player.Player))
+}
+
+func (g GameSelectorForm) SendTo(pl *player.Player) {
+	f := form.NewMenu(NewGamesForm(), GameSelector)
+	f = f.WithButtons(
+		AddButtonWithValue(pl, "Build FFA", "", game.TypeBuildFFA),
+		AddButtonWithValue(pl, "Bed Fight", "", game.TypeBedFight),
+	)
+	pl.SendForm(f)
+}

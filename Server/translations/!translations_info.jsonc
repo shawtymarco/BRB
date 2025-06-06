@@ -27,31 +27,48 @@
     }
   },
   "Game": {
-    "WaitingForPlayers": "Indicate the game is waiting for more players %v",
-    // dots: keeps changing to . or .. or ... etc (just a visual)
     "JoinGame": "Announce a player has joined the game, showing current/max players %v %v %v",
     // player name | player count | game max count
     "QuitGame": "Announce a player has left the game, showing current/max players %v %v %v",
     // player name | player count | game max count
     "Countdown": "Show countdown until game starts %v",
     // time in seconds
-    "ForceStartGame": "Notify players that the game was force-started %v",
-    // server name
     "ChangeTeams": "Inform the player that they've switched to a new team %v %v",
     // server name | team color
     "Error": {
       "NotInAGame": "Notify player they are not in a game",
       "TeamIsFull": "Tell the player the team is full",
-      "GameAlreadyStarted": "Warn the player the game has already started"
+      "GameAlreadyStarted": "Warn the player the game has already started",
+      "CannotBreakBlocksBecauseGameNotStarted": "<dark-red>You cannot place blocks because the game has not started yet.</dark-red>"
     }
   },
   "BedWars": {
-    "YouDied": "Show death message with respawn delay",
+    "YouWonTitle": "",
+    "YouLostTitle": "",
+    "TeamWonSubTitle": "<%v>%v</%v>",
+    // Team color who won: First and third %v are for color formatting; i.e. <red>RED</red> (first and third %v are <red> and </red>>)
+    "YouDiedTitle": "Show death message title",
+    "YouDiedSubTitle": "Show death message sub title with respawn delay %v",
     "RespawningIn": "Countdown for player respawn %v",
-    // time in seconds
+    // time in seconds,
+    "KilledBy": "Kill message %v %v",
+    // victim | killer | final kill (if not, its just empty)
+    "VoidDeath": "Void death message %v",
+    // victim | final kill (if not, its just empty)
+    "BedBreak": "Show break bed message %v %v",
+    // Bed color name | Player who broke
     "Error": {
-      "CannotBreakBed": "Warn the player that they can't place or interact with bed/minion"
+      "CannotBreakBed": "Warn the player that they can't break their own with bed",
+      "CannotBreakMap": "Warn the player that they can't break any of the map's blocks (that were originally there, not recently placed by a player)"
     }
+  },
+  "BuildFFA": {
+    "JoinMessage": "Announces when player joins build ffa %v",
+    "YouDied": "<bold><dark-red>YOU DIED</dark-red></bold>",
+    "KilledBy": "Kill message %v %v",
+    // victim | killer
+    "VoidDeath": "Void death message %v"
+    // victim
   },
   "Error": {
     "InventoryFull": "Alert that the player's inventory is full"

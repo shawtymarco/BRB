@@ -19,24 +19,37 @@
     }
   },
   "Game": {
-    "WaitingForPlayers": "%v",
     "JoinGame": "%v %v %v",
     "QuitGame": "%v %v %v",
     "Countdown": "%v",
-    "ForceStartGame": "%v",
     "ChangeTeams": "%v %v",
     "Error": {
       "NotInAGame": "",
       "TeamIsFull": "",
-      "GameAlreadyStarted": ""
+      "GameAlreadyStarted": "",
+      "CannotBreakBlocksBecauseGameNotStarted": "<dark-red>You cannot place blocks because the game has not started yet.</dark-red>"
     }
   },
   "BedWars": {
-    "YouDied": "",
+    "YouWonTitle": "",
+    "YouLostTitle": "",
+    "TeamWonSubTitle": "<%v>%v</%v>",
+    "YouDiedTitle": "",
+    "YouDiedSubTitle": "%v",
     "RespawningIn": "%v",
+    "KilledBy": "%v %v %v",
+    "VoidDeath": "%v %v",
+    "BedBreak": "%v %v",
     "Error": {
-      "CannotBreakBed": ""
+      "CannotBreakBed": "",
+      "CannotBreakMap": ""
     }
+  },
+  "BuildFFA": {
+    "JoinMessage": "%v",
+    "YouDied": "<bold><dark-red>YOU DIED</dark-red></bold>",
+    "KilledBy": "%v %v",
+    "VoidDeath": "%v"
   },
   "Error": {
     "InventoryFull": ""

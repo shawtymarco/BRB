@@ -22,14 +22,6 @@ type PlayerData struct {
 	Games      Games
 }
 
-type Statistics struct {
-	RankId string
-	Level  int
-	XP     int
-	ELO    int
-	Coins  int
-}
-
 func (pd PlayerData) IsRegistered() bool {
 	return pd.UserId != ""
 }
@@ -40,6 +32,18 @@ func (pd PlayerData) Rank() Rank {
 
 func (pd PlayerData) MaxXP() int {
 	return 5000 * pd.Statistics.Level
+}
+
+type Statistics struct {
+	RankId string
+	Level  int
+	XP     int
+	ELO    int
+	Coins  int
+}
+
+func (s Statistics) ELORank() EloRank {
+	return GetEloRank(s.ELO)
 }
 
 type Games struct {
@@ -54,13 +58,25 @@ type Games struct {
 		BedsBroken  int
 		Deaths      int
 	}
+	BedFight struct {
+		GamesPlayed int
+		Wins        int
+		WinStreak   int
+		Losses      int
+		Kills       int
+		Deaths      int
+	}
 	BuildFFA struct {
 		Kills        int
 		Deaths       int
 		BlocksPlaced int
 	}
-	BedFight struct {
-		Kills  int
-		Deaths int
-	}
+}
+
+func (g Games) TotalWins() int {
+	return g.BedWars.Kills + g.BedFight.Kills + g.BuildFFA.Kills
+}
+
+func (g Games) TotalKills() int {
+	return g.BedWars.Wins + g.BedFight.Wins
 }

@@ -1,9 +1,32 @@
 {
-  "TowerWars": {
-    "./server/data/maps/twmap.zip": {
-      "Name": "Debugging Map",
-      "Author": "Stodgy",
-      "Mode": 0
-    }
+  "./maps/BedFight1": {
+    "Name": "BedFight",
+    "Type": "bedfight",
+    "SpawnPoint": [
+      191.5,
+      3.0,
+      78.5
+    ],
+    "TeamSpawnPoints": [
+      [
+        224.5,
+        -41.0,
+        99.5
+      ],
+      [
+        152.5,
+        -41.0,
+        99.5
+      ]
+    ]
+  },
+  "./maps/BuildFFA": {
+    "Name": "BuildFFA",
+    "Type": "buildffa",
+    "SpawnPoint": [
+      0,
+      100,
+      0
+    ]
   }
 }

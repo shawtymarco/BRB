@@ -15,7 +15,7 @@ type nameConfig struct {
 func (nc nameConfig) Name(pd *PlayerData) string {
 	var eloStr string
 	if nc.ELO {
-		eloStr = fmt.Sprintf("<dark-grey>[%v]</dark-grey> ", pd.Statistics.ELO)
+		eloStr = fmt.Sprintf("<dark-grey>[%v %v]</dark-grey> ", pd.Statistics.ELORank().EloIcon(), pd.Statistics.ELO)
 	}
 
 	var teamColourStr string

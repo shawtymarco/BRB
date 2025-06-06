@@ -46,26 +46,40 @@ type LangConfig struct {
 	}
 
 	Game struct {
-		WaitingForPlayers string
-		JoinGame          string
-		QuitGame          string
-		Countdown         string
-		ForceStartGame    string
-		ChangeTeams       string
+		JoinGame    string
+		QuitGame    string
+		Countdown   string
+		ChangeTeams string
 
 		Error struct {
-			NotInAGame         string
-			TeamIsFull         string
-			GameAlreadyStarted string
+			NotInAGame                             string
+			TeamIsFull                             string
+			GameAlreadyStarted                     string
+			CannotBreakBlocksBecauseGameNotStarted string
 		}
 	}
 
 	BedWars struct {
-		YouDied      string
-		RespawningIn string
-		Error        struct {
+		YouWonTitle     string
+		YouLostTitle    string
+		TeamWonSubTitle string
+		YouDiedTitle    string
+		YouDiedSubTitle string
+		RespawningIn    string
+		KilledBy        string
+		VoidDeath       string
+		BedBreak        string
+		Error           struct {
 			CannotBreakBed string
+			CannotBreakMap string
 		}
+	}
+
+	BuildFFA struct {
+		JoinMessage string
+		YouDied     string
+		KilledBy    string
+		VoidDeath   string
 	}
 
 	Error struct {

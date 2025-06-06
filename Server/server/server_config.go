@@ -3,18 +3,22 @@ package server
 import (
 	"path"
 
+	"github.com/go-gl/mathgl/mgl64"
+
 	"github.com/df-mc/dragonfly/server"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
 type Server struct {
 	Prefix    string
-	WTPrefix  string
 	Languages map[string][]string
 	Pvp       struct {
-		VerticalKB      float64
-		HorizontalKB    float64
+		Force           float64
+		Height          float64
 		HitRegistration int
+	}
+	Hub struct {
+		SpawnPoint mgl64.Vec3
 	}
 }
 

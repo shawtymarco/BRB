@@ -1,15 +1,5 @@
 {
   "Prefix": "<lapis>BRB</lapis><gold>»</gold><green>",
-  "Servers": [
-    "home.json",
-    "tower_wars.json",
-    "build.json"
-  ],
-  "Names": [
-    "home",
-    "tw",
-    "build"
-  ],
   "Languages": {
     "eng.json": [
       "en-GB",
@@ -28,8 +18,15 @@
     ]
   },
   "Pvp": {
-    "HitRegistration": 9,
-    "HorizontalKB": 1.0,
-    "VerticalKB": 1.0
+    "Force": 0.4,
+    "Height": 0.4,
+    "HitRegistration": 400
+  },
+  "Hub": {
+    "SpawnPoint": [
+      -111.5,
+      103.0,
+      -143.5
+    ]
   }
 }

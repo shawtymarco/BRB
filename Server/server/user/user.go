@@ -7,6 +7,7 @@ import (
 	"server/server"
 	"server/server/cooldown"
 	"server/server/database"
+	"server/server/game"
 	"server/server/language"
 	"server/server/utils"
 	"sync"
@@ -38,6 +39,9 @@ type User struct {
 	Scoreboard *scoreboard.Scoreboard
 	Data       *database.PlayerData
 	FirstTime  bool
+
+	GameInfo Games
+	Game     *game.Game
 }
 
 func New(pl *player.Player, isBot bool) (*User, error) {
@@ -194,12 +198,23 @@ func (u *User) PlaySound(sound string, title, author string, volume, pitch float
 	}
 }
 
-func SetSpectator(pl *player.Player, set bool) {
+func (u *User) SetSpectator(set bool) {
 	if !set {
-		pl.SetGameMode(world.GameModeSurvival)
+		u.pl.SetGameMode(world.GameModeSurvival)
+		u.Game.RemoveSpectator(u.pl)
 		return
 	}
 
-	pl.SetGameMode(SpectatorGamemode{})
-	pl.SetFlightSpeed(0.15)
+	u.pl.SetGameMode(SpectatorGamemode{})
+	u.pl.SetFlightSpeed(0.15)
+	u.Game.AddSpectator(u.pl)
+}
+
+type Games struct {
+	BedWars struct {
+		Kills int
+	}
+	BuildFFA struct {
+		Kills int
+	}
 }

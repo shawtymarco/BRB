@@ -26,7 +26,6 @@ const (
 )
 
 type ItemHandler interface {
-	Stack() item.Stack
 	InteractClick(click ClickType, player *player.Player, pos *cube.Pos)
 }
 
@@ -39,15 +38,7 @@ func Texture(file string) image.Image {
 type ItemAction int
 
 const (
-	Wand ItemAction = iota
-	LeaveGame
-	TeamSelector
-	Cosmetics
-
-	Beam
-	WhiteSword
-	MiniSun
-	SpawnMage
+	GameSelector ItemAction = iota
 )
 
 type NopItem struct {
