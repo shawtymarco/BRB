@@ -42,6 +42,9 @@ type User struct {
 
 	GameInfo Games
 	Game     *game.Game
+
+	LastHit   *world.EntityHandle
+	LastHitAt time.Time
 }
 
 func New(pl *player.Player, isBot bool) (*User, error) {
@@ -212,7 +215,9 @@ func (u *User) SetSpectator(set bool) {
 
 type Games struct {
 	BedWars struct {
-		Kills int
+		Kills      int
+		FinalKills int
+		BedsBroken int
 	}
 	BuildFFA struct {
 		Kills int

@@ -132,11 +132,17 @@ func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, a
 				onDeath(h.game, pl, u, ua)
 			}
 		}
-	} else if _, ok := src.(entity.VoidDamageSource); ok {
-		ctx.Cancel()
-
+	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
+		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
+			if pla, ok := ea.(*player.Player); ok {
+				onDeath(h.game, pl, u, user.LookupPlayer(pla))
+				return
+			}
+		}
 		onDeath(h.game, pl, u, nil)
+		ctx.Cancel()
 	} else {
+		onDeath(h.game, pl, u, nil)
 		ctx.Cancel()
 	}
 }
@@ -152,6 +158,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	if g.PlayerTeam(pl).Status == game.BedBroken {
 		finalKill = text.Colourf("<bold><aqua>FINAL KILL!</aqua></bold>")
 		g.PlayerTeam(pl).RemovePlayerFromActive(pl)
+
+		if g.typeGame == game.TypeBedWars {
+			ua.Data.Games.BedWars.FinalKills++
+		} else {
+			ua.Data.Games.BedFight.FinalKills++
+		}
 	} else {
 		h := pl.H()
 		go func() {
@@ -171,6 +183,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 				i--
 			}
 		}()
+
+		if g.typeGame == game.TypeBedWars {
+			ua.Data.Games.BedWars.Kills++
+		} else {
+			ua.Data.Games.BedFight.Kills++
+		}
 	}
 
 	g.ForEachPlayer(func(p *player.Player) {
@@ -184,6 +202,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	if ua != nil {
 		ua.GameInfo.BedWars.Kills++
 		ua.Player().PlaySound(sound.Experience{})
+	}
+
+	if g.typeGame == game.TypeBedWars {
+		u.Data.Games.BedWars.Deaths++
+	} else {
+		u.Data.Games.BedFight.Deaths++
 	}
 }
 
@@ -238,6 +262,12 @@ func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]it
 		}
 
 		h.game.Teams()[teamIndex].Status = game.BedBroken
+
+		if h.game.typeGame == game.TypeBedWars {
+			u.Data.Games.BedWars.BedsBroken++
+		} else {
+			u.Data.Games.BedFight.BedsBroken++
+		}
 
 		pl.Message(text.Colourf(language.Translate(pl).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Color()).Name(u.Data)))
 

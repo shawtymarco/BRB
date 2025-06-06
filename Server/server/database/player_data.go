@@ -49,7 +49,7 @@ func (s Statistics) ELORank() EloRank {
 type Games struct {
 	BedWars struct {
 		GamesPlayed int
-		MVPCount    int
+		MVPCount    int // TODO behavior
 		Wins        int
 		WinStreak   int
 		Losses      int
@@ -64,6 +64,8 @@ type Games struct {
 		WinStreak   int
 		Losses      int
 		Kills       int
+		FinalKills  int
+		BedsBroken  int
 		Deaths      int
 	}
 	BuildFFA struct {
@@ -74,9 +76,9 @@ type Games struct {
 }
 
 func (g Games) TotalWins() int {
-	return g.BedWars.Kills + g.BedFight.Kills + g.BuildFFA.Kills
+	return g.BedWars.Wins + g.BedFight.Wins
 }
 
 func (g Games) TotalKills() int {
-	return g.BedWars.Wins + g.BedFight.Wins
+	return g.BedWars.Kills + g.BedFight.Kills + g.BuildFFA.Kills
 }

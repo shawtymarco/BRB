@@ -2,6 +2,7 @@ package buildffa
 
 import (
 	"fmt"
+	"github.com/df-mc/dragonfly/server/world/sound"
 	"image/color"
 	"server/server/database"
 	"server/server/games/lobby"
@@ -97,17 +98,23 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 	if s, ok := src.(entity.AttackDamageSource); ok {
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
+			u.LastHit = attacker.H()
 			if !immune && pl.Health() <= *damage {
-				ua.GameInfo.BuildFFA.Kills++
 				onDeath(pl, u, ua)
-
 				ctx.Cancel()
 			}
 		}
-	} else if _, ok := src.(entity.VoidDamageSource); ok {
+	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
+		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
+			if pla, ok := ea.(*player.Player); ok {
+				onDeath(pl, u, user.LookupPlayer(pla))
+				return
+			}
+		}
 		onDeath(pl, u, nil)
 		ctx.Cancel()
 	} else {
+		onDeath(pl, u, nil)
 		ctx.Cancel()
 	}
 }
@@ -124,6 +131,11 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.KilledBy, database.LobbyNameDisplay.Name(u.Data), database.LobbyNameDisplay.Name(ua.Data)))
 		}
 	})
+
+	if ua != nil {
+		ua.GameInfo.BuildFFA.Kills++
+		ua.Player().PlaySound(sound.Experience{})
+	}
 }
 
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {

@@ -80,6 +80,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							team := g.PlayerTeam(pl)
 							pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
 							giveKit(pl, g)
+
+							u := user.LookupPlayer(pl)
+							if g.typeGame == game.TypeBedWars {
+								u.Data.Games.BedWars.GamesPlayed++
+							} else {
+								u.Data.Games.BedFight.GamesPlayed++
+							}
 						})
 					} else {
 						g.ForEachPlayer(func(pl *player.Player) {
@@ -95,6 +102,15 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.World().Exec(func(tx *world.Tx) {
 						g.WinningTeam().ForEachPlayer(tx, func(pl *player.Player) {
 							g.Reward(pl)
+
+							u := user.LookupPlayer(pl)
+							if g.typeGame == game.TypeBedWars {
+								u.Data.Games.BedWars.Wins++
+								u.Data.Games.BedWars.WinStreak++
+							} else {
+								u.Data.Games.BedFight.Wins++
+								u.Data.Games.BedFight.WinStreak++
+							}
 						})
 					})
 
@@ -102,6 +118,15 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						if g.WinningTeam().Contains(pl) {
 							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouWonTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Color(), strings.ToUpper(g.WinningTeam().Color()), g.WinningTeam().Color())))
 						} else {
+							u := user.LookupPlayer(pl)
+							if g.typeGame == game.TypeBedWars {
+								u.Data.Games.BedWars.Losses++
+								u.Data.Games.BedWars.WinStreak = 0
+							} else {
+								u.Data.Games.BedFight.Losses++
+								u.Data.Games.BedFight.WinStreak = 0
+							}
+
 							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouLostTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Color(), strings.ToUpper(g.WinningTeam().Color()), g.WinningTeam().Color())))
 						}
 					})
