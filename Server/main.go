@@ -10,12 +10,14 @@ import (
 	"server/server/command"
 	"server/server/database"
 	"server/server/game"
+	"server/server/games/bedwars"
 	"server/server/games/buildffa"
 	"server/server/games/lobby"
 	"server/server/language"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
+	"slices"
 	"strings"
 
 	"github.com/df-mc/dragonfly/server/player"
@@ -78,10 +80,12 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
+	bedwars.NewBedWars(game.TypeBedWars, 2, 2, false) // TODO: REMOVE DEBUG
 
 	for pl := range srv.Accept() {
 		utils.Panics(user.New(pl, false))
 		lobby.Join(pl)
+		joinRankedBedWars(pl)
 	}
 
 	for identifier, err := range core.Database.SaveAll() {
@@ -115,4 +119,14 @@ func createBot(name string, tx *world.Tx) *player.Player {
 		Position: core.Config.Hub.SpawnPoint,
 		Scale:    1,
 	}, tx, nil)
+}
+
+func joinRankedBedWars(pl *player.Player) {
+	u := user.LookupPlayer(pl)
+	for _, g := range bedwars.Games {
+		if slices.Contains(g.UsersToJoin, u.Data.UserId) {
+			bedwars.Join(pl, pl.Tx(), g.TeamSize, g.TeamCount, g.Type(), false, g)
+			break
+		}
+	}
 }

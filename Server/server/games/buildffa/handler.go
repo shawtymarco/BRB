@@ -68,6 +68,8 @@ func Join(pl *player.Player, tx *world.Tx) {
 }
 
 func (Handler) HandleQuit(pl *player.Player) {
+	u := user.LookupPlayer(pl)
+	u.Game = nil
 	user.Save(pl)
 	Game.RemovePlayerFromTeam(pl)
 	lobby.Join(pl)

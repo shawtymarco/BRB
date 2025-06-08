@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"server/server"
+	"server/server/games/bedwars"
 	"server/server/utils"
 
 	"github.com/google/uuid"
@@ -53,5 +54,23 @@ func initPostRequests(rg *gin.RouterGroup) {
 			"username": pd.Username,
 			"elo":      pd.Statistics.ELO,
 		})
+	})
+
+	rg.POST("/games/connect-users", jwtAuthMiddleware(), func(c *gin.Context) {
+		var body struct {
+			Users []string `json:"users"`
+			Code  string   `json:"code"`
+		}
+		utils.Panic(c.BindJSON(&body))
+		var bwGame *bedwars.BedWars
+		for _, g := range bedwars.Games {
+			if g.ID().String() == body.Code {
+				bwGame = g
+				break
+			}
+		}
+		bwGame.UsersToJoin = body.Users
+
+		c.JSON(http.StatusOK, gin.H{})
 	})
 }

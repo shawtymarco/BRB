@@ -8,7 +8,7 @@ import { InitiateWebsocket } from "./ws";
 export let slashCommands = new Collection<string, any>();
 export let messageCommands = new Collection<string, any>();
 
-const client = new Client({
+export var client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,

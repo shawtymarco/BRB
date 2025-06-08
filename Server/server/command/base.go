@@ -15,6 +15,8 @@ type Permission int
 const (
 	GiveRank Permission = iota
 	GameMode
+	Warp
+	Join
 )
 
 func (p Permission) Test(src cmd.Source) bool {
@@ -50,7 +52,7 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 }
 
 var rankPermissions = map[database.Rank][]Permission{
-	database.Owner:        {},
+	database.Owner:        {GameMode, GiveRank},
 	database.Manager:      {},
 	database.Admin:        {},
 	database.Moderator:    {},
@@ -59,5 +61,5 @@ var rankPermissions = map[database.Rank][]Permission{
 	database.Premium:      {},
 	database.MediaPartner: {},
 	database.Booster:      {},
-	database.Player:       {},
+	database.Player:       {Join, Warp},
 }

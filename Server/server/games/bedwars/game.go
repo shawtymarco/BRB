@@ -59,6 +59,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]
 	g.Game = game.NewGame(newId, utils.Panics(server.WorldManager.World(mapName)), "")
+	g.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1248405762204504066", "1152316442709073941"} // TODO: REMOVE DEBUG
 	go func() {
 		ticker := time.NewTicker(250 * time.Millisecond)
 		for range ticker.C {

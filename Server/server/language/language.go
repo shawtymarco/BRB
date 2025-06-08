@@ -31,19 +31,23 @@ type LangConfig struct {
 
 	Commands struct {
 		Success struct {
-			Hub      string
-			Ping     string
-			PingSelf string
-			GiveRank string
-			Link     string
+			Hub          string
+			Ping         string
+			PingSelf     string
+			GiveRank     string
+			Link         string
+			Warp         string
+			YouGotWarped string
 		}
 
 		Error struct {
-			Permission    string
-			CoolDown      string
-			OnlyOneTarget string
-			RankHierarchy string
-			LinkExpired   string
+			Permission          string
+			CoolDown            string
+			OnlyOneTarget       string
+			RankHierarchy       string
+			LinkExpired         string
+			NoMorePlayersToWarp string
+			NoGameToJoin        string
 		}
 	}
 
@@ -71,6 +75,10 @@ type LangConfig struct {
 		KilledBy        string
 		VoidDeath       string
 		BedBreak        string
+		GiveIron        string
+		GiveGold        string
+		GiveDiamond     string
+		GiveEmerald     string
 		Error           struct {
 			CannotBreakBed string
 			CannotBreakMap string

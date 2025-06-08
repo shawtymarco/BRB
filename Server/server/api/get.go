@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"server/server"
 	"server/server/database"
@@ -33,7 +32,6 @@ func initGetRequests(rg *gin.RouterGroup) {
 
 	rg.GET("/registered-players/:userid", jwtAuthMiddleware(), func(c *gin.Context) {
 		id := c.Param("userid")
-		fmt.Println(id)
 		pd, err := server.Database.FindPlayerByDiscordID(id)
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"registered": false})
@@ -43,13 +41,11 @@ func initGetRequests(rg *gin.RouterGroup) {
 	})
 
 	rg.GET("/games/create", jwtAuthMiddleware(), func(c *gin.Context) {
-		players := c.QueryArray("users")
 		teamSize, _ := strconv.Atoi(c.Query("teamSize"))
 		teamCount, _ := strconv.Atoi(c.Query("teamCount"))
 		isCustom := utils.Question(c.Query("custom") == "1", true, false)
 
 		g := bedwars.NewBedWars(game.TypeBedWars, teamSize, teamCount, isCustom)
-		g.UsersToJoin = players
 
 		c.JSON(http.StatusOK, gin.H{
 			"id": g.ID().String(),

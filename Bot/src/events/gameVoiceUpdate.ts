@@ -3,9 +3,7 @@ import { dconfig } from "../config";
 import { APIEndpoints, Request } from "../api";
 import { EmbedUtil } from "../core/EmbedUtil";
 import { CacheUtils } from "../core/CacheUtil";
-import { GameUtil } from "../core/GameUtil";
-
-var gameCount = 0;
+import { Game, gamesDB } from "../core/GameCore";
 
 module.exports = {
     name: Events.VoiceStateUpdate,
@@ -34,14 +32,14 @@ module.exports = {
             return;
         }
 
-        GameUtil.refreshMemberNickname(newState.member as GuildMember);
+        Game.refreshMemberNickname(newState.member as GuildMember);
 
         if (isTouch && !res.isTouch) {
             CacheUtils.getChannel(newState.guild, alertsId).send({
                 content: `<@${newState.member?.id}>`,
                 embeds: [EmbedUtil.create({
                     type: "no",
-                    description: "You canno queue because you were last logged in as a NON-TOUCH player (PC, PlayStation, XBox or otherwise). If you still want to queue touch-only ranked bedwars, you must first log in with a touch device.",
+                    description: "You cannot queue because you were last logged in as a NON-TOUCH player (PC, PlayStation, XBox or otherwise). If you still want to queue touch-only ranked bedwars, you must first log in with a touch device.",
                 })]
             });
             newState.member?.voice.setChannel(null);
@@ -52,16 +50,16 @@ module.exports = {
 
         switch (newState.channelId) {
             case dconfig.channels.touch2v2:
-                if (chMembers?.size == 4) await initGameChannel(newState.guild, chMembers, "2v2");
+                if (chMembers?.size == 4) await initGameChannel(newState.guild, chMembers, 2, 2);
                 break;
             case dconfig.channels.touch3v3:
-                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, "3v3");
+                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, 3, 2);
                 break;
             case dconfig.channels.all3v3:
-                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, "3v3");
+                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, 3, 2);
                 break;
             case dconfig.channels.all4v4:
-                if (chMembers?.size == 8) await initGameChannel(newState.guild, chMembers, "4v4");
+                if (chMembers?.size == 8) await initGameChannel(newState.guild, chMembers, 4, 2);
                 break;
         }
     },
@@ -69,7 +67,7 @@ module.exports = {
 
 const initGameChannel = async (guild: Guild, members: Collection<string, GuildMember>, teamSize: number, teamCount: number) => {
     // INIT MC GAME
-    const res = await Request.get(`${APIEndpoints.GAME_CREATE}/?teamSize=${teamSize}&teamCount=${teamCount}&custom=0${members.map(member => `&users=${member.id}`)}`);
+    const res = await Request.get(`${APIEndpoints.GAME_CREATE}/?teamSize=${teamSize}&teamCount=${teamCount}&custom=0`);
 
     // INIT DISCORD GAME
     const permissionOverwrites: OverwriteResolvable[] = [
@@ -87,7 +85,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
         })
     })
 
-    const gameName = `Game ${res.id.slice(0, 8)} | ${teamSize}v${teamSize}`
+    const gameName = `Game ${res.id.slice(0, 6)} | ${teamSize}v${teamSize}`
 
     const gameVC = await guild.channels.create({
         name: gameName,
@@ -110,25 +108,11 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
 
     const captains = pick2Captains(members);
 
-    gameThread.send({
-        embeds: [{
-            author: {
-                name: `Eliagic Ranked Bedwars | Game #${res.id}`,
-                icon_url: 'https://images-ext-1.discordapp.net/external/xPUGYxZAJDXj4ScgckfwI0SvwkRQDNQDTi2gF27kRNc/%3Fsize%3D4096/https/cdn.discordapp.com/avatars/1209943786252144690/6d272ead1117efac2cf674582fceff1f.png?format=webp&quality=lossless&width=801&height=801'
-            },
-            description:
-                `**Game #8268 | Matchmaking**\n
-                **Matchmaking Type:** Captain\n
-                > 🎲 Random Captains have been chosen!\n\n
-                ### Captains\n
-                **Team 1 Captain:** <@${captains[0].id}>\n
-                **Team 2 Captain:** <@${captains[1].id}>`,
-            color: 0xFFFFFF,
-            footer: {
-                text: `eliagic.club | <t:${Math.floor(Date.now() / 1000)}>`
-            },
-        }]
-    })
+    const game = new Game(res.id, gameThread.id, gameVC.id, teamSize, members.map(m => m.id), captains.map(m => m.id));
+    gamesDB.add(gameThread.id, game)
+
+    await game.sendIntroductionMessage()
+    await game.updateCaptainPickingMessage();
 }
 
 const pick2Captains = (members: Collection<string, GuildMember>) => {
@@ -136,7 +120,7 @@ const pick2Captains = (members: Collection<string, GuildMember>) => {
 
     const firstIndex = Math.floor(Math.random() * membersArray.length);
 
-    let secondIndex;
+    let secondIndex: number;
     do {
         secondIndex = Math.floor(Math.random() * membersArray.length);
     } while (secondIndex === firstIndex);

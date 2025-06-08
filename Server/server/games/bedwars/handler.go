@@ -43,12 +43,13 @@ type Handler struct {
 	game *BedWars
 }
 
-func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame game.TypeGame, isCustom bool) {
-	var bwGame *BedWars
-	for _, g := range Games {
-		if g.Type() == typeGame && g.Stage() == game.Waiting {
-			bwGame = g
-			break
+func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame game.TypeGame, isCustom bool, bwGame *BedWars) {
+	if bwGame == nil {
+		for _, g := range Games {
+			if g.Type() == typeGame && g.Stage() == game.Waiting {
+				bwGame = g
+				break
+			}
 		}
 	}
 
@@ -62,7 +63,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	bwGame.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
 	})
-	bwGame.AddPlayerToTeam(pl, 1)
+	bwGame.AddPlayerToTeam(pl, teamSize)
 
 	pl.SetGameMode(world.GameModeSurvival)
 	pl.Inventory().Clear()
@@ -90,6 +91,8 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 }
 
 func (h Handler) HandleQuit(pl *player.Player) {
+	u := user.LookupPlayer(pl)
+	u.Game = nil
 	user.Save(pl)
 	h.game.RemovePlayerFromTeam(pl)
 	lobby.Join(pl)
@@ -155,7 +158,6 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
 	pl.Inventory().Clear()
-	pl.Armour().Clear()
 
 	finalKill := ""
 
@@ -206,13 +208,23 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		if ua == nil {
 			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Color()).Name(u.Data), finalKill))
 		} else {
-			p.Message(text.Colourf(language.Translate(p).BedWars.KilledBy, database.BedWarsNameDisplay(g.PlayerTeam(pl).Color()).Name(u.Data), database.BedWarsNameDisplay(g.PlayerTeam(ua.Player()).Color()).Name(ua.Data), finalKill))
+			c1 := g.PlayerTeam(pl).Color()
+			c2 := g.PlayerTeam(ua.Player()).Color()
+			p.Message(text.Colourf(
+				language.Translate(p).BedWars.KilledBy,
+				text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
+				text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
+				finalKill,
+			))
 		}
 	})
 
 	if ua != nil {
 		ua.Player().PlaySound(sound.Experience{})
+		rewardResources(ua.Player(), pl)
 	}
+
+	pl.Armour().Clear()
 
 	if g.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Deaths++
@@ -348,4 +360,44 @@ func giveKit(pl *player.Player, g *BedWars) {
 		item.NewStack(item.Leggings{Tier: item.ArmourTierLeather{Colour: c}}, 1),
 		item.NewStack(item.Boots{Tier: item.ArmourTierLeather{Colour: c}}, 1),
 	)
+}
+
+func rewardResources(pl *player.Player, killed *player.Player) {
+	var iron, gold, diamond, emerald int
+	for _, stack := range killed.Inventory().Items() {
+		switch stack.Item().(type) {
+		case item.IronIngot:
+			iron += stack.Count()
+			break
+		case item.GoldIngot:
+			gold += stack.Count()
+			break
+		case item.Diamond:
+			diamond += stack.Count()
+			break
+		case item.Emerald:
+			emerald += stack.Count()
+			break
+		}
+	}
+
+	if iron > 0 {
+		utils.Panics(pl.Inventory().AddItem(item.NewStack(item.IronIngot{}, iron)))
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.GiveIron, iron))
+	}
+
+	if gold > 0 {
+		utils.Panics(pl.Inventory().AddItem(item.NewStack(item.GoldIngot{}, gold)))
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.GiveGold, gold))
+	}
+
+	if diamond > 0 {
+		utils.Panics(pl.Inventory().AddItem(item.NewStack(item.Diamond{}, diamond)))
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.GiveDiamond, diamond))
+	}
+
+	if emerald > 0 {
+		utils.Panics(pl.Inventory().AddItem(item.NewStack(item.Emerald{}, emerald)))
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.GiveEmerald, emerald))
+	}
 }

@@ -19,6 +19,9 @@
       // server name | player name | new rank
       "Link": "Gives the player code to register with on Discord %v %v"
       // server name |registration code
+      "Warp": "Informs the player that they warped a specific number of players to their game %v",
+      // Number of players teleported
+      "YouGotWarped": "Informs the player that another player executed /warp and teleported them to their game"
     },
     "Error": {
       "Permission": "Show no-permission message and suggest purchasing a required rank %v",
@@ -27,7 +30,9 @@
       // duration in seconds,
       "OnlyOneTarget": "Tell the player that only one target is allowed",
       "RankHierarchy": "Warn that the action can't be performed due to rank hierarchy",
-      "LinkExpired": "Warn the player that the registration code has expired"
+      "LinkExpired": "Warn the player that the registration code has expired",
+      "NoMorePlayersToWarp": "Warns that there is no other players that can be warped to the game",
+      "NoGameToJoin": "Shows when the player tries to do /join but they aren't connect to any game or any queue in ranked bedwars"
     }
   },
   "Game": {
@@ -61,6 +66,14 @@
     // victim | final kill (if not, its just empty)
     "BedBreak": "Show break bed message %v %v",
     // Bed color name | Player who broke
+    "GiveIron": "%v",
+    // Amount
+    "GiveGold": "%v",
+    // Amount
+    "GiveDiamond": "%v",
+    // Amount
+    "GiveEmerald": "%v",
+    // Amount
     "Error": {
       "CannotBreakBed": "Warn the player that they can't break their own with bed",
       "CannotBreakMap": "Warn the player that they can't break any of the map's blocks (that were originally there, not recently placed by a player)"

@@ -10,14 +10,18 @@
       "Ping": "%v %v %v",
       "PingSelf": "%v %v",
       "GiveRank": "%v %v %v",
-      "Link": "%v %v"
+      "Link": "%v %v",
+      "Warp": "%v",
+      "YouGotWarped": ""
     },
     "Error": {
       "Permission": "%v",
       "CoolDown": "%v",
       "OnlyOneTarget": "",
       "RankHierarchy": "",
-      "LinkExpired": ""
+      "LinkExpired": "",
+      "NoMorePlayersToWarp": "",
+      "NoGameToJoin": ""
     }
   },
   "Game": {
@@ -42,6 +46,10 @@
     "KilledBy": "%v %v %v",
     "VoidDeath": "%v %v",
     "BedBreak": "%v %v",
+    "GiveIron": "<iron>+%v Iron</iron>",
+    "GiveGold": "<gold>+%v Gold</gold>",
+    "GiveDiamond": "<diamond>+%v Diamond</diamond>",
+    "GiveEmerald": "<emerald>+%v Emerald</emerald>",
     "Error": {
       "CannotBreakBed": "",
       "CannotBreakMap": ""
