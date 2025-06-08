@@ -17,5 +17,7 @@ var (
 )
 
 var (
-	Bot *player.Player
+	BotMark   *player.Player
+	BotSam    *player.Player
+	BotSteven *player.Player
 )

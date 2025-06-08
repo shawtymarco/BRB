@@ -38,7 +38,7 @@ func initPostRequests(rg *gin.RouterGroup) {
 		if !found {
 			c.JSON(http.StatusOK, gin.H{
 				"success": 0,
-				"message": fmt.Sprintf("The code is either invalid, used by a player or has already expired! You can get a new code by doing /link in the lobby server (eliagic.club)."),
+				"message": "The code is either invalid, used by a player or has already expired! You can get a new code by doing /link in the lobby server (eliagic.club).",
 			})
 			return
 		}

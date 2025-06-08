@@ -13,6 +13,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/block"
+
+	skin2 "github.com/df-mc/dragonfly/server/player/skin"
+
 	"github.com/df-mc/dragonfly/server/entity"
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/df-mc/dragonfly/server/player"
@@ -40,7 +44,7 @@ type User struct {
 	Data       *database.PlayerData
 	FirstTime  bool
 
-	GameInfo Games
+	GameInfo GameRuntimeData
 	Game     *game.Game
 
 	LastHit   *world.EntityHandle
@@ -54,28 +58,34 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 
 	userMu.Lock()
 	defer userMu.Unlock()
+
 	ft := false
-	if DataFromPlayer(pl) == nil {
+	if !isBot && DataFromPlayer(pl) == nil {
 		ft = true
 		pd := &database.PlayerData{
 			Uuid:      pl.UUID(),
 			Username:  pl.Name(),
 			FirstJoin: time.Now(),
 			LastJoin:  time.Now(),
+			DeviceOS:  utils.Session(pl).ClientData().DeviceOS,
 			Statistics: database.Statistics{
 				RankId: database.Player.Shortened(),
 				Level:  1,
 			},
-			Games: database.Games{},
+			Cosmetics: database.Cosmetics{
+				SelectedWoodType: block.OakWood(),
+			},
 		}
 		if err := server.Database.CreatePlayer(pd); err != nil {
 			return nil, err
 		}
 	}
 
-	d, err := server.Database.FindPlayer(pl.UUID())
-	if err != nil {
-		return nil, err
+	var d *database.PlayerData
+	if isBot {
+		d = utils.Panics(server.Database.FindPlayerFromName(pl.Name(), &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false}))
+	} else {
+		d = utils.Panics(server.Database.FindPlayer(pl.UUID()))
 	}
 
 	if pl.Name() != d.Username {
@@ -201,6 +211,23 @@ func (u *User) PlaySound(sound string, title, author string, volume, pitch float
 	}
 }
 
+func (u *User) RefreshCape() {
+	cape, ok := database.GetCapeByType(u.Data.Cosmetics.SelectedCape)
+	if !ok {
+		return
+	}
+
+	skin := u.pl.Skin()
+	skin.Cape = skin2.NewCape(64, 32)
+	skin.Cape.Pix = database.CapeAsBytes(cape)
+
+	go func() {
+		u.h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+			e.(*player.Player).SetSkin(skin)
+		})
+	}()
+}
+
 func (u *User) SetSpectator(set bool) {
 	if !set {
 		u.pl.SetGameMode(world.GameModeSurvival)
@@ -213,7 +240,7 @@ func (u *User) SetSpectator(set bool) {
 	u.Game.AddSpectator(u.pl)
 }
 
-type Games struct {
+type GameRuntimeData struct {
 	BedWars struct {
 		Kills      int
 		FinalKills int

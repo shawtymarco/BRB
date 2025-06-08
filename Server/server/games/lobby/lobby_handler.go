@@ -34,7 +34,10 @@ func Join(pl *player.Player) {
 	pl.Inventory().Clear()
 	pl.Armour().Clear()
 
+	u.RefreshCape()
+
 	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
+	utils.Panic(pl.Inventory().SetItem(0, stacks.CosmeticsStack()))
 
 	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BRBW</yellow></bold>"))
 	u.Scoreboard.Set(0, text.Colourf("         <yellow>▷ <white>Season 1</white> ◁</yellow>"))
@@ -52,6 +55,10 @@ func Join(pl *player.Player) {
 	u.Scoreboard.Set(12, "§e")
 	u.Scoreboard.Set(13, text.Colourf("<yellow>ELIAGIC.CLUB</yellow>"))
 	pl.SendScoreboard(u.Scoreboard)
+}
+
+func (Handler) HandleQuit(pl *player.Player) {
+	user.Save(pl)
 }
 
 func (Handler) HandleChat(ctx *player.Context, msg *string) {

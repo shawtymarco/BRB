@@ -11,6 +11,8 @@ type Database interface {
 	SavePlayer(data *PlayerData) error
 	// FindPlayer finds a player from a uuid.
 	FindPlayer(uuid uuid.UUID) (*PlayerData, error)
+	// FindPlayerByDiscordID finds a player using their Discord's ID (must be registered with Discord)
+	FindPlayerByDiscordID(id string) (*PlayerData, error)
 	// FindPlayerFromName finds a player from a player name.
 	FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error)
 	// SaveAll saves all loaded players to the database.

@@ -39,6 +39,7 @@ type ItemAction int
 
 const (
 	GameSelector ItemAction = iota
+	Cosmetics
 )
 
 type NopItem struct {

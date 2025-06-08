@@ -55,7 +55,19 @@ func (g *Game) ActivePlayers() (handles []*world.EntityHandle) {
 	return handles
 }
 
-func (g *Game) ForEachPlayer(f func(pl *player.Player)) {
+func (g *Game) ForEachOriginalPlayer(f func(pl *player.Player)) {
+	for _, e := range g.OriginalPlayers() {
+		g.world.Exec(func(tx *world.Tx) {
+			if e, ok := e.Entity(tx); ok {
+				if pl, ok := e.(*player.Player); ok {
+					f(pl)
+				}
+			}
+		})
+	}
+}
+
+func (g *Game) ForEachActivePlayer(f func(pl *player.Player)) {
 	for _, e := range g.ActivePlayers() {
 		g.world.Exec(func(tx *world.Tx) {
 			if e, ok := e.Entity(tx); ok {
@@ -143,6 +155,7 @@ type Essentials interface {
 	MapConfig() MapData
 	Handler() player.Handler
 	Reward(player *player.Player)
+	Punish(player *player.Player)
 }
 
 const (

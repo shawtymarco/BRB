@@ -60,6 +60,13 @@ func (d *MongoDBDatabase) FindPlayer(uuid uuid.UUID) (*PlayerData, error) {
 	return d.findPlayerFromQuery(bson.D{{"uuid", uuid}}, uuid.String())
 }
 
+func (d *MongoDBDatabase) FindPlayerByDiscordID(id string) (*PlayerData, error) {
+	if data, err := d.cache.FindPlayerByDiscordID(id); err == nil {
+		return data, nil
+	}
+	return d.findPlayerFromQuery(bson.D{{"userid", id}}, id)
+}
+
 func (d *MongoDBDatabase) FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
 	if data, err := d.cache.FindPlayerFromName(playerName, opts); err == nil {
 		return data, nil

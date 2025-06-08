@@ -43,6 +43,17 @@ func (d *LocalDatabase) FindPlayer(uuid uuid.UUID) (*PlayerData, error) {
 	return nil, utils.PlayerDataNotFoundError{Identifier: uuid.String()}
 }
 
+func (d *LocalDatabase) FindPlayerByDiscordID(id string) (*PlayerData, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	for _, playerData := range d.data {
+		if playerData.UserId == id {
+			return playerData, nil
+		}
+	}
+	return nil, utils.PlayerDataNotFoundError{Identifier: id}
+}
+
 func (d *LocalDatabase) FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
 	if opts == nil {
 		opts = &PlayerNameSearchOpts{}

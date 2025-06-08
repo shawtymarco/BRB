@@ -7,10 +7,17 @@ import (
 var Maps map[string]MapData
 
 type MapData struct {
-	Name            string
-	Type            TypeGame
-	Author          string
-	Mode            int
+	Name   string
+	Type   TypeGame
+	Author string
+	Mode   int
+
 	SpawnPoint      mgl64.Vec3
 	TeamSpawnPoints []mgl64.Vec3
+
+	ShopVillagerPositions     []mgl64.Vec3
+	UpgradesVillagerPositions []mgl64.Vec3
+	IronGenerators            []mgl64.Vec3
+	DiamondGenerators         []mgl64.Vec3
+	EmeraldGenerators         []mgl64.Vec3
 }

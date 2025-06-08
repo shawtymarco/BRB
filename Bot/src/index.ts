@@ -1,4 +1,4 @@
-import { Client, Collection, Events, MessageFlags } from "discord.js";
+import { Client, Collection, Events, GatewayIntentBits, MessageFlags } from "discord.js";
 import { jwtSecret, token } from "./config";
 import path from "path";
 import fs from "fs";
@@ -10,10 +10,11 @@ export let messageCommands = new Collection<string, any>();
 
 const client = new Client({
     intents: [
-        "Guilds",
-        "GuildMessages",
-        "DirectMessages",
-        "MessageContent"
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
     ],
 });
 
@@ -42,6 +43,7 @@ const client = new Client({
         }
     }
 
+    // Load EVENTS
     const eventsPath = 'src/events';
     const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
 

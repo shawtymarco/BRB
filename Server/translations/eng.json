@@ -1,6 +1,8 @@
 {
   "Misc": {
-    "NowPlaying": "%v %v %v"
+    "NowPlaying": "%v %v %v",
+    "SelectedWoodSkin": "%v",
+    "SelectedCape": "%v"
   },
   "Commands": {
     "Success": {

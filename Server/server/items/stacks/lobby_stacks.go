@@ -3,6 +3,8 @@ package stacks
 import (
 	"server/server/items"
 
+	"github.com/df-mc/dragonfly/server/block"
+
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
@@ -10,5 +12,11 @@ import (
 func GameSelectorStack() item.Stack {
 	s := item.NewStack(item.Compass{}, 1).WithValue("action", int(items.GameSelector))
 	s = s.WithCustomName(text.Colourf("<emerald>Game Selector</emerald>"))
+	return s
+}
+
+func CosmeticsStack() item.Stack {
+	s := item.NewStack(block.Flower{Type: block.Poppy()}, 1).WithValue("action", int(items.Cosmetics))
+	s = s.WithCustomName(text.Colourf("<emerald>Cosmetics</emerald>"))
 	return s
 }

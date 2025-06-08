@@ -12,8 +12,10 @@ const httpsAgent = new https.Agent({
 
 export enum APIEndpoints {
     CONNECT = "api/connect",
+    VERIFY = "api/verify",
     GET_PLAYER = "api/players",
-    VERIFY = "api/verify"
+    GET_REGISTERED_PLAYER = "api/registered-players",
+    GAME_CREATE = "api/games/create"
 }
 
 export class Request {

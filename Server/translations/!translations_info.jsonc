@@ -1,7 +1,11 @@
 {
   "Misc": {
-    "NowPlaying": "Display the currently playing song with its name and author %v %v %v"
+    "NowPlaying": "Display the currently playing song with its name and author %v %v %v",
     // server name | song name | song author
+    "SelectedWoodSkin": "Informs the player that they selected a specific wood skin %v",
+    // wood skin name
+    "SelectedCape": "Informs the player that they selected a specific cape %v"
+    // cape name
   },
   "Commands": {
     "Success": {

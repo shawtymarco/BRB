@@ -3,6 +3,10 @@ package database
 import (
 	"time"
 
+	"github.com/sandertv/gophertunnel/minecraft/protocol"
+
+	"github.com/df-mc/dragonfly/server/block"
+
 	"github.com/google/uuid"
 )
 
@@ -17,13 +21,19 @@ type PlayerData struct {
 	Online     bool
 	FirstJoin  time.Time
 	LastJoin   time.Time
+	DeviceOS   protocol.DeviceOS
 	ProtocolId string
 	Statistics Statistics
+	Cosmetics  Cosmetics
 	Games      Games
 }
 
 func (pd PlayerData) IsRegistered() bool {
 	return pd.UserId != ""
+}
+
+func (pd PlayerData) IsTouch() bool {
+	return pd.DeviceOS == protocol.DeviceAndroid || pd.DeviceOS == protocol.DeviceIOS || pd.DeviceOS == protocol.DeviceFireOS || pd.DeviceOS == protocol.DeviceWP
 }
 
 func (pd PlayerData) Rank() Rank {
@@ -44,6 +54,11 @@ type Statistics struct {
 
 func (s Statistics) ELORank() EloRank {
 	return GetEloRank(s.ELO)
+}
+
+type Cosmetics struct {
+	SelectedWoodType block.WoodType
+	SelectedCape     string
 }
 
 type Games struct {

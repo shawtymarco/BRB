@@ -2,7 +2,6 @@ package buildffa
 
 import (
 	"fmt"
-	"github.com/df-mc/dragonfly/server/world/sound"
 	"image/color"
 	"server/server/database"
 	"server/server/games/lobby"
@@ -12,6 +11,8 @@ import (
 	"server/server/utils"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/world/sound"
 
 	"github.com/df-mc/dragonfly/server/item/enchantment"
 
@@ -53,7 +54,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 
-	Game.ForEachPlayer(func(pl *player.Player) {
+	Game.ForEachActivePlayer(func(pl *player.Player) {
 		pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
 	})
 
@@ -99,21 +100,25 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
 			u.LastHit = attacker.H()
-			if !immune && pl.Health() <= *damage {
+			if pl.Health() <= *damage {
 				onDeath(pl, u, ua)
 				ctx.Cancel()
 			}
 		}
 	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
 		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
-			if pla, ok := ea.(*player.Player); ok {
+			if pla, ok := ea.(*player.Player); ok && pl.Health() <= *damage {
 				onDeath(pl, u, user.LookupPlayer(pla))
+				ctx.Cancel()
 				return
 			}
 		}
-		onDeath(pl, u, nil)
-		ctx.Cancel()
-	} else {
+
+		if pl.Health() <= *damage {
+			onDeath(pl, u, nil)
+			ctx.Cancel()
+		}
+	} else if pl.Health() <= *damage {
 		onDeath(pl, u, nil)
 		ctx.Cancel()
 	}
@@ -124,7 +129,7 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 	pl.Teleport(Game.MapConfig().SpawnPoint)
 
 	pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BuildFFA.YouDied)))
-	Game.ForEachPlayer(func(pl *player.Player) {
+	Game.ForEachActivePlayer(func(pl *player.Player) {
 		if ua == nil {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.VoidDeath, database.LobbyNameDisplay.Name(u.Data)))
 		} else {

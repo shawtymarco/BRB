@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	core "server/server"
+	"server/server/capes"
 	"server/server/command"
 	"server/server/database"
 	"server/server/game"
@@ -15,6 +16,9 @@ import (
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
+	"strings"
+
+	"github.com/df-mc/dragonfly/server/player"
 
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/df-mc/npc"
@@ -47,6 +51,7 @@ func main() {
 	log.Info("Successfully connected to the database!", "type", core.Database.String())
 
 	command.RegisterCommands()
+	registerCapes()
 
 	c := core.DefaultConfig()
 	conf := utils.Panics(c.Config(log))
@@ -63,17 +68,7 @@ func main() {
 	core.MCServer = srv
 
 	srv.World().Exec(func(tx *world.Tx) {
-		bot := npc.Create(npc.Settings{
-			Name:     fmt.Sprintf("Mark"),
-			Skin:     npc.MustSkin(npc.MustParseTexture(path.Join(".", "config", "skins", "mark.png")), npc.DefaultModel),
-			Position: core.Config.Hub.SpawnPoint,
-			Scale:    1,
-		}, tx, nil)
-
-		utils.Panics(user.New(bot, true))
-		lobby.Join(bot)
-
-		core.Bot = bot
+		initBots(tx)
 	})
 
 	core.WorldManager = utils.Panics(worldmanager.ManagerSettings{
@@ -93,4 +88,31 @@ func main() {
 		errorCode := utils.RandString(6)
 		log.With("code", errorCode).With("identifier", identifier).Error(err.Error())
 	}
+}
+
+func registerCapes() {
+	database.RegisterCape(capes.CreeperCape{})
+}
+
+func initBots(tx *world.Tx) {
+	core.BotMark = createBot("Mark", tx)
+	utils.Panics(user.New(core.BotMark, true))
+	lobby.Join(core.BotMark)
+
+	core.BotSam = createBot("Sam", tx)
+	utils.Panics(user.New(core.BotSam, true))
+	lobby.Join(core.BotSam)
+
+	core.BotSteven = createBot("Steven", tx)
+	utils.Panics(user.New(core.BotSteven, true))
+	lobby.Join(core.BotSteven)
+}
+
+func createBot(name string, tx *world.Tx) *player.Player {
+	return npc.Create(npc.Settings{
+		Name:     name,
+		Skin:     npc.MustSkin(npc.MustParseTexture(path.Join(".", "config", "skins", fmt.Sprintf("%v.png", strings.ToLower(name)))), npc.DefaultModel),
+		Position: core.Config.Hub.SpawnPoint,
+		Scale:    1,
+	}, tx, nil)
 }

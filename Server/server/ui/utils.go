@@ -6,10 +6,6 @@ import (
 	"github.com/df-mc/dragonfly/server/world"
 )
 
-const (
-	GameSelector = "game.selector"
-)
-
 var values = make(map[*world.EntityHandle]map[string]interface{})
 
 func Store[T any](pl *world.EntityHandle, key string, value T) {

@@ -24,7 +24,9 @@ func TranslateWithH(entityHandle *world.EntityHandle, tx *world.Tx) LangConfig {
 
 type LangConfig struct {
 	Misc struct {
-		NowPlaying string
+		NowPlaying       string
+		SelectedWoodSkin string
+		SelectedCape     string
 	}
 
 	Commands struct {

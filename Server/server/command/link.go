@@ -31,7 +31,6 @@ func (LinkCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 				pl.Message(text.Colourf(language.Translate(pl).Commands.Error.LinkExpired))
 			}
 		})
-		fmt.Println(language.Translate(pl).Commands.Success.Link)
 		o.Print(text.Colourf(language.Translate(pl).Commands.Success.Link, server.Config.Prefix, api.RegistrationCodes[pl.UUID()]))
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))

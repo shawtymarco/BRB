@@ -84,7 +84,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Color()).Name(u.Data))
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	bwGame.ForEachPlayer(func(pl *player.Player) {
+	bwGame.ForEachActivePlayer(func(pl *player.Player) {
 		pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
 	})
 }
@@ -126,22 +126,26 @@ func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, a
 	if s, ok := src.(entity.AttackDamageSource); ok {
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
+			u.LastHit = attacker.H()
 			if pl.Health() <= *damage {
-				ctx.Cancel()
-
 				onDeath(h.game, pl, u, ua)
+				ctx.Cancel()
 			}
 		}
 	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
 		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
-			if pla, ok := ea.(*player.Player); ok {
+			if pla, ok := ea.(*player.Player); ok && pl.Health() <= *damage {
 				onDeath(h.game, pl, u, user.LookupPlayer(pla))
+				ctx.Cancel()
 				return
 			}
 		}
-		onDeath(h.game, pl, u, nil)
-		ctx.Cancel()
-	} else {
+
+		if pl.Health() <= *damage {
+			onDeath(h.game, pl, u, nil)
+			ctx.Cancel()
+		}
+	} else if pl.Health() <= *damage {
 		onDeath(h.game, pl, u, nil)
 		ctx.Cancel()
 	}
@@ -159,10 +163,13 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		finalKill = text.Colourf("<bold><aqua>FINAL KILL!</aqua></bold>")
 		g.PlayerTeam(pl).RemovePlayerFromActive(pl)
 
-		if g.typeGame == game.TypeBedWars {
-			ua.Data.Games.BedWars.FinalKills++
-		} else {
-			ua.Data.Games.BedFight.FinalKills++
+		if ua != nil {
+			ua.GameInfo.BedWars.FinalKills++
+			if g.typeGame == game.TypeBedWars {
+				ua.Data.Games.BedWars.FinalKills++
+			} else {
+				ua.Data.Games.BedFight.FinalKills++
+			}
 		}
 	} else {
 		h := pl.H()
@@ -184,14 +191,18 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			}
 		}()
 
-		if g.typeGame == game.TypeBedWars {
-			ua.Data.Games.BedWars.Kills++
-		} else {
-			ua.Data.Games.BedFight.Kills++
+		if ua != nil {
+			ua.GameInfo.BedWars.Kills++
+			if g.typeGame == game.TypeBedWars {
+				ua.Data.Games.BedWars.Kills++
+			} else {
+				ua.Data.Games.BedFight.Kills++
+			}
 		}
+
 	}
 
-	g.ForEachPlayer(func(p *player.Player) {
+	g.ForEachActivePlayer(func(p *player.Player) {
 		if ua == nil {
 			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Color()).Name(u.Data), finalKill))
 		} else {
@@ -200,7 +211,6 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	})
 
 	if ua != nil {
-		ua.GameInfo.BedWars.Kills++
 		ua.Player().PlaySound(sound.Experience{})
 	}
 
@@ -263,6 +273,7 @@ func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]it
 
 		h.game.Teams()[teamIndex].Status = game.BedBroken
 
+		u.GameInfo.BedWars.BedsBroken++
 		if h.game.typeGame == game.TypeBedWars {
 			u.Data.Games.BedWars.BedsBroken++
 		} else {

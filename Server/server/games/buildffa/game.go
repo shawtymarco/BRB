@@ -26,7 +26,7 @@ func NewBuildFFA() {
 	go func() {
 		for range time.NewTicker(250 * time.Millisecond).C {
 			var users []*user.User
-			Game.ForEachPlayer(func(pl *player.Player) {
+			Game.ForEachActivePlayer(func(pl *player.Player) {
 				users = append(users, user.LookupPlayer(pl))
 			})
 
@@ -34,7 +34,7 @@ func NewBuildFFA() {
 				return b.GameInfo.BuildFFA.Kills - a.GameInfo.BuildFFA.Kills
 			})
 
-			Game.ForEachPlayer(func(pl *player.Player) {
+			Game.ForEachActivePlayer(func(pl *player.Player) {
 				u := user.LookupPlayer(pl)
 				u.Scoreboard.Set(0, text.Colourf("         <yellow>▷ <white>Season 1</white> ◁</yellow>"))
 				u.Scoreboard.Set(1, "§0 ")
@@ -78,4 +78,7 @@ func (b *BuildFFA) Handler() player.Handler {
 }
 
 func (b *BuildFFA) Reward(player *player.Player) {
+}
+
+func (b *BuildFFA) Punish(player *player.Player) {
 }
