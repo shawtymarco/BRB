@@ -13,7 +13,7 @@ type Villager struct {
 	living.NopLivingType
 }
 
-func NewVillager(pos mgl64.Vec3, tx *world.Tx, name, handler living.Handler) *living.Living {
+func NewVillager(pos mgl64.Vec3, name string, handler living.Handler, tx *world.Tx) *living.Living {
 	m := Villager{}
 	conf := living.Config{
 		EntityType: m,
@@ -28,7 +28,7 @@ func NewVillager(pos mgl64.Vec3, tx *world.Tx, name, handler living.Handler) *li
 		EyeHeight: 0.3,
 		Handler:   handler,
 	}
-	l := tx.AddEntity(world.EntitySpawnOpts{NameTag: "<green>Shop Villager</green>", Position: pos}.New(conf.EntityType, conf)).(*living.Living)
+	l := tx.AddEntity(world.EntitySpawnOpts{NameTag: name, Position: pos}.New(conf.EntityType, conf)).(*living.Living)
 	return l
 }
 

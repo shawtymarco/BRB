@@ -11,6 +11,7 @@ import (
 	"server/server/database"
 	"server/server/game"
 	"server/server/games/bedwars"
+	"server/server/games/bedwars/generators"
 	"server/server/games/buildffa"
 	"server/server/games/lobby"
 	"server/server/language"
@@ -57,6 +58,7 @@ func main() {
 
 	c := core.DefaultConfig()
 	conf := utils.Panics(c.Config(log))
+	conf.Entities = conf.Entities.Config().New([]world.EntityType{&generators.GeneratorBlockType{}})
 	conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
 	conf.ReadOnlyWorld = true
 	srv := conf.New()

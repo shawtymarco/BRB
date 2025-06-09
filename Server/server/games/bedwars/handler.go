@@ -317,6 +317,20 @@ func (Handler) HandlePunchAir(ctx *player.Context) {
 	listener.HandlePunchAir(ctx)
 }
 
+func (h Handler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
+	pl := ctx.Val()
+	gen := h.game.NearestGenerator(pl.Position())
+
+	genPlayers := gen.PlayersWithin()
+	if len(genPlayers) > 1 {
+		ctx.Cancel()
+
+		for _, p := range genPlayers {
+			utils.Panics(p.Inventory().AddItem(item.NewStack(i.Item(), i.Count()/len(genPlayers))))
+		}
+	}
+}
+
 func (Handler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
 }
@@ -349,10 +363,12 @@ func giveKit(pl *player.Player, g *BedWars) {
 	}
 
 	utils.Panic(pl.Inventory().SetItem(0, item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)))
-	utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1)))
-	utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1)))
-	utils.Panic(pl.Inventory().SetItem(3, item.NewStack(item.Shears{}, 1)))
-	utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: woolColor}, 64)))
+	if g.Type() == game.TypeBedFight {
+		utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1)))
+		utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1)))
+		utils.Panic(pl.Inventory().SetItem(3, item.NewStack(item.Shears{}, 1)))
+		utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: woolColor}, 64)))
+	}
 
 	pl.Armour().Set(
 		item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: c}}, 1),

@@ -1,0 +1,32 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "bedwars:generator_block",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "air": "textures/entity/generator_block/air",
+        "diamond": "textures/entity/generator_block/diamond",
+        "emerald": "textures/entity/generator_block/emerald"
+      },
+      "geometry": {
+        "default": "geometry.generator_block"
+      },
+      "render_controllers": [
+        "controller.render.generator_block"
+      ],
+      "animations": {
+        "rotate": "animation.generator_block.rotate"
+      },
+      "scripts": {
+        "animate": [
+          "rotate"
+        ]
+      },
+      "enable_attachables": false,
+      "hide_armor": true
+    }
+  }
+}

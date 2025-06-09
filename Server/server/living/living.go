@@ -50,8 +50,8 @@ func (l *Living) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	}
 
 	immunity := l.immuneDuration
-	ctx := event.C(l)
-	if l.handler.HandleHurt(ctx, totalDamage, immune, &immunity, src); ctx.Cancelled() {
+	ctx := event.C[*Living](l)
+	if l.handler.HandleHurt(*ctx, totalDamage, immune, &immunity, src); ctx.Cancelled() {
 		return 0, false
 	}
 	l.setAttackImmunity(immunity, totalDamage)
@@ -415,7 +415,7 @@ func (l *Living) LastDamage() float64 {
 func (l *Living) Tick(tx *world.Tx, current int64) {
 	l.age += 50 * time.Millisecond
 	ctx := event.C(l)
-	l.handler.HandleTick(ctx, tx)
+	l.handler.HandleTick(*ctx, tx)
 
 	if ctx.Cancelled() || l.Dead() {
 		return

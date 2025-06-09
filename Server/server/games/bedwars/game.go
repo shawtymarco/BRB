@@ -2,10 +2,13 @@ package bedwars
 
 import (
 	"fmt"
+	"github.com/go-gl/mathgl/mgl64"
 	"math/rand"
 	"server/server"
 	"server/server/database"
 	"server/server/game"
+	"server/server/games/bedwars/generators"
+	"server/server/games/bedwars/shop"
 	"server/server/games/lobby"
 	language2 "server/server/language"
 	"server/server/user"
@@ -14,6 +17,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/block"
+
+	"github.com/df-mc/dragonfly/server/item"
 
 	"github.com/df-mc/dragonfly/server/player/title"
 
@@ -43,6 +50,12 @@ type BedWars struct {
 	isCustom   bool
 	mapIndex   int
 	startingIn time.Duration
+
+	ironGeneratorSettings    *generators.GeneratorSettings
+	goldGeneratorSettings    *generators.GeneratorSettings
+	diamondGeneratorSettings *generators.GeneratorSettings
+	emeraldGeneratorSettings *generators.GeneratorSettings
+	generators               []*generators.GeneratorBlockType
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
@@ -60,6 +73,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	mapName := g.Maps()[g.mapIndex]
 	g.Game = game.NewGame(newId, utils.Panics(server.WorldManager.World(mapName)), "")
 	g.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1248405762204504066", "1152316442709073941"} // TODO: REMOVE DEBUG
+
+	g.World().Exec(func(tx *world.Tx) {
+		g.initBedWarsFeatures(tx)
+	})
+
 	go func() {
 		ticker := time.NewTicker(250 * time.Millisecond)
 		for range ticker.C {
@@ -90,6 +108,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								u.Data.Games.BedWars.GamesPlayed++
 							} else {
 								u.Data.Games.BedFight.GamesPlayed++
+							}
+
+							for _, gen := range g.generators {
+								gen.Active = true
 							}
 						})
 					} else {
@@ -143,6 +165,8 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 						lobby.Join(pl)
 					}
+
+					utils.Panic(tx.World().Close())
 				})
 				break
 			default:
@@ -152,6 +176,56 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	}()
 
 	return g
+}
+
+func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
+	for _, pos := range b.MapConfig().ShopVillagerPositions {
+		shop.NewVillager(pos, text.Colourf("<green>Shop Villager</green>"), shop.ItemsVillagerHandler{}, tx)
+	}
+	for _, pos := range b.MapConfig().UpgradesVillagerPositions {
+		shop.NewVillager(pos, text.Colourf("<green>Upgrades Villager</green>"), shop.UpgradesVillagerHandler{}, tx)
+	}
+
+	b.ironGeneratorSettings = &generators.GeneratorSettings{
+		Resource:  item.NewStack(item.IronIngot{}, 1),
+		Tier:      1,
+		Cap:       48,
+		SpawnRate: 400 * time.Millisecond,
+	}
+	b.goldGeneratorSettings = &generators.GeneratorSettings{
+		Resource:  item.NewStack(item.GoldIngot{}, 1),
+		Tier:      1,
+		Cap:       12,
+		SpawnRate: 4 * time.Second,
+	}
+	b.diamondGeneratorSettings = &generators.GeneratorSettings{
+		Block:     block.Diamond{},
+		Resource:  item.NewStack(item.Diamond{}, 1),
+		Tier:      1,
+		Name:      text.Colourf("<bold><diamond>Diamond</diamond></bold>"),
+		Cap:       8,
+		SpawnRate: 30 * time.Second,
+	}
+	b.emeraldGeneratorSettings = &generators.GeneratorSettings{
+		Block:     block.Emerald{},
+		Resource:  item.NewStack(item.Emerald{}, 1),
+		Tier:      1,
+		Name:      text.Colourf("<bold><emerald>Emerald</emerald></bold>"),
+		Cap:       6,
+		SpawnRate: 66 * time.Second,
+	}
+
+	for _, pos := range b.MapConfig().IronGenerators {
+		b.generators = append(b.generators, b.ironGeneratorSettings.New(pos, tx), b.goldGeneratorSettings.New(pos, tx))
+	}
+
+	for _, pos := range b.MapConfig().DiamondGenerators {
+		b.generators = append(b.generators, b.diamondGeneratorSettings.New(pos, tx))
+	}
+
+	for _, pos := range b.MapConfig().EmeraldGenerators {
+		b.generators = append(b.generators, b.emeraldGeneratorSettings.New(pos, tx))
+	}
 }
 
 func (b *BedWars) Type() game.TypeGame {
@@ -284,6 +358,16 @@ func (b *BedWars) Punish(pl *player.Player) {
 		u.Data.Games.BedFight.Losses++
 		u.Data.Games.BedFight.WinStreak = 0
 	}
+}
+
+func (b *BedWars) NearestGenerator(pos mgl64.Vec3) *generators.GeneratorBlockType {
+	var nearestGen *generators.GeneratorBlockType
+	for _, gen := range b.generators {
+		if nearestGen == nil || utils.Distance(pos, gen.Position()) < utils.Distance(pos, nearestGen.Position()) {
+			nearestGen = gen
+		}
+	}
+	return nearestGen
 }
 
 func sendWaitingScoreboard(pl *player.Player, g *BedWars) {

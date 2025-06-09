@@ -8,7 +8,7 @@ import (
 )
 
 type UpgradesVillagerHandler struct {
-	living.Handler
+	living.NopHandler
 }
 
 func (h UpgradesVillagerHandler) HandleHurt(ctx living.Context, damage float64, immune bool, immunity *time.Duration, src world.DamageSource) {
