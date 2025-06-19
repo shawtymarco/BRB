@@ -51,6 +51,8 @@ func (l *Living) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 
 	immunity := l.immuneDuration
 	ctx := event.C[*Living](l)
+	l.handler.HandleHurt(*ctx, totalDamage, immune, &immunity, src)
+
 	if l.handler.HandleHurt(*ctx, totalDamage, immune, &immunity, src); ctx.Cancelled() {
 		return 0, false
 	}

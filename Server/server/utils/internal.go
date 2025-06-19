@@ -151,10 +151,3 @@ func Delete(url string, contentType string, body io.Reader) (*http.Response, err
 	req.Header.Set("Content-Type", contentType)
 	return http.DefaultClient.Do(req)
 }
-
-func Question[T any](cond bool, o1, o2 T) T {
-	if cond {
-		return o1
-	}
-	return o2
-}

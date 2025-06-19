@@ -12,7 +12,7 @@ func RegisterCommands() {
 	cmd.Register(cmd.New("color", "To show list of colors", nil, ColorCommand{}))
 	cmd.Register(cmd.New("rank", "To set a specific player's rank", nil, RankCommand{}))
 
-	// Player Commands
+	// player Commands
 	cmd.Register(cmd.New("ping", "To check a specific player's ping", nil, PingCommand{}))
 	cmd.Register(cmd.New("link", "To link your minecraft account with your discord account", nil, LinkCommand{}))
 	cmd.Register(cmd.New("join", "To join a ranked BedWars game you queued in from Discord", nil, JoinCommand{}))

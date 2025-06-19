@@ -29,7 +29,7 @@ var ChatPrefixes = []string{
 
 var RankPrefixes = []string{
 	"<lapis>Owner</lapis>", "<diamond>Manager</diamond>", "<dark-green>Admin</dark-green>", "<amethyst>Moderator</amethyst>", "<copper>Helper</copper>",
-	"<dark-purple>Prime</dark-purple>", "<aqua>Premium</aqua>", "<gold>Media Partner</gold>", "<quartz>Booster</quartz>", "<grey>Player</grey>",
+	"<dark-purple>Prime</dark-purple>", "<aqua>Premium</aqua>", "<gold>Media Partner</gold>", "<quartz>Booster</quartz>", "<grey>player</grey>",
 }
 
 func (r Rank) Shortened() string {

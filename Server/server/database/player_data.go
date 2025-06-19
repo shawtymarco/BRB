@@ -25,6 +25,7 @@ type PlayerData struct {
 	ProtocolId string
 	Statistics Statistics
 	Cosmetics  Cosmetics
+	Settings   Settings
 	Games      Games
 }
 
@@ -60,6 +61,23 @@ type Cosmetics struct {
 	SelectedWoodType block.WoodType
 	SelectedCape     string
 }
+
+type Settings struct {
+	HotBarConfig   [9]HotBarCategory
+	QuickBuyConfig map[int]*int
+}
+
+type HotBarCategory int
+
+const (
+	Melee HotBarCategory = iota
+	Tools
+	Bows
+	Blocks
+	Potions
+	TNT
+	Compass
+)
 
 type Games struct {
 	BedWars struct {

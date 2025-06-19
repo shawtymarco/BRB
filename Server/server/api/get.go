@@ -6,8 +6,9 @@ import (
 	"server/server/database"
 	"server/server/game"
 	"server/server/games/bedwars"
-	"server/server/utils"
 	"strconv"
+
+	"github.com/samber/lo"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,7 +44,7 @@ func initGetRequests(rg *gin.RouterGroup) {
 	rg.GET("/games/create", jwtAuthMiddleware(), func(c *gin.Context) {
 		teamSize, _ := strconv.Atoi(c.Query("teamSize"))
 		teamCount, _ := strconv.Atoi(c.Query("teamCount"))
-		isCustom := utils.Question(c.Query("custom") == "1", true, false)
+		isCustom := lo.If(c.Query("custom") == "1", true).Else(false)
 
 		g := bedwars.NewBedWars(game.TypeBedWars, teamSize, teamCount, isCustom)
 

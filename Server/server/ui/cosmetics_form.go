@@ -4,12 +4,12 @@ import (
 	"server/server/database"
 	"server/server/language"
 	"server/server/user"
-	"server/server/utils"
 
 	"github.com/df-mc/dragonfly/server/block"
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/player/form"
 	"github.com/df-mc/dragonfly/server/world"
+	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
@@ -73,7 +73,7 @@ func (w WoodSkinsForm) SendTo(pl *player.Player) {
 		f = f.WithButtons(
 			AddButtonWithValue(
 				pl,
-				text.Colourf("%v%v", wt.Name(), utils.Question(u.Data.Cosmetics.SelectedWoodType == wt, text.Colourf("\n<green>Selected</green>"), "")),
+				text.Colourf("%v%v", wt.Name(), lo.If(u.Data.Cosmetics.SelectedWoodType == wt, text.Colourf("\n<green>Selected</green>")).Else("")),
 				"",
 				wt,
 			),
@@ -110,7 +110,7 @@ func (c CapesForm) SendTo(pl *player.Player) {
 		f = f.WithButtons(
 			AddButtonWithValue(
 				pl,
-				text.Colourf("%v%v", cape.Name(), utils.Question(u.Data.Cosmetics.SelectedCape == cape.Identifier(), text.Colourf("\n<green>Selected</green>"), "")),
+				text.Colourf("%v%v", cape.Name(), lo.If(u.Data.Cosmetics.SelectedCape == cape.Identifier(), text.Colourf("\n<green>Selected</green>")).Else("")),
 				"",
 				cape,
 			),

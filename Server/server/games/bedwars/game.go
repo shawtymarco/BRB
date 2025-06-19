@@ -2,13 +2,10 @@ package bedwars
 
 import (
 	"fmt"
-	"github.com/go-gl/mathgl/mgl64"
 	"math/rand"
 	"server/server"
 	"server/server/database"
 	"server/server/game"
-	"server/server/games/bedwars/generators"
-	"server/server/games/bedwars/shop"
 	"server/server/games/lobby"
 	language2 "server/server/language"
 	"server/server/user"
@@ -18,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/df-mc/dragonfly/server/block"
-
 	"github.com/df-mc/dragonfly/server/item"
+
+	"github.com/go-gl/mathgl/mgl64"
 
 	"github.com/df-mc/dragonfly/server/player/title"
 
@@ -51,11 +48,14 @@ type BedWars struct {
 	mapIndex   int
 	startingIn time.Duration
 
-	ironGeneratorSettings    *generators.GeneratorSettings
-	goldGeneratorSettings    *generators.GeneratorSettings
-	diamondGeneratorSettings *generators.GeneratorSettings
-	emeraldGeneratorSettings *generators.GeneratorSettings
-	generators               []*generators.GeneratorBlockType
+	ironGeneratorSettings    *GeneratorSettings
+	goldGeneratorSettings    *GeneratorSettings
+	diamondGeneratorSettings *GeneratorSettings
+	emeraldGeneratorSettings *GeneratorSettings
+	generators               []*GeneratorBlockType
+
+	pickaxeTierPlayers map[*player.Player]int
+	axeTierPlayers     map[*player.Player]int
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
@@ -74,10 +74,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	g.Game = game.NewGame(newId, utils.Panics(server.WorldManager.World(mapName)), "")
 	g.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1248405762204504066", "1152316442709073941"} // TODO: REMOVE DEBUG
 
-	g.World().Exec(func(tx *world.Tx) {
-		g.initBedWarsFeatures(tx)
-	})
-
 	go func() {
 		ticker := time.NewTicker(250 * time.Millisecond)
 		for range ticker.C {
@@ -95,9 +91,14 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				if len(g.OriginalPlayers()) != teamSize*teamCount {
 					g.SetStage(game.Waiting)
 					g.startingIn = startingInDuration
+
 				} else {
 					if g.startingIn == 0 {
 						g.SetStage(game.Running)
+						g.World().Exec(func(tx *world.Tx) {
+							g.initBedWarsFeatures(tx)
+						})
+
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							team := g.PlayerTeam(pl)
 							pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
@@ -129,10 +130,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.ForEachActivePlayer(func(pl *player.Player) {
 						if g.WinningTeam().Contains(pl) {
 							g.Reward(pl)
-							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouWonTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Color(), strings.ToUpper(g.WinningTeam().Color()), g.WinningTeam().Color())))
+							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouWonTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour())))
 						} else {
 							g.Punish(pl)
-							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouLostTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Color(), strings.ToUpper(g.WinningTeam().Color()), g.WinningTeam().Color())))
+							pl.SendTitle(title.New(text.Colourf(language2.Translate(pl).BedWars.YouLostTitle)).WithSubtitle(text.Colourf(language2.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour())))
 						}
 					})
 				} else {
@@ -180,35 +181,36 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 	for _, pos := range b.MapConfig().ShopVillagerPositions {
-		shop.NewVillager(pos, text.Colourf("<green>Shop Villager</green>"), shop.ItemsVillagerHandler{}, tx)
+		t := b.NearestTeam(pos)
+		v := NewShopVillager(pos, text.Colourf("<green>Shop Villager</green>"), b, t, tx)
+		v.LookAt(b.MapConfig().TeamSpawnPoints[t.ID()].Sub(mgl64.Vec3{0, 2, 0}), tx)
 	}
-	for _, pos := range b.MapConfig().UpgradesVillagerPositions {
-		shop.NewVillager(pos, text.Colourf("<green>Upgrades Villager</green>"), shop.UpgradesVillagerHandler{}, tx)
-	}
+	//for _, pos := range b.MapConfig().UpgradesVillagerPositions {
+	//	nearestTeam := b.NearestTeam(pos)
+	//	NewShopVillager(pos, text.Colourf("<green>Upgrades ItemsShopVillager</green>"), b, nearestTeam, tx)
+	//}
 
-	b.ironGeneratorSettings = &generators.GeneratorSettings{
-		Resource:  item.NewStack(item.IronIngot{}, 1),
+	b.ironGeneratorSettings = &GeneratorSettings{
+		Resource:  Iron,
 		Tier:      1,
 		Cap:       48,
 		SpawnRate: 400 * time.Millisecond,
 	}
-	b.goldGeneratorSettings = &generators.GeneratorSettings{
-		Resource:  item.NewStack(item.GoldIngot{}, 1),
+	b.goldGeneratorSettings = &GeneratorSettings{
+		Resource:  Gold,
 		Tier:      1,
 		Cap:       12,
 		SpawnRate: 4 * time.Second,
 	}
-	b.diamondGeneratorSettings = &generators.GeneratorSettings{
-		Block:     block.Diamond{},
-		Resource:  item.NewStack(item.Diamond{}, 1),
+	b.diamondGeneratorSettings = &GeneratorSettings{
+		Resource:  Diamond,
 		Tier:      1,
 		Name:      text.Colourf("<bold><diamond>Diamond</diamond></bold>"),
 		Cap:       8,
 		SpawnRate: 30 * time.Second,
 	}
-	b.emeraldGeneratorSettings = &generators.GeneratorSettings{
-		Block:     block.Emerald{},
-		Resource:  item.NewStack(item.Emerald{}, 1),
+	b.emeraldGeneratorSettings = &GeneratorSettings{
+		Resource:  Emerald,
 		Tier:      1,
 		Name:      text.Colourf("<bold><emerald>Emerald</emerald></bold>"),
 		Cap:       6,
@@ -252,6 +254,8 @@ func (b *BedWars) Reward(pl *player.Player) {
 	b.ForEachOriginalPlayer(func(p *player.Player) {
 		sorted = append(sorted, pl)
 	})
+
+	fmt.Println(b.OriginalPlayers())
 
 	slices.SortFunc(sorted, func(a, b *player.Player) int {
 		ua := user.LookupPlayer(a)
@@ -360,14 +364,48 @@ func (b *BedWars) Punish(pl *player.Player) {
 	}
 }
 
-func (b *BedWars) NearestGenerator(pos mgl64.Vec3) *generators.GeneratorBlockType {
-	var nearestGen *generators.GeneratorBlockType
+func (b *BedWars) NearestGenerator(pos mgl64.Vec3, resource Resource) *GeneratorBlockType {
+	var nearestGen *GeneratorBlockType
 	for _, gen := range b.generators {
-		if nearestGen == nil || utils.Distance(pos, gen.Position()) < utils.Distance(pos, nearestGen.Position()) {
+		if gen.Resource == resource && (nearestGen == nil || utils.Distance(pos, gen.Position()) < utils.Distance(pos, nearestGen.Position())) {
 			nearestGen = gen
 		}
 	}
 	return nearestGen
+}
+
+func (b *BedWars) NearestTeam(pos mgl64.Vec3) *game.Team {
+	var nearestTeam *game.Team
+	for _, t := range b.Teams() {
+		if nearestTeam == nil || utils.Distance(pos, b.MapConfig().TeamSpawnPoints[t.ID()]) < utils.Distance(pos, b.MapConfig().TeamSpawnPoints[nearestTeam.ID()]) {
+			nearestTeam = t
+		}
+	}
+	return nearestTeam
+}
+
+func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
+	if canAfford(pl, s) {
+		cost, resource := getCost(s)
+		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
+
+		if boots, ok := s.Item().(item.Boots); ok {
+			pl.Armour().Set(
+				item.NewStack(item.Helmet{Tier: boots.Tier}, 1).AsUnbreakable(),
+				item.NewStack(item.Chestplate{Tier: boots.Tier}, 1).AsUnbreakable(),
+				item.NewStack(item.Leggings{Tier: boots.Tier}, 1).AsUnbreakable(),
+				item.NewStack(item.Boots{Tier: boots.Tier}, 1).AsUnbreakable(),
+			)
+		}
+
+		if n, err := pl.Inventory().AddItem(s); err != nil {
+			_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
+			_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
+			return false
+		}
+		return true
+	}
+	return false
 }
 
 func sendWaitingScoreboard(pl *player.Player, g *BedWars) {
@@ -417,7 +455,7 @@ func sendStartingScoreboard(pl *player.Player, g *BedWars) {
 
 func sendRunningScoreboard(pl *player.Player, g *BedWars) {
 	u := user.LookupPlayer(pl)
-	u.Scoreboard.Set(0, text.Colourf("          <yellow>▷ <white>Season 1</white> ◁</yellow>"))
+	u.Scoreboard.Set(0, text.Colourf("       <yellow>▷ <white>Season 1</white> ◁</yellow>"))
 	u.Scoreboard.Set(1, "§0")
 	i := 2
 	for _, t := range g.Teams() {
@@ -436,10 +474,10 @@ func sendRunningScoreboard(pl *player.Player, g *BedWars) {
 
 		u.Scoreboard.Set(i, text.Colourf(
 			"<%v>%v</%v> <white>%v:</white> <bold>%v</bold>",
-			t.Color(),
-			strings.ToUpper(string([]rune(t.Color())[0])),
-			t.Color(),
-			cases.Title(language.English).String(strings.Replace(t.Color(), "-", " ", 1)),
+			t.Colour(),
+			strings.ToUpper(string([]rune(t.Colour())[0])),
+			t.Colour(),
+			cases.Title(language.English).String(strings.Replace(t.Colour(), "-", " ", 1)),
 			statusStr,
 		))
 

@@ -1,4 +1,4 @@
-package ui
+package utils
 
 import (
 	"github.com/df-mc/dragonfly/server/event"
@@ -13,6 +13,7 @@ type ChestUIHandler struct {
 }
 
 func (h ChestUIHandler) HandleTake(ctx *event.Context[inventory.Holder], slot int, stack item.Stack) {
+	ctx.Val()
 	if h.Funcs[0] != nil {
 		h.Funcs[0](ctx, slot, stack, h.Inventory)
 	}

@@ -1,15 +1,18 @@
-package generators
+package bedwars
 
 import (
 	"server/server/living"
 	"server/server/utils"
+	"slices"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/item"
+	"github.com/samber/lo"
 
 	"github.com/df-mc/dragonfly/server/block"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/entity"
-	"github.com/df-mc/dragonfly/server/item"
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/go-gl/mathgl/mgl64"
@@ -19,8 +22,7 @@ import (
 type GeneratorSettings struct {
 	Active bool
 
-	Block    world.Block
-	Resource item.Stack
+	Resource Resource
 
 	Tier int
 	Name string
@@ -32,10 +34,6 @@ type GeneratorSettings struct {
 func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockType {
 	t := &GeneratorBlockType{GeneratorSettings: gs}
 
-	if gs.Block == nil {
-		gs.Block = block.Air{}
-	}
-
 	conf := living.Config{
 		EntityType: t,
 		MaxHealth:  1,
@@ -45,15 +43,15 @@ func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockTy
 			Drag:              0,
 			DragBeforeGravity: false,
 		},
-		Drops: []living.Drop{living.NewDropWithStack(gs.Resource)},
+		Drops: []living.Drop{living.NewDropWithStack(item.NewStack(gs.Resource.Item(), 1))},
 	}
 
 	gb := tx.AddEntity(world.EntitySpawnOpts{Position: pos}.New(conf.EntityType, conf)).(*GeneratorBlockType)
 	gb.SetImmobile(true, tx)
 
-	_, ok1 := gb.Block.(block.Air)
-	_, ok2 := gb.Block.(block.Diamond)
-	gb.WithVariant(int32(utils.Question(ok1, 0, utils.Question(ok2, 1, 2))))
+	_, ok1 := gb.Resource.Block().(block.Air)
+	_, ok2 := gb.Resource.Block().(block.Diamond)
+	gb.WithVariant(int32(lo.If(ok1, 0).ElseIf(ok2, 1).Else(2)))
 	gb.lastSpawn = time.Now()
 	return gb
 }
@@ -66,6 +64,8 @@ type GeneratorBlockType struct {
 
 	tick      time.Duration
 	lastSpawn time.Time
+
+	queue []*player.Player
 }
 
 func (*GeneratorBlockType) EncodeEntity() string   { return "bedwars:generator_block" }
@@ -79,9 +79,9 @@ func (b *GeneratorBlockType) Open(tx *world.Tx, handle *world.EntityHandle, data
 	return b
 }
 
-func (b *GeneratorBlockType) PlayersWithin() []*player.Player {
+func (b *GeneratorBlockType) PlayersWithin(tx *world.Tx) []*player.Player {
 	var res []*player.Player
-	for e := range b.Tx().EntitiesWithin(cube.Box(-2, -2, -2, 2, 2, 2).Translate(b.Position())) {
+	for e := range tx.EntitiesWithin(cube.Box(-3, -3, -3, 3, 3, 3).Translate(b.Position())) {
 		if pl, ok := e.(*player.Player); ok {
 			res = append(res, pl)
 		}
@@ -100,10 +100,10 @@ func (b *GeneratorBlockType) CountResourcesWithin() (res int) {
 	return res
 }
 
-func (b *GeneratorBlockType) ResourcesWithin() []*entity.Ent {
+func (b *GeneratorBlockType) ResourcesWithin(tx *world.Tx) []*entity.Ent {
 	var res []*entity.Ent
 
-	for e := range b.Tx().EntitiesWithin(cube.Box(-2, -2, -2, 2, 2, 2).Translate(b.Position())) {
+	for e := range tx.EntitiesWithin(cube.Box(-2, -2, -2, 2, 2, 2).Translate(b.Position())) {
 		if ent, ok := e.(*entity.Ent); ok && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
 				res = append(res, ent)
@@ -113,6 +113,46 @@ func (b *GeneratorBlockType) ResourcesWithin() []*entity.Ent {
 	return res
 }
 
+func (b *GeneratorBlockType) UpdateQueue(tx *world.Tx) {
+	playersWithin := b.PlayersWithin(tx)
+
+	for _, p := range playersWithin {
+		if !slices.ContainsFunc(b.queue, func(p2 *player.Player) bool {
+			return p2.UUID() == p.UUID()
+		}) {
+			b.AddPlayer(p)
+		}
+	}
+
+	for _, p := range b.queue {
+		if !slices.ContainsFunc(playersWithin, func(p2 *player.Player) bool {
+			return p2.UUID() == p.UUID()
+		}) {
+			b.RemovePlayer(p)
+		}
+	}
+}
+
+func (b *GeneratorBlockType) Next() *player.Player {
+	pl := b.queue[0]
+	b.queue = b.queue[1:]
+	b.queue = append(b.queue, pl)
+	return pl
+}
+
+func (b *GeneratorBlockType) AddPlayer(pl *player.Player) {
+	b.queue = append(b.queue, pl)
+}
+
+func (b *GeneratorBlockType) RemovePlayer(pl *player.Player) {
+	for i, p := range b.queue {
+		if p == pl {
+			b.queue = append(b.queue[:i], b.queue[i+1:]...)
+			break
+		}
+	}
+}
+
 func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	if !b.Active {
 		b.Living.Tick(tx, current+1)
@@ -120,7 +160,7 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	}
 
 	remainingDur := b.SpawnRate - time.Now().Sub(b.lastSpawn)
-	if _, ok := b.Block.(block.Air); !ok {
+	if _, ok := b.Resource.Block().(block.Air); !ok {
 		b.SetNameTag(text.Colourf("<bold><yellow>Tier <red>%v</red></yellow></bold>\n%v\n<yellow>Spawns in <red>%.1f</red> seconds</yellow>", utils.IntToRoman(b.Tier), b.Name, remainingDur.Seconds()), tx)
 	}
 

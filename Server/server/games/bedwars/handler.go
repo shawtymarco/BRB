@@ -2,7 +2,6 @@ package bedwars
 
 import (
 	"fmt"
-	"image/color"
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
@@ -13,6 +12,8 @@ import (
 	"server/server/utils"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/item/potion"
 
 	"github.com/df-mc/dragonfly/server/player/title"
 
@@ -82,7 +83,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		panic("Unhandled game type")
 	}
 
-	pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Color()).Name(u.Data))
+	pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data))
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
 	bwGame.ForEachActivePlayer(func(pl *player.Player) {
@@ -105,10 +106,27 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	u := user.LookupPlayer(pl)
 
 	*msg = strings.ReplaceAll(*msg, "§r", "")
-	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Color()).Name(u.Data), *msg)
+	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), *msg)
 	*msg = text.Colourf(newMsg)
 
 	_, _ = fmt.Fprintf(chat.Global, *msg)
+}
+
+func (Handler) HandleItemConsume(ctx *player.Context, s item.Stack) {
+	if s, ok := s.Item().(item.Potion); ok {
+		pl := ctx.Val()
+		switch s.Type {
+		case potion.StrongLeaping():
+			pl.AddEffect(effect.New(effect.JumpBoost, 5, 45*time.Second))
+			break
+		case potion.StrongSwiftness():
+			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
+			break
+		case potion.LongInvisibility():
+			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
+			break
+		}
+	}
 }
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
@@ -130,6 +148,9 @@ func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, a
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
 			u.LastHit = attacker.H()
+
+			pl.RemoveEffect(effect.Invisibility)
+
 			if pl.Health() <= *damage {
 				onDeath(h.game, pl, u, ua)
 				ctx.Cancel()
@@ -155,6 +176,9 @@ func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, a
 }
 
 func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
+	for _, e := range pl.Effects() {
+		pl.RemoveEffect(e.Type())
+	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
 	pl.Inventory().Clear()
@@ -174,6 +198,13 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			}
 		}
 	} else {
+		if g.pickaxeTierPlayers[pl] > 1 {
+			g.pickaxeTierPlayers[pl]--
+		}
+		if g.axeTierPlayers[pl] > 1 {
+			g.axeTierPlayers[pl]--
+		}
+
 		h := pl.H()
 		go func() {
 			i := 5
@@ -201,15 +232,14 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 				ua.Data.Games.BedFight.Kills++
 			}
 		}
-
 	}
 
 	g.ForEachActivePlayer(func(p *player.Player) {
 		if ua == nil {
-			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Color()).Name(u.Data), finalKill))
+			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
 		} else {
-			c1 := g.PlayerTeam(pl).Color()
-			c2 := g.PlayerTeam(ua.Player()).Color()
+			c1 := g.PlayerTeam(pl).Colour()
+			c2 := g.PlayerTeam(ua.Player()).Colour()
 			p.Message(text.Colourf(
 				language.Translate(p).BedWars.KilledBy,
 				text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
@@ -242,6 +272,10 @@ func (h Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Blo
 	}
 
 	blocksPlaced[vec3ToString(pos.Vec3())] = b
+
+	if t, ok := b.(block.TNT); ok {
+		t.Ignite(pos, pl.Tx(), nil)
+	}
 }
 
 func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
@@ -292,7 +326,7 @@ func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]it
 			u.Data.Games.BedFight.BedsBroken++
 		}
 
-		pl.Message(text.Colourf(language.Translate(pl).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Color()).Name(u.Data)))
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Colour()).Name(u.Data)))
 
 		return
 	}
@@ -319,15 +353,56 @@ func (Handler) HandlePunchAir(ctx *player.Context) {
 
 func (h Handler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	pl := ctx.Val()
-	gen := h.game.NearestGenerator(pl.Position())
+	gen := h.game.NearestGenerator(pl.Position(), Iron)
 
-	genPlayers := gen.PlayersWithin()
-	if len(genPlayers) > 1 {
+	genPlayers := gen.PlayersWithin(pl.Tx())
+	if len(genPlayers) > 1 && !i.Empty() {
 		ctx.Cancel()
+		fmt.Println(1)
+		split(pl, genPlayers, h)
+	}
+}
 
-		for _, p := range genPlayers {
-			utils.Panics(p.Inventory().AddItem(item.NewStack(i.Item(), i.Count()/len(genPlayers))))
+func split(pl *player.Player, genPlayers []*player.Player, h Handler) {
+	genIron := h.game.NearestGenerator(pl.Position(), Iron)
+	genGold := h.game.NearestGenerator(pl.Position(), Gold)
+
+	f := func(gen *GeneratorBlockType) {
+		gen.UpdateQueue(pl.Tx())
+		for _, ent := range gen.ResourcesWithin(pl.Tx()) {
+			if be, ok := ent.Behaviour().(*entity.ItemBehaviour); ok {
+				if be.Item().Count() > 1 {
+					n := be.Item().Count() / len(genPlayers)
+					for _, p := range genPlayers {
+						pickUp(p, ent, item.NewStack(be.Item().Item(), n), false, pl.Tx())
+					}
+					utils.Panic(ent.Close())
+				} else {
+					pickUp(gen.Next(), ent, be.Item(), true, pl.Tx())
+				}
+				break
+			}
 		}
+	}
+
+	f(genIron)
+	f(genGold)
+}
+
+func pickUp(pl *player.Player, ent *entity.Ent, stack item.Stack, closeEnt bool, tx *world.Tx) {
+	_, _ = pl.Inventory().AddItem(stack)
+
+	collector, ok := world.Entity(pl).(entity.Collector)
+	if !ok {
+		return
+	}
+
+	for _, viewer := range tx.Viewers(ent.Position()) {
+		viewer.ViewEntityAction(ent, entity.PickedUpAction{Collector: collector})
+	}
+
+	if closeEnt {
+		utils.Panic(ent.Close())
 	}
 }
 
@@ -340,42 +415,30 @@ func vec3ToString(v mgl64.Vec3) string {
 }
 
 func giveKit(pl *player.Player, g *BedWars) {
-	teamColor := g.PlayerTeam(pl).Color()
-	var c color.RGBA
-	var woolColor item.Colour
-	switch teamColor {
-	case "red":
-		c = color.RGBA{R: 255}
-		woolColor = item.ColourRed()
-		break
-	case "blue":
-		c = color.RGBA{B: 255}
-		woolColor = item.ColourBlue()
-		break
-	case "green":
-		c = color.RGBA{G: 255}
-		woolColor = item.ColourGreen()
-		break
-	case "yellow":
-		c = color.RGBA{R: 255, G: 255}
-		woolColor = item.ColourYellow()
-		break
-	}
-
+	t := g.PlayerTeam(pl)
 	utils.Panic(pl.Inventory().SetItem(0, item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)))
 	if g.Type() == game.TypeBedFight {
 		utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1)))
 		utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1)))
 		utils.Panic(pl.Inventory().SetItem(3, item.NewStack(item.Shears{}, 1)))
-		utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: woolColor}, 64)))
+		utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: t.WoolColour()}, 64)))
 	}
 
-	pl.Armour().Set(
-		item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: c}}, 1),
-		item.NewStack(item.Chestplate{Tier: item.ArmourTierLeather{Colour: c}}, 1),
-		item.NewStack(item.Leggings{Tier: item.ArmourTierLeather{Colour: c}}, 1),
-		item.NewStack(item.Boots{Tier: item.ArmourTierLeather{Colour: c}}, 1),
-	)
+	if len(pl.Armour().Items()) == 0 {
+		pl.Armour().Set(
+			item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
+			item.NewStack(item.Chestplate{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
+			item.NewStack(item.Leggings{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
+			item.NewStack(item.Boots{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
+		)
+	}
+
+	if g.pickaxeTierPlayers[pl] != 0 {
+		_, _ = pl.Inventory().AddItem(pickaxeTier(pl, g.pickaxeTierPlayers[pl]))
+	}
+	if g.axeTierPlayers[pl] != 0 {
+		_, _ = pl.Inventory().AddItem(axeTier(pl, g.pickaxeTierPlayers[pl]))
+	}
 }
 
 func rewardResources(pl *player.Player, killed *player.Player) {

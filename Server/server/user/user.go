@@ -75,6 +75,10 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 			Cosmetics: database.Cosmetics{
 				SelectedWoodType: block.OakWood(),
 			},
+			Settings: database.Settings{
+				HotBarConfig:   [9]database.HotBarCategory(make([]database.HotBarCategory, 9)),
+				QuickBuyConfig: make(map[int]*int),
+			},
 		}
 		if err := server.Database.CreatePlayer(pd); err != nil {
 			return nil, err

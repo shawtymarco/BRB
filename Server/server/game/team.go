@@ -3,6 +3,8 @@ package game
 import (
 	"slices"
 
+	"github.com/df-mc/dragonfly/server/item"
+
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/world"
 )
@@ -81,8 +83,23 @@ func (t *Team) MovePlayerFromSpectate(pl *player.Player) {
 	t.activeHandles = append(t.activeHandles, pl.H())
 }
 
-func (t *Team) Color() string {
+func (t *Team) Colour() string {
 	return t.color
+}
+
+func (t *Team) WoolColour() item.Colour {
+	switch t.color {
+	case "red":
+		return item.ColourRed()
+	case "blue":
+		return item.ColourBlue()
+	case "green":
+		return item.ColourGreen()
+	case "yellow":
+		return item.ColourYellow()
+	}
+
+	return item.ColourBlack()
 }
 
 type Status int
