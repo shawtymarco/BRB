@@ -398,7 +398,7 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 			)
 		}
 
-		if n, err := pl.Inventory().AddItem(s); err != nil {
+		if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
 			_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
 			_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
 			return false
@@ -455,7 +455,7 @@ func sendStartingScoreboard(pl *player.Player, g *BedWars) {
 
 func sendRunningScoreboard(pl *player.Player, g *BedWars) {
 	u := user.LookupPlayer(pl)
-	u.Scoreboard.Set(0, text.Colourf("       <yellow>▷ <white>Season 1</white> ◁</yellow>"))
+	u.Scoreboard.Set(0, text.Colourf("   <yellow>▷ <white>Season 1</white> ◁</yellow>"))
 	u.Scoreboard.Set(1, "§0")
 	i := 2
 	for _, t := range g.Teams() {

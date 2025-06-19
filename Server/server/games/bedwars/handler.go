@@ -358,7 +358,6 @@ func (h Handler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	genPlayers := gen.PlayersWithin(pl.Tx())
 	if len(genPlayers) > 1 && !i.Empty() {
 		ctx.Cancel()
-		fmt.Println(1)
 		split(pl, genPlayers, h)
 	}
 }

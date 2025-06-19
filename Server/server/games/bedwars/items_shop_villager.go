@@ -152,16 +152,16 @@ func sendItemShopUI(shop *itemShop) {
 							menu.WithStacks(shop.itemShopBlocks()...)
 						}()
 					} else {
-						if shop.game.buyItem(pl, stack) {
-							pl.PlaySound(sound.Experience{})
-						} else {
-							cost, resource := getCost(stack)
-							go func() {
-								pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+						go func() {
+							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+							if shop.game.buyItem(pl, stack) {
+								pl.PlaySound(sound.Experience{})
+							} else {
+								cost, resource := getCost(stack)
 								_ = menuInv.SetItem(slot, shopify(pl, stack, resource, cost, false, true))
-							}()
-							pl.PlaySound(sound.Deny{})
-						}
+								pl.PlaySound(sound.Deny{})
+							}
+						}()
 					}
 				} else if qbMode.Equal(blazePowder) {
 					shop.isQuickBuy = false

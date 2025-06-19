@@ -4,7 +4,6 @@ import (
 	"server/server/game"
 	"server/server/games/buildffa"
 	"server/server/user"
-	"server/server/utils"
 	"strings"
 
 	"github.com/df-mc/dragonfly/server/item/potion"
@@ -186,12 +185,23 @@ func (s *itemShop) AllItemShops() []item.Stack {
 }
 
 func shopify(pl *player.Player, s item.Stack, resource Resource, cost int, owned bool, fullInv bool) item.Stack {
-	return s.WithCustomName(text.Colourf(
-		"<green>%v</green>\n<blue>Cost:</blue> %v\n\n%v",
-		utils.ItemDisplay(s),
-		resource.Name(cost),
-		text.Colourf(lo.If(owned, "<emerald>Purchased!</emerald>").ElseIf(pl != nil && !canAfford(pl, s), "<red>You cannot afford this!</red>").ElseIf(fullInv, text.Colourf("<red>Your inventory is full!</red>")).Else("<yellow>Click to purchase!</yellow>")),
-	)).WithValue("resource", int(resource)).WithValue("cost", cost)
+	s = s.WithValue("resource", int(resource)).WithValue("cost", cost)
+
+	infoMsg := "<yellow>Click to purchase!</yellow>"
+	if owned {
+		infoMsg = "<emerald>Purchased!</emerald>"
+	} else if !canAfford(pl, s) {
+		infoMsg = "<red>You cannot afford this!</red>"
+	} else if fullInv {
+		infoMsg = "<red>Your inventory is full!</red>"
+	}
+
+	return s.WithLore(
+		text.Colourf("<yellow>------------</yellow>"),
+		text.Colourf("<blue>Cost:</blue> %v", resource.Name(cost)),
+		"",
+		text.Colourf(infoMsg),
+	)
 }
 
 func editName(s item.Stack, customName string) item.Stack {
