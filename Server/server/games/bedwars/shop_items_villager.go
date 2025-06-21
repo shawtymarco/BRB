@@ -7,6 +7,8 @@ import (
 	"server/server/utils"
 	"slices"
 
+	"github.com/samber/lo"
+
 	"github.com/sandertv/gophertunnel/minecraft/text"
 
 	"github.com/bedrock-gophers/inv/inv"
@@ -30,7 +32,7 @@ type ItemsShopVillager struct {
 	Team *game.Team
 }
 
-func NewShopVillager(pos mgl64.Vec3, name string, game *BedWars, team *game.Team, tx *world.Tx) *ItemsShopVillager {
+func NewItemsVillager(pos mgl64.Vec3, name string, game *BedWars, team *game.Team, tx *world.Tx) *ItemsShopVillager {
 	m := &ItemsShopVillager{Game: game, Team: team}
 	conf := living.Config{
 		EntityType: m,
@@ -81,35 +83,39 @@ func sendItemShopUI(shop *itemShop) {
 
 	var qbSlot int
 
+	var inArmoury bool
+
 	menuInv.Handle(utils.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 
 			if slot >= 1 && slot <= 7 {
+				inArmoury = false
 				go func() {
 					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 					menuInv.Clear()
 					switch slot {
 					case 1:
-						menu.WithStacks(shop.itemShopBlocks()...)
+						menu.WithStacks(shop.Blocks()...)
 						return
 					case 2:
-						menu.WithStacks(shop.itemShopMelee()...)
+						menu.WithStacks(shop.Melee()...)
 						return
 					case 3:
-						menu.WithStacks(shop.itemShopArmour()...)
+						menu.WithStacks(shop.Armour()...)
+						inArmoury = true
 						return
 					case 4:
-						menu.WithStacks(shop.itemShopTools()...)
+						menu.WithStacks(shop.Tools()...)
 						return
 					case 5:
-						menu.WithStacks(shop.itemShopBows()...)
+						menu.WithStacks(shop.Bows()...)
 						return
 					case 6:
-						menu.WithStacks(shop.itemShopPotions()...)
+						menu.WithStacks(shop.Potions()...)
 						return
 					case 7:
-						menu.WithStacks(shop.itemShopUtility()...)
+						menu.WithStacks(shop.Utility()...)
 						return
 					}
 				}()
@@ -149,25 +155,36 @@ func sendItemShopUI(shop *itemShop) {
 						go func() {
 							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 							menuInv.Clear()
-							menu.WithStacks(shop.itemShopBlocks()...)
+							menu.WithStacks(shop.Blocks()...)
 						}()
 					} else {
 						go func() {
-							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
-							if shop.game.buyItem(pl, stack) {
-								pl.PlaySound(sound.Experience{})
-							} else {
-								cost, resource := getCost(stack)
-								_ = menuInv.SetItem(slot, shopify(pl, stack, resource, cost, false, true))
-								pl.PlaySound(sound.Deny{})
-							}
+							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+								t := pl.Armour().Boots().Item().(item.Boots).Tier
+								chain := t == item.ArmourTierChain{}
+								iron := t == item.ArmourTierIron{}
+								diamond := t == item.ArmourTierDiamond{}
+								boots, ok := stack.Item().(item.Boots)
+								owned := ok && (boots.Tier == item.ArmourTierDiamond{} && diamond || boots.Tier == item.ArmourTierIron{} && (diamond || iron) || boots.Tier == item.ArmourTierChain{} && (diamond || iron || chain))
+
+								if !owned && shop.game.buyItem(pl, stack) {
+									if _, ok := stack.Item().(item.Boots); ok {
+										menu.WithStacks(lo.If(inArmoury, shop.Armour()).Else(shop.itemShopDashboard(true))...)
+									}
+									pl.PlaySound(sound.Experience{})
+								} else {
+									resource, cost := getCost(stack)
+									_ = menuInv.SetItem(slot, shopify(pl, stack, resource, cost, owned, true))
+									pl.PlaySound(sound.Deny{})
+								}
+							})
 						}()
 					}
 				} else if qbMode.Equal(blazePowder) {
 					shop.isQuickBuy = false
 
 					var itemId int
-					for i, s2 := range shop.AllItemShops() {
+					for i, s2 := range shop.All() {
 						if s2.Equal(stack) {
 							itemId = i
 							break

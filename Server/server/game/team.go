@@ -16,7 +16,16 @@ type Team struct {
 	spectatorHandles []*world.EntityHandle
 	color            string
 
-	Status Status
+	Status   Status
+	Upgrades struct {
+		Sharpness     int
+		Protection    int
+		Haste         int
+		HealPool      int
+		GeneratorTier int
+
+		Traps [3]Trap
+	}
 }
 
 func (t *Team) ID() int {
@@ -102,10 +111,60 @@ func (t *Team) WoolColour() item.Colour {
 	return item.ColourBlack()
 }
 
+func (t *Team) TrapsCount() (count int) {
+	for _, trap := range t.Upgrades.Traps {
+		if trap != None {
+			count++
+		}
+	}
+	return count
+}
+
+func (t *Team) IsTrapsFull() bool {
+	return t.TrapsCount() == 3
+}
+
+func (t *Team) AddTrap(trap Trap) {
+	copy(t.Upgrades.Traps[0:], t.Upgrades.Traps[1:])
+	t.Upgrades.Traps[2] = trap
+}
+
+func (t *Team) RemoveTrap() Trap {
+	removed := t.Upgrades.Traps[0]
+	copy(t.Upgrades.Traps[0:], t.Upgrades.Traps[1:])
+	t.Upgrades.Traps[2] = None
+	return removed
+}
+
 type Status int
 
 const (
 	BedExists Status = iota
 	BedBroken
 	TeamDead
+)
+
+type Trap int
+
+func (t Trap) Slot() int {
+	switch t {
+	case Regular:
+		return 14
+	case CounterOffensive:
+		return 15
+	case Alarm:
+		return 16
+	case MinerFatigue:
+		return 23
+	default:
+		return -1
+	}
+}
+
+const (
+	None Trap = iota
+	Regular
+	CounterOffensive
+	Alarm
+	MinerFatigue
 )

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/item/enchantment"
+
 	"github.com/df-mc/dragonfly/server/item/potion"
 
 	"github.com/df-mc/dragonfly/server/player/title"
@@ -38,7 +40,7 @@ import (
 
 var blocksPlaced = make(map[string]world.Block)
 
-type Handler struct {
+type PlayerHandler struct {
 	player.NopHandler
 
 	game *BedWars
@@ -58,7 +60,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		bwGame = NewBedWars(typeGame, teamSize, teamCount, isCustom)
 	}
 
-	pl.Handle(Handler{game: bwGame})
+	pl.Handle(PlayerHandler{game: bwGame})
 
 	tx.RemoveEntity(pl)
 	bwGame.World().Exec(func(tx *world.Tx) {
@@ -91,7 +93,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	})
 }
 
-func (h Handler) HandleQuit(pl *player.Player) {
+func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u := user.LookupPlayer(pl)
 	u.Game = nil
 	user.Save(pl)
@@ -99,7 +101,7 @@ func (h Handler) HandleQuit(pl *player.Player) {
 	lobby.Join(pl)
 }
 
-func (Handler) HandleChat(ctx *player.Context, msg *string) {
+func (PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 	ctx.Cancel()
 
 	pl := ctx.Val()
@@ -112,7 +114,7 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	_, _ = fmt.Fprintf(chat.Global, *msg)
 }
 
-func (Handler) HandleItemConsume(ctx *player.Context, s item.Stack) {
+func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 	if s, ok := s.Item().(item.Potion); ok {
 		pl := ctx.Val()
 		switch s.Type {
@@ -129,11 +131,31 @@ func (Handler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 	}
 }
 
-func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
+func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
 	listener.HandleAttackEntity(ctx, e, force, height, critical)
 }
 
-func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
+func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
+	pl := ctx.Val()
+	if newPos.Y() <= float64(h.game.MapConfig().Void) {
+		if h.game.Stage() < game.Running {
+			pl.Teleport(h.game.MapConfig().SpawnPoint)
+		} else {
+			damage := 30.0
+			dur := time.Duration(0)
+			h.HandleHurt(ctx, &damage, false, &dur, entity.VoidDamageSource{})
+		}
+	}
+
+	team := h.game.PlayerTeam(pl)
+	if team.Upgrades.HealPool > 0 && utils.Distance(newPos, h.game.MapConfig().TeamSpawnPoints[team.ID()]) <= 20 {
+		pl.AddEffect(effect.NewInfinite(effect.Regeneration, 1))
+	} else {
+		pl.RemoveEffect(effect.Regeneration)
+	}
+}
+
+func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
 	listener.HandleHurt(ctx, damage, immune, attackImmunity, src)
 
 	pl := ctx.Val()
@@ -177,7 +199,9 @@ func (h Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, a
 
 func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	for _, e := range pl.Effects() {
-		pl.RemoveEffect(e.Type())
+		if !e.Infinite() {
+			pl.RemoveEffect(e.Type())
+		}
 	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
@@ -263,8 +287,25 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	}
 }
 
-func (h Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
+func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
 	pl := ctx.Val()
+	main, _ := pl.HeldItems()
+
+	if b, ok := main.Item().(item.Bucket); ok && b.Content == item.LiquidBucketContent(block.Water{}) {
+		h := pl.H()
+		time.AfterFunc(50*time.Millisecond, func() {
+			h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+				pl = e.(*player.Player)
+				main, off := pl.HeldItems()
+				pl.SetHeldItems(main.Grow(-1), off)
+			})
+		})
+	}
+}
+
+func (h PlayerHandler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
+	pl := ctx.Val()
+	main, off := pl.HeldItems()
 	if h.game.Stage() < game.Running {
 		pl.Message(text.Colourf(language.Translate(pl).Game.Error.CannotBreakBlocksBecauseGameNotStarted))
 		ctx.Cancel()
@@ -274,11 +315,13 @@ func (h Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Blo
 	blocksPlaced[vec3ToString(pos.Vec3())] = b
 
 	if t, ok := b.(block.TNT); ok {
+		ctx.Cancel()
 		t.Ignite(pos, pl.Tx(), nil)
+		pl.SetHeldItems(main.Grow(-1), off)
 	}
 }
 
-func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
+func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
 	b := pl.Tx().Block(pos)
@@ -339,19 +382,19 @@ func (h Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]it
 	}
 }
 
-func (Handler) HandleFoodLoss(ctx *player.Context, from int, to *int) {
+func (PlayerHandler) HandleFoodLoss(ctx *player.Context, from int, to *int) {
 	ctx.Cancel()
 }
 
-func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
+func (PlayerHandler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 	listener.HandleStartBreak(ctx, pos)
 }
 
-func (Handler) HandlePunchAir(ctx *player.Context) {
+func (PlayerHandler) HandlePunchAir(ctx *player.Context) {
 	listener.HandlePunchAir(ctx)
 }
 
-func (h Handler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
+func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	pl := ctx.Val()
 	gen := h.game.NearestGenerator(pl.Position(), Iron)
 
@@ -362,7 +405,7 @@ func (h Handler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	}
 }
 
-func split(pl *player.Player, genPlayers []*player.Player, h Handler) {
+func split(pl *player.Player, genPlayers []*player.Player, h PlayerHandler) {
 	genIron := h.game.NearestGenerator(pl.Position(), Iron)
 	genGold := h.game.NearestGenerator(pl.Position(), Gold)
 
@@ -405,7 +448,7 @@ func pickUp(pl *player.Player, ent *entity.Ent, stack item.Stack, closeEnt bool,
 	}
 }
 
-func (Handler) HandleItemUse(ctx *player.Context) {
+func (PlayerHandler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
 }
 
@@ -415,7 +458,12 @@ func vec3ToString(v mgl64.Vec3) string {
 
 func giveKit(pl *player.Player, g *BedWars) {
 	t := g.PlayerTeam(pl)
-	utils.Panic(pl.Inventory().SetItem(0, item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)))
+
+	sword := item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)
+	if t.Upgrades.Sharpness > 0 {
+		sword = sword.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, t.Upgrades.Sharpness))
+	}
+	utils.Panic(pl.Inventory().SetItem(0, sword))
 	if g.Type() == game.TypeBedFight {
 		utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1)))
 		utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1)))
@@ -425,11 +473,17 @@ func giveKit(pl *player.Player, g *BedWars) {
 
 	if len(pl.Armour().Items()) == 0 {
 		pl.Armour().Set(
-			item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
-			item.NewStack(item.Chestplate{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
-			item.NewStack(item.Leggings{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
-			item.NewStack(item.Boots{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1),
+			item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1).AsUnbreakable(),
+			item.NewStack(item.Chestplate{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1).AsUnbreakable(),
+			item.NewStack(item.Leggings{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1).AsUnbreakable(),
+			item.NewStack(item.Boots{Tier: item.ArmourTierLeather{Colour: t.WoolColour().RGBA()}}, 1).AsUnbreakable(),
 		)
+
+		if t.Upgrades.Protection != 0 {
+			for slot, stack := range pl.Armour().Items() {
+				utils.Panic(pl.Armour().Inventory().SetItem(slot, stack.WithEnchantments(item.NewEnchantment(enchantment.Protection, t.Upgrades.Protection))))
+			}
+		}
 	}
 
 	if g.pickaxeTierPlayers[pl] != 0 {

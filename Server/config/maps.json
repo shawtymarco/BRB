@@ -2,6 +2,7 @@
   "./maps/Invasion": {
     "Name": "Invasion",
     "Type": "bedwars",
+    "Void": 70,
     "SpawnPoint": [
       0.5,
       120,

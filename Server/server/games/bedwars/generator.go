@@ -1,6 +1,7 @@
 package bedwars
 
 import (
+	"server/server/game"
 	"server/server/living"
 	"server/server/utils"
 	"slices"
@@ -21,6 +22,7 @@ import (
 
 type GeneratorSettings struct {
 	Active bool
+	Game   *BedWars
 
 	Resource Resource
 
@@ -33,6 +35,9 @@ type GeneratorSettings struct {
 
 func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockType {
 	t := &GeneratorBlockType{GeneratorSettings: gs}
+	if gs.Game != nil {
+		t.Team = gs.Game.NearestTeam(pos)
+	}
 
 	conf := living.Config{
 		EntityType: t,
@@ -61,6 +66,7 @@ type GeneratorBlockType struct {
 
 	*living.Living
 	*GeneratorSettings
+	Team *game.Team
 
 	tick      time.Duration
 	lastSpawn time.Time
@@ -153,10 +159,18 @@ func (b *GeneratorBlockType) RemovePlayer(pl *player.Player) {
 	}
 }
 
+func (b *GeneratorBlockType) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
+	return 0, false
+}
+
 func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	if !b.Active {
 		b.Living.Tick(tx, current+1)
 		return
+	}
+
+	if b.Team != nil {
+		b.updateTier()
 	}
 
 	remainingDur := b.SpawnRate - time.Now().Sub(b.lastSpawn)
@@ -170,4 +184,42 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	}
 	b.tick += 50 * time.Millisecond
 	b.Living.Tick(tx, current+1)
+}
+
+func (b *GeneratorBlockType) updateTier() {
+	if b.Resource == Iron {
+		b.Tier = b.Team.Upgrades.GeneratorTier + 1
+		switch b.Tier {
+		case 2:
+			b.SpawnRate = 300 * time.Millisecond
+			b.Cap = 64
+			break
+		case 3:
+			b.SpawnRate = 200 * time.Millisecond
+			break
+		case 4:
+			break
+		case 5:
+			b.SpawnRate = 150 * time.Millisecond
+			break
+		}
+	} else if b.Resource == Gold {
+		b.Tier = b.Team.Upgrades.GeneratorTier + 1
+		switch b.Tier {
+		case 2:
+			b.SpawnRate = 3000 * time.Millisecond
+			b.Cap = 16
+			break
+		case 3:
+			b.SpawnRate = 2000 * time.Millisecond
+			break
+		case 4:
+			break
+		case 5:
+			b.SpawnRate = 1350 * time.Millisecond
+			break
+		}
+	} else if b.Resource == Emerald && b.Tier == 5 {
+		b.SpawnRate = 15 * time.Second
+	}
 }

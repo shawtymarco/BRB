@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/item/enchantment"
+
 	"github.com/df-mc/dragonfly/server/item"
 
 	"github.com/go-gl/mathgl/mgl64"
@@ -71,7 +73,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]
-	g.Game = game.NewGame(newId, utils.Panics(server.WorldManager.World(mapName)), "")
+	gameWorld := utils.Panics(server.WorldManager.World(mapName))
+	gameWorld.Handle(WorldHandler{game: g})
+	g.Game = game.NewGame(newId, gameWorld, "")
 	g.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1248405762204504066", "1152316442709073941"} // TODO: REMOVE DEBUG
 
 	go func() {
@@ -182,25 +186,28 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 	for _, pos := range b.MapConfig().ShopVillagerPositions {
 		t := b.NearestTeam(pos)
-		v := NewShopVillager(pos, text.Colourf("<green>Shop Villager</green>"), b, t, tx)
+		v := NewItemsVillager(pos, text.Colourf("<green>Shop Villager</green>"), b, t, tx)
 		v.LookAt(b.MapConfig().TeamSpawnPoints[t.ID()].Sub(mgl64.Vec3{0, 2, 0}), tx)
 	}
-	//for _, pos := range b.MapConfig().UpgradesVillagerPositions {
-	//	nearestTeam := b.NearestTeam(pos)
-	//	NewShopVillager(pos, text.Colourf("<green>Upgrades ItemsShopVillager</green>"), b, nearestTeam, tx)
-	//}
+	for _, pos := range b.MapConfig().UpgradesVillagerPositions {
+		t := b.NearestTeam(pos)
+		v := NewUpgradesVillager(pos, text.Colourf("<green>Upgrades Villager</green>"), b, t, tx)
+		v.LookAt(b.MapConfig().TeamSpawnPoints[t.ID()].Sub(mgl64.Vec3{0, 2, 0}), tx)
+	}
 
 	b.ironGeneratorSettings = &GeneratorSettings{
+		Game:      b,
 		Resource:  Iron,
 		Tier:      1,
 		Cap:       48,
-		SpawnRate: 400 * time.Millisecond,
+		SpawnRate: 100 * time.Millisecond, // TODO: Change back to 400ms
 	}
 	b.goldGeneratorSettings = &GeneratorSettings{
+		Game:      b,
 		Resource:  Gold,
 		Tier:      1,
 		Cap:       12,
-		SpawnRate: 4 * time.Second,
+		SpawnRate: 400 * time.Millisecond, // TODO: Change back to 4s
 	}
 	b.diamondGeneratorSettings = &GeneratorSettings{
 		Resource:  Diamond,
@@ -246,7 +253,7 @@ func (b *BedWars) MapConfig() game.MapData {
 }
 
 func (b *BedWars) Handler() player.Handler {
-	return Handler{}
+	return PlayerHandler{}
 }
 
 func (b *BedWars) Reward(pl *player.Player) {
@@ -386,23 +393,40 @@ func (b *BedWars) NearestTeam(pos mgl64.Vec3) *game.Team {
 
 func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 	if canAfford(pl, s) {
-		cost, resource := getCost(s)
+		resource, cost := getCost(s)
 		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
 
 		if boots, ok := s.Item().(item.Boots); ok {
+			t := b.PlayerTeam(pl)
 			pl.Armour().Set(
 				item.NewStack(item.Helmet{Tier: boots.Tier}, 1).AsUnbreakable(),
 				item.NewStack(item.Chestplate{Tier: boots.Tier}, 1).AsUnbreakable(),
 				item.NewStack(item.Leggings{Tier: boots.Tier}, 1).AsUnbreakable(),
 				item.NewStack(item.Boots{Tier: boots.Tier}, 1).AsUnbreakable(),
 			)
+
+			if t.Upgrades.Protection != 0 {
+				for slot, stack := range pl.Armour().Items() {
+					utils.Panic(pl.Armour().Inventory().SetItem(slot, stack.WithEnchantments(item.NewEnchantment(enchantment.Protection, t.Upgrades.Protection))))
+				}
+			}
+		} else {
+			if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
+				_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
+				_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
+				return false
+			}
 		}
 
-		if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
-			_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
-			_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
-			return false
-		}
+		return true
+	}
+	return false
+}
+
+func (b *BedWars) buyUpgrade(pl *player.Player, s item.Stack) bool {
+	if canAfford(pl, s) {
+		resource, cost := getCost(s)
+		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
 		return true
 	}
 	return false
