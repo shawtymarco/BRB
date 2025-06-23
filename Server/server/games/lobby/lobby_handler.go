@@ -4,6 +4,7 @@ import (
 	"fmt"
 	core "server/server"
 	"server/server/database"
+	"server/server/font"
 	"server/server/items/stacks"
 	"server/server/listener"
 	"server/server/user"
@@ -38,9 +39,9 @@ func Join(pl *player.Player) {
 
 	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
 	utils.Panic(pl.Inventory().SetItem(0, stacks.CosmeticsStack()))
+	utils.Panic(pl.Inventory().SetItem(8, stacks.SettingsStack()))
 
 	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BRBW</yellow></bold>"))
-	u.Scoreboard.Set(0, text.Colourf("         <yellow>▷ <white>Season 1</white> ◁</yellow>"))
 	u.Scoreboard.Set(1, "§0")
 	u.Scoreboard.Set(2, text.Colourf("<yellow>▌</yellow> <bold><white>ELO:</white> <green>%v</green></bold>", u.Data.Statistics.ELO))
 	u.Scoreboard.Set(3, text.Colourf("<yellow>▌</yellow> <bold><white>Rank:</white> <green>%v %v</green></bold>", u.Data.Statistics.ELORank().EloIcon(), u.Data.Statistics.ELORank().EloPrefix()))
@@ -53,8 +54,8 @@ func Join(pl *player.Player) {
 	u.Scoreboard.Set(10, text.Colourf("<yellow>▌</yellow> <bold><white>Total Kills:</white> <green>%v</green></bold>", u.Data.Games.TotalKills()))
 	u.Scoreboard.Set(11, text.Colourf("<yellow>▌</yellow> <bold><white>Total Wins:</white> <green>%v</green></bold>", u.Data.Games.TotalKills()))
 	u.Scoreboard.Set(12, "§e")
-	u.Scoreboard.Set(13, text.Colourf("<yellow>ELIAGIC.CLUB</yellow>"))
-	pl.SendScoreboard(u.Scoreboard)
+	u.Scoreboard.Set(13, font.Transform(core.IP))
+	u.SendScoreboard(7)
 }
 
 func (Handler) HandleQuit(pl *player.Player) {

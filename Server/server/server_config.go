@@ -9,6 +9,8 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
+var IP = "BRBW.NET"
+
 type Server struct {
 	Prefix    string
 	Languages map[string][]string

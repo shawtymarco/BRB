@@ -40,6 +40,7 @@
     "YouWonTitle": "",
     "YouLostTitle": "",
     "TeamWonSubTitle": "<%v>%v</%v>",
+    "Draw": "<gold>DRAW!</gold>",
     "YouDiedTitle": "",
     "YouDiedSubTitle": "%v",
     "RespawningIn": "%v",
@@ -50,6 +51,10 @@
     "GiveGold": "<gold>+%v Gold</gold>",
     "GiveDiamond": "<diamond>+%v Diamond</diamond>",
     "GiveEmerald": "<emerald>+%v Emerald</emerald>",
+    "TrapTriggered": "<red>TRAP TRIGGERED!</red>",
+    "GeneratorUpgraded": "<yellow>%v have been upgraded to Tier <red>%v</red></yellow>",
+    "BedGone": "",
+    "SuddenDeath": "",
     "Error": {
       "CannotBreakBed": "",
       "CannotBreakMap": ""

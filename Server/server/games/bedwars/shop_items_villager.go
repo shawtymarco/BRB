@@ -64,15 +64,15 @@ func (v *ItemsShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, data 
 func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
 		if pl, ok := src.Attacker.(*player.Player); ok {
-			sendItemShopUI(&itemShop{game: v.Game, team: v.Team, player: pl})
+			SendItemShopUI(&ItemShop{game: v.Game, team: v.Team, Player: pl})
 		}
 	}
 
 	return 0, false
 }
 
-func sendItemShopUI(shop *itemShop) {
-	pl := shop.player
+func SendItemShopUI(shop *ItemShop) {
+	pl := shop.Player
 	u := user.LookupPlayer(pl)
 
 	menuInv := inventory.New(54, func(slot int, before, after item.Stack) {
@@ -149,7 +149,7 @@ func sendItemShopUI(shop *itemShop) {
 			if slices.Contains(quickBuySlots, slot) {
 				if qbMode.Equal(blazeRod) {
 					if stack.Equal(glassPane) {
-						shop.isQuickBuy = true
+						shop.IsQuickBuy = true
 
 						qbSlot = slot
 						go func() {
@@ -181,7 +181,7 @@ func sendItemShopUI(shop *itemShop) {
 						}()
 					}
 				} else if qbMode.Equal(blazePowder) {
-					shop.isQuickBuy = false
+					shop.IsQuickBuy = false
 
 					var itemId int
 					for i, s2 := range shop.All() {

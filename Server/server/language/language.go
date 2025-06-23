@@ -66,20 +66,25 @@ type LangConfig struct {
 	}
 
 	BedWars struct {
-		YouWonTitle     string
-		YouLostTitle    string
-		TeamWonSubTitle string
-		YouDiedTitle    string
-		YouDiedSubTitle string
-		RespawningIn    string
-		KilledBy        string
-		VoidDeath       string
-		BedBreak        string
-		GiveIron        string
-		GiveGold        string
-		GiveDiamond     string
-		GiveEmerald     string
-		Error           struct {
+		YouWonTitle       string
+		YouLostTitle      string
+		TeamWonSubTitle   string
+		Draw              string
+		YouDiedTitle      string
+		YouDiedSubTitle   string
+		RespawningIn      string
+		KilledBy          string
+		VoidDeath         string
+		BedBreak          string
+		GiveIron          string
+		GiveGold          string
+		GiveDiamond       string
+		GiveEmerald       string
+		TrapTriggered     string
+		GeneratorUpgraded string
+		BedGone           string
+		SuddenDeath       string
+		Error             struct {
 			CannotBreakBed string
 			CannotBreakMap string
 		}

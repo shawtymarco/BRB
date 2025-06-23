@@ -20,3 +20,9 @@ func CosmeticsStack() item.Stack {
 	s = s.WithCustomName(text.Colourf("<emerald>Cosmetics</emerald>"))
 	return s
 }
+
+func SettingsStack() item.Stack {
+	s := item.NewStack(item.BlazePowder{}, 1).WithValue("action", int(items.Settings))
+	s = s.WithCustomName(text.Colourf("<emerald>Settings</emerald>"))
+	return s
+}

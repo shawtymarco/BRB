@@ -24,7 +24,7 @@ func (WarpCommand) PermissionMessage(src cmd.Source) string {
 	return GiveRank.PermissionMessage(src)
 }
 
-func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
+func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.LookupPlayer(pl)
 		if u.Game == nil {
@@ -46,13 +46,13 @@ func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 				return
 			}
 
-			server.MCServer.World().Exec(func(tx *world.Tx) {
-				for e := range tx.Players() {
+			server.MCServer.World().Exec(func(tx2 *world.Tx) {
+				for e := range tx2.Players() {
 					p := e.(*player.Player)
 					u := user.LookupPlayer(p)
 
 					if u.Game == nil && u.Data.IsRegistered() && slices.Contains(bwGame.UsersToJoin, u.Data.UserId) {
-						bedwars.Join(p, tx, bwGame.TeamSize, bwGame.TeamCount, bwGame.Type(), false, bwGame)
+						bedwars.Join(p, tx2, bwGame.TeamSize, bwGame.TeamCount, bwGame.Type(), false, bwGame)
 						p.Message(text.Colourf(language.Translate(p).Commands.Success.YouGotWarped))
 					}
 				}

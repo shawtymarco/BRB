@@ -56,6 +56,7 @@
     "YouLostTitle": "",
     "TeamWonSubTitle": "<%v>%v</%v>",
     // Team color who won: First and third %v are for color formatting; i.e. <red>RED</red> (first and third %v are <red> and </red>>)
+    "Draw": "Shows a title telling all players that game ended in a draw",
     "YouDiedTitle": "Show death message title",
     "YouDiedSubTitle": "Show death message sub title with respawn delay %v",
     "RespawningIn": "Countdown for player respawn %v",
@@ -74,6 +75,11 @@
     // Amount
     "GiveEmerald": "%v",
     // Amount
+    "TrapTriggered": "Sends title to team players that a trap was triggered in their base",
+    "GeneratorUpgraded": "Announces that a certain generator has been upgraded to a certain tier %v %v",
+    // Generator type | New tier
+    "BedGone": "Announces that all beds are broken",
+    "SuddenDeath": "Announces that sudden death is starting (Fireballs and TNT will be raining down)",
     "Error": {
       "CannotBreakBed": "Warn the player that they can't break their own with bed",
       "CannotBreakMap": "Warn the player that they can't break any of the map's blocks (that were originally there, not recently placed by a player)"

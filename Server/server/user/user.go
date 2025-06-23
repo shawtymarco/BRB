@@ -7,9 +7,11 @@ import (
 	"server/server"
 	"server/server/cooldown"
 	"server/server/database"
+	"server/server/font"
 	"server/server/game"
 	"server/server/language"
 	"server/server/utils"
+	"strings"
 	"sync"
 	"time"
 
@@ -115,7 +117,7 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 }
 
 func Save(pl *player.Player) {
-	user := LookupUUID(pl.UUID())
+	user := LookupPlayer(pl)
 	user.Data.LastJoin = time.Now()
 	user.Data.Online = false
 	utils.Panic(server.Database.SavePlayer(user.Data))
@@ -135,6 +137,18 @@ func LookupUUID(uuid uuid.UUID) *User {
 	userMu.Lock()
 	defer userMu.Unlock()
 	return users[uuid]
+}
+
+func LookupUserID(userId string) *User {
+	userMu.Lock()
+	defer userMu.Unlock()
+
+	for _, user := range users {
+		if user.Data.UserId == userId {
+			return user
+		}
+	}
+	return nil
 }
 
 func DataFromPlayer(pl *player.Player) *database.PlayerData {
@@ -191,6 +205,11 @@ func (u *User) AddItem(its ...item.Stack) bool {
 		}
 	}
 	return true
+}
+
+func (u *User) SendScoreboard(numOfSpaces int) {
+	u.Scoreboard.Set(0, text.Colourf("%v%v", strings.Repeat(" ", numOfSpaces), font.Transform("SEASON 1")))
+	u.pl.SendScoreboard(u.Scoreboard)
 }
 
 func (u *User) DropItem(it item.Stack, tx *world.Tx) {

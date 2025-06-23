@@ -2,6 +2,7 @@ package buildffa
 
 import (
 	"server/server"
+	"server/server/font"
 	"server/server/game"
 	"server/server/user"
 	"server/server/utils"
@@ -36,7 +37,6 @@ func NewBuildFFA() {
 
 			Game.ForEachActivePlayer(func(pl *player.Player) {
 				u := user.LookupPlayer(pl)
-				u.Scoreboard.Set(0, text.Colourf("         <yellow>▷ <white>Season 1</white> ◁</yellow>"))
 				u.Scoreboard.Set(1, "§0 ")
 				u.Scoreboard.Set(2, text.Colourf("<grey>Game:</grey> <emerald>Build UHC</emerald>"))
 				u.Scoreboard.Set(3, "§1 ")
@@ -54,8 +54,8 @@ func NewBuildFFA() {
 				u.Scoreboard.Set(9, text.Colourf("<grey>Kills:</grey> <emerald>%v</emerald>", u.GameInfo.BuildFFA.Kills))
 				u.Scoreboard.Set(10, text.Colourf("<grey>Position:</grey> <emerald>#%v</emerald>", slices.Index(users, u)+1))
 				u.Scoreboard.Set(11, "§3 ")
-				u.Scoreboard.Set(12, text.Colourf("<yellow>ELIAGIC.CLUB</yellow>"))
-				pl.SendScoreboard(u.Scoreboard)
+				u.Scoreboard.Set(12, font.Transform(server.IP))
+				u.SendScoreboard(5)
 			})
 		}
 	}()

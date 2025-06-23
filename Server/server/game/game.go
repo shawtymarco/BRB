@@ -56,27 +56,27 @@ func (g *Game) ActivePlayers() (handles []*world.EntityHandle) {
 }
 
 func (g *Game) ForEachOriginalPlayer(f func(pl *player.Player)) {
-	for _, e := range g.OriginalPlayers() {
-		g.world.Exec(func(tx *world.Tx) {
+	<-g.world.Exec(func(tx *world.Tx) {
+		for _, e := range g.OriginalPlayers() {
 			if e, ok := e.Entity(tx); ok {
 				if pl, ok := e.(*player.Player); ok {
 					f(pl)
 				}
 			}
-		})
-	}
+		}
+	})
 }
 
 func (g *Game) ForEachActivePlayer(f func(pl *player.Player)) {
-	for _, e := range g.ActivePlayers() {
-		g.world.Exec(func(tx *world.Tx) {
+	<-g.world.Exec(func(tx *world.Tx) {
+		for _, e := range g.ActivePlayers() {
 			if e, ok := e.Entity(tx); ok {
 				if pl, ok := e.(*player.Player); ok {
 					f(pl)
 				}
 			}
-		})
-	}
+		}
+	})
 }
 
 func (g *Game) PlayerTeam(pl *player.Player) *Team {

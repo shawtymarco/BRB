@@ -56,7 +56,7 @@ func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockTy
 
 	_, ok1 := gb.Resource.Block().(block.Air)
 	_, ok2 := gb.Resource.Block().(block.Diamond)
-	gb.WithVariant(int32(lo.If(ok1, 0).ElseIf(ok2, 1).Else(2)))
+	gb.WithVariant(int32(lo.If(ok1 || gs.Game != nil, 0).ElseIf(ok2, 1).Else(2)))
 	gb.lastSpawn = time.Now()
 	return gb
 }
@@ -174,15 +174,17 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	}
 
 	remainingDur := b.SpawnRate - time.Now().Sub(b.lastSpawn)
-	if _, ok := b.Resource.Block().(block.Air); !ok {
+	if _, ok := b.Resource.Block().(block.Air); !ok && b.Team == nil {
 		b.SetNameTag(text.Colourf("<bold><yellow>Tier <red>%v</red></yellow></bold>\n%v\n<yellow>Spawns in <red>%.1f</red> seconds</yellow>", utils.IntToRoman(b.Tier), b.Name, remainingDur.Seconds()), tx)
 	}
 
-	if remainingDur <= 0 && b.CountResourcesWithin() < b.Cap {
-		b.DropItems(tx)
-		b.lastSpawn = time.Now()
+	if b.CountResourcesWithin() < b.Cap {
+		if remainingDur <= 0 {
+			b.DropItems(tx)
+			b.lastSpawn = time.Now()
+		}
+		b.tick += 50 * time.Millisecond
 	}
-	b.tick += 50 * time.Millisecond
 	b.Living.Tick(tx, current+1)
 }
 
@@ -219,7 +221,10 @@ func (b *GeneratorBlockType) updateTier() {
 			b.SpawnRate = 1350 * time.Millisecond
 			break
 		}
-	} else if b.Resource == Emerald && b.Tier == 5 {
-		b.SpawnRate = 15 * time.Second
+	} else if b.Resource == Emerald {
+		b.Tier = b.Team.Upgrades.GeneratorTier + 1
+		if b.Tier == 5 {
+			b.SpawnRate = 15 * time.Second
+		}
 	}
 }

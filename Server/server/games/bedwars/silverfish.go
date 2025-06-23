@@ -85,7 +85,6 @@ func (s *Silverfish) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 func (s *Silverfish) Tick(tx *world.Tx, current int64) {
 	if s.target == nil {
 		if nearestEnemy := s.findNearestEnemy(tx); nearestEnemy != nil {
-			fmt.Println(nearestEnemy.Name())
 			s.target = nearestEnemy.H()
 		}
 		s.Living.Tick(tx, current+1)

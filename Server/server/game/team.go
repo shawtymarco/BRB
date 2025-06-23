@@ -2,6 +2,7 @@ package game
 
 import (
 	"slices"
+	"time"
 
 	"github.com/df-mc/dragonfly/server/item"
 
@@ -24,7 +25,9 @@ type Team struct {
 		HealPool      int
 		GeneratorTier int
 
-		Traps [3]Trap
+		Traps          [3]Trap
+		ActiveTrap     Trap
+		ActivatedSince time.Time
 	}
 }
 
@@ -125,8 +128,14 @@ func (t *Team) IsTrapsFull() bool {
 }
 
 func (t *Team) AddTrap(trap Trap) {
-	copy(t.Upgrades.Traps[0:], t.Upgrades.Traps[1:])
-	t.Upgrades.Traps[2] = trap
+	for i := range t.Upgrades.Traps {
+		if t.Upgrades.Traps[i] == None {
+			t.Upgrades.Traps[i] = trap
+			return
+		}
+	}
+
+	panic("AddTrap called when trap queue is full")
 }
 
 func (t *Team) RemoveTrap() Trap {
