@@ -55,6 +55,8 @@
     "GeneratorUpgraded": "<yellow>%v have been upgraded to Tier <red>%v</red></yellow>",
     "BedGone": "",
     "SuddenDeath": "",
+    "MagicMilkEffectGive": "no more traps!",
+    "MagicMilkEffectRemove": "traps enabled for u again bbg",
     "Error": {
       "CannotBreakBed": "",
       "CannotBreakMap": ""

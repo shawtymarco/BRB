@@ -6,6 +6,7 @@ import (
 	"server/server/user"
 	"server/server/utils"
 	"slices"
+	"strings"
 
 	"github.com/samber/lo"
 
@@ -64,14 +65,14 @@ func (v *ItemsShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, data 
 func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
 		if pl, ok := src.Attacker.(*player.Player); ok {
-			SendItemShopUI(&ItemShop{game: v.Game, team: v.Team, Player: pl})
+			SendItemShopUI(&ItemShop{game: v.Game, team: v.Team, Player: pl}, false)
 		}
 	}
 
 	return 0, false
 }
 
-func SendItemShopUI(shop *ItemShop) {
+func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 	pl := shop.Player
 	u := user.LookupPlayer(pl)
 
@@ -157,19 +158,19 @@ func SendItemShopUI(shop *ItemShop) {
 							menuInv.Clear()
 							menu.WithStacks(shop.Blocks()...)
 						}()
-					} else {
+					} else if !fromLobby {
 						go func() {
 							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-								t := pl.Armour().Boots().Item().(item.Boots).Tier
-								chain := t == item.ArmourTierChain{}
-								iron := t == item.ArmourTierIron{}
-								diamond := t == item.ArmourTierDiamond{}
-								boots, ok := stack.Item().(item.Boots)
-								owned := ok && (boots.Tier == item.ArmourTierDiamond{} && diamond || boots.Tier == item.ArmourTierIron{} && (diamond || iron) || boots.Tier == item.ArmourTierChain{} && (diamond || iron || chain))
-
+								owned := strings.Contains(stack.Lore()[len(stack.Lore())-1], "Purchased!")
 								if !owned && shop.game.buyItem(pl, stack) {
 									if _, ok := stack.Item().(item.Boots); ok {
 										menu.WithStacks(lo.If(inArmoury, shop.Armour()).Else(shop.itemShopDashboard(true))...)
+									} else if tool, ok := stack.Item().(item.Tool); ok {
+										if tool.ToolType() == item.TypePickaxe {
+											utils.Panic(menuInv.SetItem(slot, pickaxeTier(pl, shop.game.pickaxeTierPlayers[pl.UUID()])))
+										} else {
+											utils.Panic(menuInv.SetItem(slot, axeTier(pl, shop.game.axeTierPlayers[pl.UUID()])))
+										}
 									}
 									pl.PlaySound(sound.Experience{})
 								} else {

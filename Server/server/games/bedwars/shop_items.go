@@ -105,10 +105,13 @@ func (s *ItemShop) Melee() []item.Stack {
 }
 
 func (s *ItemShop) Armour() []item.Stack {
-	t := s.Player.Armour().Boots().Item().(item.Boots).Tier
-	chain := t == item.ArmourTierChain{}
-	iron := t == item.ArmourTierIron{}
-	diamond := t == item.ArmourTierDiamond{}
+	var chain, iron, diamond bool
+	if boots, ok := s.Player.Armour().Boots().Item().(item.Boots); ok {
+		t := boots.Tier
+		chain = t == item.ArmourTierChain{}
+		iron = t == item.ArmourTierIron{}
+		diamond = t == item.ArmourTierDiamond{}
+	}
 	items := s.itemShopDashboard(false)
 
 	i19 := shopify(s.Player, item.NewStack(item.Boots{Tier: item.ArmourTierChain{}}, 1), Iron, 30, chain || iron || diamond, false)
@@ -131,8 +134,8 @@ func (s *ItemShop) Tools() []item.Stack {
 	items := s.itemShopDashboard(false)
 	items[19] = shopify(s.Player, item.NewStack(item.Shears{}, 1), Iron, 10, false, false)
 	if s.game != nil {
-		items[20] = pickaxeTier(s.Player, s.game.pickaxeTierPlayers[s.Player])
-		items[21] = axeTier(s.Player, s.game.axeTierPlayers[s.Player])
+		items[20] = pickaxeTier(s.Player, s.game.pickaxeTierPlayers[s.Player.UUID()])
+		items[21] = axeTier(s.Player, s.game.axeTierPlayers[s.Player.UUID()])
 	} else {
 		items[20] = pickaxeTier(s.Player, 1)
 		items[21] = axeTier(s.Player, 1)
@@ -169,7 +172,7 @@ func (s *ItemShop) Utility() []item.Stack {
 	} else {
 		items[24] = editName(shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: item.ColourWhite()}}, 1), Emerald, 1, false, false), text.Colourf("<green>Bridge Egg</green>"))
 	}
-	items[25] = shopify(s.Player, item.NewStack(item.Bucket{Content: item.MilkBucketContent()}, 1), Gold, 3, false, false)
+	items[25] = editName(shopify(s.Player, item.NewStack(NewMagicMilk(s.game), 1), Gold, 3, false, false), text.Colourf("<green>Magic Milk</green>"))
 	items[28] = shopify(s.Player, item.NewStack(block.Sponge{}, 4), Gold, 3, false, false)
 	items[29] = shopify(s.Player, item.NewStack(item.Compass{}, 1), Emerald, 2, false, false)
 	return items
@@ -249,29 +252,69 @@ func editName(s item.Stack, customName string) item.Stack {
 	return s.WithCustomName(strings.Join(lines, "\n"))
 }
 
-func axeTier(pl *player.Player, tier int) item.Stack {
+func pickaxeTier(pl *player.Player, tier int) item.Stack {
+	var t1Owned, t2Owned, t3Owned, t4Owned bool
+
+	for _, stack := range pl.Inventory().Items() {
+		if tool, ok := stack.Item().(item.Pickaxe); ok {
+			switch tool.Tier {
+			case item.ToolTierDiamond:
+				t4Owned = true
+				fallthrough
+			case item.ToolTierGold:
+				t3Owned = true
+				fallthrough
+			case item.ToolTierIron:
+				t2Owned = true
+				fallthrough
+			case item.ToolTierWood:
+				t1Owned = true
+			}
+		}
+	}
+
 	switch tier {
+	case 0:
+		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, t1Owned, false)
 	case 1:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierStone}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, false, false)
+		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierIron}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, t2Owned, false)
 	case 2:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierIron}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Gold, 3, false, false)
-	case 3:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierDiamond}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, false, false)
+		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierGold}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 3, t3Owned, false)
 	default:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, false, false)
+		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierDiamond}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, t4Owned, false)
 	}
 }
 
-func pickaxeTier(pl *player.Player, tier int) item.Stack {
+func axeTier(pl *player.Player, tier int) item.Stack {
+	var t1Owned, t2Owned, t3Owned, t4Owned bool
+
+	for _, stack := range pl.Inventory().Items() {
+		if tool, ok := stack.Item().(item.Axe); ok {
+			switch tool.Tier {
+			case item.ToolTierDiamond:
+				t4Owned = true
+				fallthrough
+			case item.ToolTierIron:
+				t3Owned = true
+				fallthrough
+			case item.ToolTierStone:
+				t2Owned = true
+				fallthrough
+			case item.ToolTierWood:
+				t1Owned = true
+			}
+		}
+	}
+
 	switch tier {
+	case 0:
+		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, t1Owned, false)
 	case 1:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierIron}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, false, false)
+		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierStone}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, t2Owned, false)
 	case 2:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierGold}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 3, false, false)
-	case 3:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierDiamond}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, false, false)
+		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierIron}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Gold, 3, t3Owned, false)
 	default:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, false, false)
+		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierDiamond}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, t4Owned, false)
 	}
 }
 

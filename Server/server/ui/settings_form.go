@@ -2,6 +2,7 @@ package ui
 
 import (
 	"server/server/games/bedwars"
+	"time"
 
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/player/form"
@@ -17,19 +18,23 @@ func NewSettingsForm() SettingsForm {
 }
 
 func (g SettingsForm) Submit(submitter form.Submitter, button form.Button, _ *world.Tx) {
-	pl := submitter.(*player.Player)
-	switch button.Text {
-	case "QuickBuy Config":
-		bedwars.SendItemShopUI(&bedwars.ItemShop{Player: pl, IsQuickBuy: true})
-		break
-	case "HotBar Config":
+	h := submitter.(*player.Player).H()
+	time.AfterFunc(700*time.Millisecond, func() {
+		h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+			switch button.Text {
+			case "QuickBuy Config":
+				bedwars.SendItemShopUI(&bedwars.ItemShop{Player: e.(*player.Player)}, true)
+				break
+			case "HotBar Config":
 
-		break
-	}
+				break
+			}
+		})
+	})
 }
 
 func (g SettingsForm) SendTo(pl *player.Player) {
-	f := form.NewMenu(NewCosmeticsForm(), text.Colourf("<emerald>Settings</emerald>"))
+	f := form.NewMenu(NewSettingsForm(), text.Colourf("<emerald>Settings</emerald>"))
 	f = f.WithButtons(
 		form.NewButton("QuickBuy Config", ""),
 		form.NewButton("HotBar Config", ""),

@@ -32,10 +32,6 @@ func (g CosmeticsForm) Submit(submitter form.Submitter, button form.Button, _ *w
 	}
 }
 
-func (g CosmeticsForm) Close(submitter form.Submitter) {
-	g.SendTo(submitter.(*player.Player))
-}
-
 func (g CosmeticsForm) SendTo(pl *player.Player) {
 	f := form.NewMenu(NewCosmeticsForm(), text.Colourf("<emerald>Cosmetics</emerald>"))
 	f = f.WithButtons(
@@ -60,10 +56,6 @@ func (w WoodSkinsForm) Submit(submitter form.Submitter, button form.Button, _ *w
 	u.Data.Cosmetics.SelectedWoodType = wt
 
 	pl.Message(text.Colourf(language.Translate(pl).Misc.SelectedWoodSkin, wt.Name()))
-}
-
-func (w WoodSkinsForm) Close(submitter form.Submitter) {
-	w.SendTo(submitter.(*player.Player))
 }
 
 func (w WoodSkinsForm) SendTo(pl *player.Player) {
@@ -97,10 +89,6 @@ func (c CapesForm) Submit(submitter form.Submitter, button form.Button, tx *worl
 	u.RefreshCape()
 
 	pl.Message(text.Colourf(language.Translate(pl).Misc.SelectedCape, cape.Name()))
-}
-
-func (c CapesForm) Close(submitter form.Submitter) {
-	c.SendTo(submitter.(*player.Player))
 }
 
 func (c CapesForm) SendTo(pl *player.Player) {

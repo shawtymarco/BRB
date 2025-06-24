@@ -122,7 +122,7 @@ func (s *upgradesShop) uShopify(stack item.Stack, name, description string, tier
 
 	infoMsg := "<yellow>Click to purchase!</yellow>"
 	if len(costs)-1 < tier {
-		infoMsg = "<green>Purchased!</green>"
+		infoMsg = "<emerald>Purchased!</emerald>"
 	} else if !canAfford(s.player, stack) {
 		infoMsg = "<red>You cannot afford this!</red>"
 	}

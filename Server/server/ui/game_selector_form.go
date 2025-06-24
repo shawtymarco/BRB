@@ -54,10 +54,6 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 	}
 }
 
-func (g GameSelectorForm) Close(submitter form.Submitter) {
-	g.SendTo(submitter.(*player.Player))
-}
-
 func (g GameSelectorForm) SendTo(pl *player.Player) {
 	f := form.NewMenu(NewGamesForm(), text.Colourf("<emerald>Game Selector</emerald>"))
 	f = f.WithButtons(

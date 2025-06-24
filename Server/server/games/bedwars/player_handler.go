@@ -165,7 +165,7 @@ func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot
 		nearestEnemyTeam := h.game.NearestEnemyTeam(team, pl.Position())
 		enemyPos := h.game.MapConfig().BedPositions[nearestEnemyTeam.ID()*2]
 
-		if nearestEnemyTeam.TrapsCount() > 0 && utils.Distance(newPos, enemyPos) <= 10 {
+		if !h.game.trapIgnore[pl.UUID()] && nearestEnemyTeam.TrapsCount() > 0 && utils.Distance(newPos, enemyPos) <= 10 {
 			if nearestEnemyTeam.Upgrades.ActiveTrap == game.None || time.Now().Sub(nearestEnemyTeam.Upgrades.ActivatedSince) > 10*time.Second {
 				nearestEnemyTeam.Upgrades.ActiveTrap = nearestEnemyTeam.RemoveTrap()
 				nearestEnemyTeam.Upgrades.ActivatedSince = time.Now()
@@ -273,11 +273,11 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			}
 		}
 	} else {
-		if g.pickaxeTierPlayers[pl] > 1 {
-			g.pickaxeTierPlayers[pl]--
+		if g.pickaxeTierPlayers[pl.UUID()] > 1 {
+			g.pickaxeTierPlayers[pl.UUID()]--
 		}
-		if g.axeTierPlayers[pl] > 1 {
-			g.axeTierPlayers[pl]--
+		if g.axeTierPlayers[pl.UUID()] > 1 {
+			g.axeTierPlayers[pl.UUID()]--
 		}
 
 		h := pl.H()
@@ -542,11 +542,11 @@ func giveKit(pl *player.Player, g *BedWars) {
 		}
 	}
 
-	if g.pickaxeTierPlayers[pl] != 0 {
-		_, _ = pl.Inventory().AddItem(pickaxeTier(pl, g.pickaxeTierPlayers[pl]))
+	if g.pickaxeTierPlayers[pl.UUID()] != 0 {
+		_, _ = pl.Inventory().AddItem(pickaxeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
 	}
-	if g.axeTierPlayers[pl] != 0 {
-		_, _ = pl.Inventory().AddItem(axeTier(pl, g.pickaxeTierPlayers[pl]))
+	if g.axeTierPlayers[pl.UUID()] != 0 {
+		_, _ = pl.Inventory().AddItem(axeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
 	}
 }
 

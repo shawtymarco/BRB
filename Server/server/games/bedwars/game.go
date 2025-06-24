@@ -63,18 +63,23 @@ type BedWars struct {
 	emeraldGeneratorSettings *GeneratorSettings
 	generators               []*GeneratorBlockType
 
-	pickaxeTierPlayers map[*player.Player]int
-	axeTierPlayers     map[*player.Player]int
+	pickaxeTierPlayers map[uuid.UUID]int
+	axeTierPlayers     map[uuid.UUID]int
+
+	trapIgnore map[uuid.UUID]bool
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
 	newId := uuid.New()
 	Games[newId] = &BedWars{
-		TeamSize:   teamSize,
-		TeamCount:  teamCount,
-		typeGame:   typeGame,
-		isCustom:   isCustom,
-		startingIn: startingInDuration,
+		TeamSize:           teamSize,
+		TeamCount:          teamCount,
+		typeGame:           typeGame,
+		isCustom:           isCustom,
+		startingIn:         startingInDuration,
+		pickaxeTierPlayers: make(map[uuid.UUID]int),
+		axeTierPlayers:     make(map[uuid.UUID]int),
+		trapIgnore:         make(map[uuid.UUID]bool),
 	}
 	g := Games[newId]
 
@@ -515,6 +520,16 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 		resource, cost := getCost(s)
 		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
 
+		addItem := func() bool {
+			if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
+				_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
+				_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
+				return false
+			}
+
+			return true
+		}
+
 		if boots, ok := s.Item().(item.Boots); ok {
 			t := b.PlayerTeam(pl)
 			pl.Armour().Set(
@@ -529,12 +544,36 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 					utils.Panic(pl.Armour().Inventory().SetItem(slot, stack.WithEnchantments(item.NewEnchantment(enchantment.Protection, t.Upgrades.Protection))))
 				}
 			}
-		} else {
-			if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
-				_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
-				_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
-				return false
+		} else if _, ok := s.Item().(item.Pickaxe); ok {
+			b.pickaxeTierPlayers[pl.UUID()]++
+
+			var flag bool
+			for slot, stack := range pl.Inventory().Items() {
+				if _, ok := stack.Item().(item.Pickaxe); ok {
+					utils.Panic(pl.Inventory().SetItem(slot, s))
+					flag = true
+				}
 			}
+
+			if !flag {
+				return addItem()
+			}
+		} else if _, ok := s.Item().(item.Axe); ok {
+			b.axeTierPlayers[pl.UUID()]++
+
+			var flag bool
+			for slot, stack := range pl.Inventory().Items() {
+				if _, ok := stack.Item().(item.Axe); ok {
+					utils.Panic(pl.Inventory().SetItem(slot, s))
+					flag = true
+				}
+			}
+
+			if !flag {
+				return addItem()
+			}
+		} else {
+			return addItem()
 		}
 
 		return true
