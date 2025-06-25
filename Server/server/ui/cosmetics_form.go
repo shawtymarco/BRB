@@ -25,10 +25,8 @@ func (g CosmeticsForm) Submit(submitter form.Submitter, button form.Button, _ *w
 	switch button.Text {
 	case "Wood Skins":
 		NewWoodSkinsForm().SendTo(pl)
-		break
 	case "Capes":
 		NewCapesForm().SendTo(pl)
-		break
 	}
 }
 

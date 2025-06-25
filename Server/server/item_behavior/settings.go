@@ -1,4 +1,4 @@
-package games
+package item_behavior
 
 import (
 	"server/server/items"

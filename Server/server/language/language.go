@@ -60,7 +60,6 @@ type LangConfig struct {
 		Error struct {
 			NotInAGame                             string
 			TeamIsFull                             string
-			GameAlreadyStarted                     string
 			CannotBreakBlocksBecauseGameNotStarted string
 		}
 	}

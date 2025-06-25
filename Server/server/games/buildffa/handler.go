@@ -92,11 +92,24 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 	listener.HandleAttackEntity(ctx, e, force, height, critical)
 }
 
+func (h Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
+	if newPos.Y() <= float64(Game.MapConfig().Void) {
+		damage := 30.0
+		immunityDur := time.Duration(0)
+		h.HandleHurt(ctx, &damage, false, &immunityDur, entity.VoidDamageSource{})
+	}
+}
+
 func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
 	listener.HandleHurt(ctx, damage, immune, attackImmunity, src)
 
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
+
+	if _, ok := src.(entity.FallDamageSource); ok {
+		ctx.Cancel()
+		return
+	}
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
 		if attacker, ok := s.Attacker.(*player.Player); ok {
@@ -127,11 +140,14 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 }
 
 func onDeath(pl *player.Player, u *user.User, ua *user.User) {
+	pl.Inventory().Clear()
+	pl.Armour().Clear()
+	giveKit(pl)
 	pl.Heal(20, effect.InstantHealingSource{})
 	pl.Teleport(Game.MapConfig().SpawnPoint)
 
 	pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BuildFFA.YouDied)))
-	Game.ForEachActivePlayer(func(pl *player.Player) {
+	go Game.ForEachActivePlayer(func(pl *player.Player) {
 		if ua == nil {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.VoidDeath, database.LobbyNameDisplay.Name(u.Data)))
 		} else {
@@ -141,6 +157,7 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 
 	if ua != nil {
 		ua.GameInfo.BuildFFA.Kills++
+		ua.Player().Heal(20, effect.InstantHealingSource{})
 		ua.Player().PlaySound(sound.Experience{})
 	}
 }
@@ -167,8 +184,15 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 }
 
 func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
+	pl := ctx.Val()
 	if blocksPlaced[vec3ToString(pos.Vec3())].IsZero() {
-		ctx.Cancel()
+		*drops = []item.Stack{}
+		b := pl.Tx().Block(pos)
+		time.AfterFunc(10*time.Second, func() {
+			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+				tx.SetBlock(pos, b, nil)
+			})
+		})
 	} else {
 		*drops = []item.Stack{}
 		blocksPlaced[vec3ToString(pos.Vec3())] = time.Time{}
@@ -180,7 +204,9 @@ func (Handler) HandleFoodLoss(ctx *player.Context, from int, to *int) {
 }
 
 func (Handler) HandleHeal(ctx *player.Context, health *float64, src world.HealingSource) {
-	ctx.Cancel()
+	if _, ok := src.(effect.RegenerationHealingSource); ok {
+		ctx.Cancel()
+	}
 }
 
 func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
@@ -196,12 +222,13 @@ func (Handler) HandleItemUse(ctx *player.Context) {
 }
 
 func giveKit(pl *player.Player) {
-	utils.Panic(pl.Inventory().SetItem(0, item.NewStack(item.Sword{Tier: item.ToolTierStone}, 1).AsUnbreakable()))
-	utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable()))
-	utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Shears{}, 1).AsUnbreakable()))
+	u := user.LookupPlayer(pl)
+	utils.Panics(u.AddItemWithHBConfig(0, item.NewStack(item.Sword{Tier: item.ToolTierStone}, 1).AsUnbreakable()))
+	utils.Panics(u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable()))
+	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).AsUnbreakable()))
 
-	utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: item.ColourGreen()}, 64)))
-	utils.Panic(pl.Inventory().SetItem(8, item.NewStack(KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Knockback, 2)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
+	utils.Panics(u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: item.ColourGreen()}, 64)))
+	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Knockback, 2)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
 
 	pl.Armour().Set(
 		item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: color.RGBA{G: 255}}}, 1).AsUnbreakable(),

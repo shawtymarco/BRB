@@ -195,15 +195,11 @@ func (b *GeneratorBlockType) updateTier() {
 		case 2:
 			b.SpawnRate = 300 * time.Millisecond
 			b.Cap = 64
-			break
 		case 3:
 			b.SpawnRate = 200 * time.Millisecond
-			break
 		case 4:
-			break
 		case 5:
 			b.SpawnRate = 150 * time.Millisecond
-			break
 		}
 	} else if b.Resource == Gold {
 		b.Tier = b.Team.Upgrades.GeneratorTier + 1
@@ -211,15 +207,11 @@ func (b *GeneratorBlockType) updateTier() {
 		case 2:
 			b.SpawnRate = 3000 * time.Millisecond
 			b.Cap = 16
-			break
 		case 3:
 			b.SpawnRate = 2000 * time.Millisecond
-			break
 		case 4:
-			break
 		case 5:
 			b.SpawnRate = 1350 * time.Millisecond
-			break
 		}
 	} else if b.Resource == Emerald {
 		b.Tier = b.Team.Upgrades.GeneratorTier + 1

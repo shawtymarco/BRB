@@ -104,7 +104,6 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 									}
 								}
 							})
-							break
 						case 11:
 							shop.team.Upgrades.Protection++
 							pl.PlaySound(sound.Experience{})
@@ -113,14 +112,12 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 									utils.Panic(p.Armour().Inventory().SetItem(invSlot, invStack.WithEnchantments(item.NewEnchantment(enchantment.Protection, shop.team.Upgrades.Protection))))
 								}
 							})
-							break
 						case 12:
 							shop.team.Upgrades.Haste++
 							pl.PlaySound(sound.Experience{})
 							shop.team.ForEachPlayer(tx, func(p *player.Player) {
 								p.AddEffect(effect.NewInfinite(effect.Haste, shop.team.Upgrades.Haste))
 							})
-							break
 						case 19:
 							shop.team.Upgrades.GeneratorTier++
 							pl.PlaySound(sound.Experience{})
@@ -135,11 +132,9 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 									SpawnRate: 30 * time.Second,
 								}).New(shop.game.MapConfig().IronGenerators[shop.team.ID()], tx)
 							}
-							break
 						case 20:
 							shop.team.Upgrades.HealPool++
 							pl.PlaySound(sound.Experience{})
-							break
 						case 14:
 							if !shop.team.IsTrapsFull() {
 								shop.team.AddTrap(game.Regular)
@@ -147,7 +142,6 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 							} else {
 								pl.PlaySound(sound.Deny{})
 							}
-							break
 						case 15:
 							if !shop.team.IsTrapsFull() {
 								shop.team.AddTrap(game.CounterOffensive)
@@ -155,7 +149,6 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 							} else {
 								pl.PlaySound(sound.Deny{})
 							}
-							break
 						case 16:
 							if !shop.team.IsTrapsFull() {
 								shop.team.AddTrap(game.Alarm)
@@ -163,7 +156,6 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 							} else {
 								pl.PlaySound(sound.Deny{})
 							}
-							break
 						case 23:
 							if !shop.team.IsTrapsFull() {
 								shop.team.AddTrap(game.MinerFatigue)
@@ -171,7 +163,6 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 							} else {
 								pl.PlaySound(sound.Deny{})
 							}
-							break
 						}
 					} else {
 						pl.PlaySound(sound.Deny{})

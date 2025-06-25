@@ -78,10 +78,8 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	switch typeGame {
 	case game.TypeBedWars:
 		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDWARS</yellow></bold>"))
-		break
 	case game.TypeBedFight:
 		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDFIGHT</yellow></bold>"))
-		break
 	default:
 		panic("Unhandled game type")
 	}
@@ -126,13 +124,10 @@ func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 		switch s.Type {
 		case potion.StrongLeaping():
 			pl.AddEffect(effect.New(effect.JumpBoost, 5, 45*time.Second))
-			break
 		case potion.StrongSwiftness():
 			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
-			break
 		case potion.LongInvisibility():
 			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
-			break
 		}
 	}
 }
@@ -395,19 +390,15 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		case item.ColourRed():
 			teamIndex = 0
 			bedColor = text.Colourf("<red>Red</red> Bed")
-			break
 		case item.ColourBlue():
 			teamIndex = 1
 			bedColor = text.Colourf("<blue>Blue</blue> Bed")
-			break
 		case item.ColourGreen():
 			teamIndex = 2
 			bedColor = text.Colourf("<green>Green</green> Bed")
-			break
 		case item.ColourYellow():
 			teamIndex = 3
 			bedColor = text.Colourf("<yellow>Yellow</yello> Bed")
-			break
 		}
 
 		if h.game.PlayerTeam(pl).ID() == teamIndex {
@@ -513,18 +504,19 @@ func vec3ToString(v mgl64.Vec3) string {
 }
 
 func giveKit(pl *player.Player, g *BedWars) {
+	u := user.LookupPlayer(pl)
 	t := g.PlayerTeam(pl)
 
 	sword := item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)
 	if t.Upgrades.Sharpness > 0 {
 		sword = sword.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, t.Upgrades.Sharpness))
 	}
-	utils.Panic(pl.Inventory().SetItem(0, sword))
+	_, _ = u.AddItemWithHBConfig(0, sword)
 	if g.Type() == game.TypeBedFight {
-		utils.Panic(pl.Inventory().SetItem(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1)))
-		utils.Panic(pl.Inventory().SetItem(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1)))
-		utils.Panic(pl.Inventory().SetItem(3, item.NewStack(item.Shears{}, 1)))
-		utils.Panic(pl.Inventory().SetItem(4, item.NewStack(block.Wool{Colour: t.WoolColour()}, 64)))
+		_, _ = u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1))
+		_, _ = u.AddItemWithHBConfig(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1))
+		_, _ = u.AddItemWithHBConfig(3, item.NewStack(item.Shears{}, 1))
+		_, _ = u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: t.WoolColour()}, 64))
 	}
 
 	if len(pl.Armour().Items()) == 0 {
@@ -543,10 +535,10 @@ func giveKit(pl *player.Player, g *BedWars) {
 	}
 
 	if g.pickaxeTierPlayers[pl.UUID()] != 0 {
-		_, _ = pl.Inventory().AddItem(pickaxeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
+		_, _ = u.AddItemWithHBConfig(-1, pickaxeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
 	}
 	if g.axeTierPlayers[pl.UUID()] != 0 {
-		_, _ = pl.Inventory().AddItem(axeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
+		_, _ = u.AddItemWithHBConfig(-1, axeTier(pl, g.pickaxeTierPlayers[pl.UUID()]))
 	}
 }
 
@@ -556,16 +548,12 @@ func rewardResources(pl *player.Player, killed *player.Player) {
 		switch stack.Item().(type) {
 		case item.IronIngot:
 			iron += stack.Count()
-			break
 		case item.GoldIngot:
 			gold += stack.Count()
-			break
 		case item.Diamond:
 			diamond += stack.Count()
-			break
 		case item.Emerald:
 			emerald += stack.Count()
-			break
 		}
 	}
 

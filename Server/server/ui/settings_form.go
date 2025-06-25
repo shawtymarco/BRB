@@ -21,13 +21,12 @@ func (g SettingsForm) Submit(submitter form.Submitter, button form.Button, _ *wo
 	h := submitter.(*player.Player).H()
 	time.AfterFunc(700*time.Millisecond, func() {
 		h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+			pl := e.(*player.Player)
 			switch button.Text {
 			case "QuickBuy Config":
-				bedwars.SendItemShopUI(&bedwars.ItemShop{Player: e.(*player.Player)}, true)
-				break
+				bedwars.SendItemShopUI(&bedwars.ItemShop{Player: pl}, true)
 			case "HotBar Config":
-
-				break
+				sendHotBarConfigUI(pl)
 			}
 		})
 	})

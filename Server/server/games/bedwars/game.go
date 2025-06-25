@@ -115,7 +115,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						sendWaitingScoreboard(pl, g)
 					})
 				}
-				break
 			case game.Starting:
 				if len(g.OriginalPlayers()) != teamSize*teamCount {
 					g.startingIn = startingInDuration
@@ -164,7 +163,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						g.startingIn -= 100 * time.Millisecond
 					}
 				}
-				break
 			case game.Running:
 				suddenDeathTicker := time.NewTicker(700 * time.Millisecond)
 				if g.WinningTeam() != nil {
@@ -203,7 +201,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 									pl.Message(text.Colourf(language.Translate(pl).BedWars.GeneratorUpgraded, currentStage.action, currentStage.tier))
 								}
 							})
-							break
 						case "<red>Bed Gone</red>":
 							g.World().Exec(func(tx *world.Tx) {
 								for e := range tx.Players() {
@@ -219,7 +216,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 								g.playBedBrokenSound(tx)
 							})
-							break
 						case "<red>Sudden Death | Phase I</Red>", "<red>Sudden Death | Phase II</Red>", "<red>Sudden Death | Phase III</Red>":
 							g.World().Exec(func(tx *world.Tx) {
 								for e := range tx.Players() {
@@ -247,7 +243,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 									})
 								}
 							}()
-							break
 						case "<red>Game Ends</red>":
 							suddenDeathTicker.Stop()
 							g.World().Exec(func(tx *world.Tx) {
@@ -257,17 +252,14 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								}
 							})
 							g.SetStage(game.Ending)
-							break
 						}
 						stages = stages[1:]
 					}
 				}
-				break
 			case game.Ending:
 				time.AfterFunc(5*time.Second, func() {
 					g.SetStage(game.Terminated)
 				})
-				break
 			case game.Terminated:
 				ticker.Stop()
 
@@ -289,7 +281,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 				utils.Panic(g.World().Close())
 				delete(Games, g.ID())
-				break
 			default:
 				panic("unknown stage")
 			}
@@ -392,50 +383,36 @@ func (b *BedWars) Reward(pl *player.Player) {
 		switch u.Data.Statistics.ELORank() {
 		case database.Bronze:
 			u.Data.Statistics.ELO += 25
-			break
 		case database.Silver, database.Gold, database.Platinum, database.Diamond:
 			u.Data.Statistics.ELO += 20
-			break
 		case database.Emerald, database.Sapphire, database.Ruby, database.Crystal:
 			u.Data.Statistics.ELO += 15
-			break
 		case database.Opal, database.Amethyst, database.Obsidian, database.Aventurine:
 			u.Data.Statistics.ELO += 10
-			break
 		case database.Quartz, database.Topaz, database.DarkMatter:
 			u.Data.Statistics.ELO += 5
-			break
 		}
 	}
 
 	switch u.Data.Statistics.ELORank() {
 	case database.Bronze:
 		u.Data.Statistics.ELO += 45
-		break
 	case database.Silver, database.Gold:
 		u.Data.Statistics.ELO += 40
-		break
 	case database.Platinum, database.Diamond:
 		u.Data.Statistics.ELO += 35
-		break
 	case database.Emerald, database.Sapphire:
 		u.Data.Statistics.ELO += 30
-		break
 	case database.Ruby, database.Crystal:
 		u.Data.Statistics.ELO += 25
-		break
 	case database.Opal, database.Amethyst:
 		u.Data.Statistics.ELO += 20
-		break
 	case database.Obsidian, database.Aventurine:
 		u.Data.Statistics.ELO += 15
-		break
 	case database.Quartz, database.Topaz:
 		u.Data.Statistics.ELO += 10
-		break
 	case database.DarkMatter:
 		u.Data.Statistics.ELO += 5
-		break
 	}
 
 	if b.typeGame == game.TypeBedWars {
@@ -452,28 +429,20 @@ func (b *BedWars) Punish(pl *player.Player) {
 	switch u.Data.Statistics.ELORank() {
 	case database.Bronze, database.Silver:
 		u.Data.Statistics.ELO -= 10
-		break
 	case database.Gold, database.Platinum:
 		u.Data.Statistics.ELO -= 15
-		break
 	case database.Diamond, database.Emerald:
 		u.Data.Statistics.ELO -= 20
-		break
 	case database.Sapphire, database.Ruby:
 		u.Data.Statistics.ELO -= 25
-		break
 	case database.Crystal, database.Opal:
 		u.Data.Statistics.ELO -= 30
-		break
 	case database.Amethyst, database.Obsidian:
 		u.Data.Statistics.ELO -= 35
-		break
 	case database.Aventurine, database.Quartz:
 		u.Data.Statistics.ELO -= 40
-		break
 	case database.Topaz, database.DarkMatter:
 		u.Data.Statistics.ELO -= 45
-		break
 	}
 
 	if b.typeGame == game.TypeBedWars {
@@ -516,12 +485,13 @@ func (b *BedWars) NearestEnemyTeam(team *game.Team, pos mgl64.Vec3) *game.Team {
 }
 
 func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
+	u := user.LookupPlayer(pl)
 	if canAfford(pl, s) {
 		resource, cost := getCost(s)
 		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
 
 		addItem := func() bool {
-			if n, err := pl.Inventory().AddItem(s.WithLore()); err != nil {
+			if n, err := u.AddItemWithHBConfig(-1, s.WithLore()); err != nil {
 				_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
 				_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
 				return false
@@ -654,13 +624,10 @@ func sendRunningScoreboard(pl *player.Player, g *BedWars, stage *stage) {
 		switch t.Status {
 		case game.BedExists:
 			statusStr = "<green>✔</green>"
-			break
 		case game.BedBroken:
 			statusStr = strconv.Itoa(t.CountActivePlayers())
-			break
 		case game.TeamDead:
 			statusStr = "<red>✖</red>"
-			break
 		}
 
 		u.Scoreboard.Set(i, text.Colourf(

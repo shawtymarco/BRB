@@ -176,7 +176,7 @@
   "./maps/BedFight1": {
     "Name": "BedFight",
     "Type": "bedfight",
-    "void": -50,
+    "Void": -50,
     "SpawnPoint": [
       191.5,
       3.0,
@@ -198,6 +198,7 @@
   "./maps/BuildFFA": {
     "Name": "BuildFFA",
     "Type": "buildffa",
+    "Void": 60,
     "SpawnPoint": [
       0,
       100,

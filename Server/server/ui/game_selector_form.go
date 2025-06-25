@@ -38,7 +38,6 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 				})
 			}()
 		}
-		break
 	case game.TypeBedFight:
 		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false, nil)
 
@@ -50,7 +49,6 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 				})
 			}()
 		}
-		break
 	}
 }
 

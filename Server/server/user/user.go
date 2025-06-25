@@ -192,19 +192,56 @@ func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Dura
 	return exists
 }
 
-func (u *User) AddItem(its ...item.Stack) bool {
-	if len(u.pl.Inventory().Items())+len(its) > 36 {
-		u.pl.Message(text.Colourf(language.Translate(u.pl).Error.InventoryFull))
-		return false
+func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err error) {
+	var category database.HotBarCategory
+
+	switch it.Item().(type) {
+	case item.Sword, item.Stick:
+		category = database.Melee
+	case world.Block:
+		category = database.Blocks
+	case item.Bow:
+		category = database.Bows
+	case item.Potion:
+		category = database.Potions
+	case item.GoldenApple, item.Snowball, block.TNT, item.EnderPearl, item.Bucket, item.Egg, block.Sponge, item.Compass:
+		category = database.Utility
+	case item.Shears:
+		category = database.Shears
+	case item.Pickaxe:
+		category = database.Pickaxe
+	case item.Axe:
+		category = database.Axe
 	}
-	for _, it := range its {
-		_, err := u.pl.Inventory().AddItem(it)
-		if err != nil {
-			u.pl.Message(text.Colourf(language.Translate(u.pl).Error.InventoryFull))
-			return false
+
+	slot := -1
+
+	if category != database.None {
+		for s, c := range u.Data.Settings.HotBarConfig {
+			if c == category {
+				slot = s
+				break
+			}
 		}
 	}
-	return true
+
+	if slot != -1 {
+		sa, sb := it.AddStack(utils.Panics(u.pl.Inventory().Item(slot)))
+		if sb.Count() != 0 {
+			slot = -1
+		} else {
+			return it.Count(), u.pl.Inventory().SetItem(slot, sa)
+		}
+	}
+
+	if slot == -1 && preferredSlot != -1 {
+		sa, sb := it.AddStack(utils.Panics(u.pl.Inventory().Item(preferredSlot)))
+		if sb.Count() == 0 {
+			return it.Count(), u.pl.Inventory().SetItem(preferredSlot, sa)
+		}
+	}
+
+	return u.pl.Inventory().AddItem(it)
 }
 
 func (u *User) SendScoreboard(numOfSpaces int) {

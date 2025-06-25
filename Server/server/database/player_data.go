@@ -3,6 +3,9 @@ package database
 import (
 	"time"
 
+	"github.com/df-mc/dragonfly/server/item"
+	"github.com/sandertv/gophertunnel/minecraft/text"
+
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 
 	"github.com/df-mc/dragonfly/server/block"
@@ -70,14 +73,61 @@ type Settings struct {
 type HotBarCategory int
 
 const (
-	Melee HotBarCategory = iota
-	Tools
-	Bows
+	None HotBarCategory = iota
+	Melee
 	Blocks
+	Bows
 	Potions
-	TNT
-	Compass
+	Utility
+	Shears
+	Pickaxe
+	Axe
 )
+
+func (c HotBarCategory) AsStack() item.Stack {
+	switch c {
+	case Melee:
+		return item.NewStack(item.Sword{Tier: item.ToolTierGold}, 1).WithCustomName(text.Colourf("<emerald>Melee</emerald>"))
+	case Blocks:
+		return item.NewStack(block.Wool{}, 1).WithCustomName(text.Colourf("<emerald>Blocks</emerald>"))
+	case Bows:
+		return item.NewStack(item.Bow{}, 1).WithCustomName(text.Colourf("<emerald>Bows</emerald>"))
+	case Potions:
+		return item.NewStack(block.BrewingStand{}, 1).WithCustomName(text.Colourf("<emerald>Potions</emerald>"))
+	case Utility:
+		return item.NewStack(block.TNT{}, 1).WithCustomName(text.Colourf("<emerald>Utility</emerald>"))
+	case Shears:
+		return item.NewStack(item.Shears{}, 1).WithCustomName(text.Colourf("<emerald>Shears</emerald>"))
+	case Pickaxe:
+		return item.NewStack(item.Pickaxe{Tier: item.ToolTierIron}, 1).WithCustomName(text.Colourf("<emerald>Pickaxe</emerald>"))
+	case Axe:
+		return item.NewStack(item.Axe{Tier: item.ToolTierIron}, 1).WithCustomName(text.Colourf("<emerald>Axe</emerald>"))
+	default:
+		return item.NewStack(block.StainedGlass{Colour: item.ColourRed()}, 1).WithCustomName(text.Colourf("<red>Empty Slot</red>"))
+	}
+}
+
+func HotBarCategoryFromStack(stack item.Stack) HotBarCategory {
+	switch {
+	case stack.Equal(Melee.AsStack()):
+		return Melee
+	case stack.Equal(Blocks.AsStack()):
+		return Blocks
+	case stack.Equal(Bows.AsStack()):
+		return Bows
+	case stack.Equal(Potions.AsStack()):
+		return Potions
+	case stack.Equal(Utility.AsStack()):
+		return Utility
+	case stack.Equal(Shears.AsStack()):
+		return Shears
+	case stack.Equal(Pickaxe.AsStack()):
+		return Pickaxe
+	case stack.Equal(Axe.AsStack()):
+		return Axe
+	}
+	return None
+}
 
 type Games struct {
 	BedWars struct {

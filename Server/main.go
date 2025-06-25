@@ -28,7 +28,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player/chat"
 
 	_ "server/server/api"
-	_ "server/server/games"
+	_ "server/server/item_behavior"
 )
 
 func main() {
