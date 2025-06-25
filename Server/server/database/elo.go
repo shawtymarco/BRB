@@ -92,37 +92,37 @@ func GetEloRank(elo int) EloRank {
 func (e EloRank) EloPrefix() string {
 	switch e {
 	case Bronze:
-		return text.Colourf("<bold><copper>Bronze</copper></bold>")
+		return text.Colourf("<copper>Bronze</copper>")
 	case Silver:
-		return text.Colourf("<bold><grey>Silver</grey></bold>")
+		return text.Colourf("<grey>Silver</grey>")
 	case Gold:
-		return text.Colourf("<bold><gold>Gold</gold></bold>")
+		return text.Colourf("<gold>Gold</gold>")
 	case Platinum:
-		return text.Colourf("<bold><lapis>Platinum</lapis></bold>")
+		return text.Colourf("<lapis>Platinum</lapis>")
 	case Diamond:
-		return text.Colourf("<bold><diamond>Diamond</diamond></bold>")
+		return text.Colourf("<diamond>Diamond</diamond>")
 	case Emerald:
-		return text.Colourf("<bold><emerald>Emerald</emerald></bold>")
+		return text.Colourf("<emerald>Emerald</emerald>")
 	case Sapphire:
-		return text.Colourf("<bold><dark-blue>Sapphire</dark-blue></bold>")
+		return text.Colourf("<dark-blue>Sapphire</dark-blue>")
 	case Ruby:
-		return text.Colourf("<bold><redstone>Ruby</redstone></bold>")
+		return text.Colourf("<redstone>Ruby</redstone>")
 	case Crystal:
-		return text.Colourf("<bold><iron>Crystal</iron></bold>")
+		return text.Colourf("<iron>Crystal</iron>")
 	case Opal:
-		return text.Colourf("<bold><white>Opal</white></bold>")
+		return text.Colourf("<white>Opal</white>")
 	case Amethyst:
-		return text.Colourf("<bold><amethyst>Amethyst</amethyst></bold>")
+		return text.Colourf("<amethyst>Amethyst</amethyst>")
 	case Obsidian:
-		return text.Colourf("<bold><dark-purple>Obsidian</dark-purple></bold>")
+		return text.Colourf("<dark-purple>Obsidian</dark-purple>")
 	case Aventurine:
-		return text.Colourf("<bold><green>Aventurine</green></bold>")
+		return text.Colourf("<green>Aventurine</green>")
 	case Quartz:
-		return text.Colourf("<bold><quartz>Quartz</quartz></bold>")
+		return text.Colourf("<quartz>Quartz</quartz>")
 	case Topaz:
-		return text.Colourf("<bold><yellow>Topaz</yellow></bold>")
+		return text.Colourf("<yellow>Topaz</yellow>")
 	case DarkMatter:
-		return text.Colourf("<bold><black>Dark Matter</black></bold>")
+		return text.Colourf("<black>Dark Matter</black>")
 	default:
 		return ""
 	}

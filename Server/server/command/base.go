@@ -17,6 +17,7 @@ const (
 	GameMode
 	Warp
 	Join
+	Rejoin
 )
 
 func (p Permission) Test(src cmd.Source) bool {
@@ -61,5 +62,5 @@ var rankPermissions = map[database.Rank][]Permission{
 	database.Premium:      {},
 	database.MediaPartner: {},
 	database.Booster:      {},
-	database.Player:       {Join, Warp},
+	database.Player:       {Rejoin, Join, Warp},
 }

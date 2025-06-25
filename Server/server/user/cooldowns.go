@@ -3,7 +3,8 @@ package user
 type PlayerCoolDowns int
 
 const (
-	INTERACT PlayerCoolDowns = iota
+	Interact PlayerCoolDowns = iota
+	Chat
 	CommandPing
 	CommandHub
 	CommandLink

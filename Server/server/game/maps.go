@@ -18,6 +18,8 @@ type MapData struct {
 	TeamSpawnPoints []mgl64.Vec3
 
 	BedPositions              []mgl64.Vec3
+	ChestPositions            []mgl64.Vec3
+	EnderChestPositions       []mgl64.Vec3
 	ShopVillagerPositions     []mgl64.Vec3
 	UpgradesVillagerPositions []mgl64.Vec3
 	IronGenerators            []mgl64.Vec3

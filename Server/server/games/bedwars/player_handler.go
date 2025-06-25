@@ -10,8 +10,11 @@ import (
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/item/inventory"
 
 	"github.com/bedrock-gophers/inv/inv"
 
@@ -87,9 +90,13 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	bwGame.AddPlayerToTeam(pl, teamSize)
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	bwGame.ForEachActivePlayer(func(pl *player.Player) {
-		pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
-	})
+	if bwGame.Stage() == game.Running {
+		pl.Hurt(20, entity.VoidDamageSource{})
+	} else {
+		bwGame.ForEachActivePlayer(func(pl *player.Player) {
+			pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
+		})
+	}
 }
 
 func (h PlayerHandler) HandleQuit(pl *player.Player) {
@@ -106,10 +113,24 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
 
+	if listener.CheckChatCoolDown(pl) {
+		return
+	}
+
 	*msg = strings.ReplaceAll(*msg, "§r", "")
 	var newMsg string
 	if h.game.Stage() == game.Running {
-		newMsg = fmt.Sprintf("%v<white>: %v</white>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), *msg)
+		if strings.HasPrefix(*msg, "!") {
+			*msg = strings.Replace(*msg, "!", "", 1)
+			newMsg = fmt.Sprintf("%v<white>: %v</white>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), *msg)
+		} else {
+			ctx.Cancel()
+			newMsg = fmt.Sprintf("<grey>[TEAM CHAT]</grey> %v<white>: %v</white>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), *msg)
+			h.game.PlayerTeam(pl).ForEachPlayer(pl.Tx(), func(pl *player.Player) {
+				pl.Message(text.Colourf(newMsg))
+			})
+			return
+		}
 	} else {
 		newMsg = fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
 	}
@@ -216,6 +237,9 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
 			u.LastHit = attacker.H()
+			ua.LastHit = pl.H()
+			u.LastHitAt = time.Now()
+			ua.LastHitAt = time.Now()
 
 			pl.RemoveEffect(effect.Invisibility)
 
@@ -224,7 +248,7 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 				ctx.Cancel()
 			}
 		}
-	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
+	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 15*time.Second {
 		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
 			if pla, ok := ea.(*player.Player); ok && pl.Health() <= *damage {
 				onDeath(h.game, pl, u, user.LookupPlayer(pla))
@@ -251,7 +275,6 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
-	pl.Inventory().Clear()
 	inv.CloseContainer(pl)
 
 	finalKill := ""
@@ -309,27 +332,34 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}
 	}
 
-	go g.ForEachActivePlayer(func(p *player.Player) {
-		if ua == nil {
-			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
-		} else {
-			c1 := g.PlayerTeam(pl).Colour()
-			c2 := g.PlayerTeam(ua.Player()).Colour()
-			p.Message(text.Colourf(
-				language.Translate(p).BedWars.KilledBy,
-				text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
-				text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
-				finalKill,
-			))
+	ha := ua.Player().H()
+	go func() {
+		g.ForEachActivePlayer(func(p *player.Player) {
+			if ua == nil {
+				p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
+			} else {
+				c1 := g.PlayerTeam(pl).Colour()
+				c2 := g.PlayerTeam(ua.Player()).Colour()
+				p.Message(text.Colourf(
+					language.Translate(p).BedWars.KilledBy,
+					text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
+					text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
+					finalKill,
+				))
+			}
+		})
+
+		if ua != nil {
+			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+				if attacker, ok := ha.Entity(tx); ok {
+					ua.Player().PlaySound(sound.Experience{})
+					rewardResources(attacker.(*player.Player), e.(*player.Player))
+				}
+				e.(*player.Player).Armour().Clear()
+			})
 		}
-	})
 
-	if ua != nil {
-		ua.Player().PlaySound(sound.Experience{})
-		rewardResources(ua.Player(), pl)
-	}
-
-	pl.Armour().Clear()
+	}()
 
 	if g.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Deaths++
@@ -369,6 +399,20 @@ func (h PlayerHandler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b wor
 		ctx.Cancel()
 		t.Ignite(pos, pl.Tx(), nil)
 		pl.SetHeldItems(main.Grow(-1), off)
+		return
+	}
+
+	for _, v := range slices.Concat(
+		h.game.MapConfig().IronGenerators,
+		h.game.MapConfig().DiamondGenerators,
+		h.game.MapConfig().EmeraldGenerators,
+		h.game.MapConfig().ShopVillagerPositions,
+		h.game.MapConfig().UpgradesVillagerPositions,
+	) {
+		if utils.Distance(v, pos.Vec3()) <= 3 {
+			ctx.Cancel()
+			break
+		}
 	}
 }
 
@@ -435,6 +479,19 @@ func (PlayerHandler) HandleFoodLoss(ctx *player.Context, from int, to *int) {
 
 func (PlayerHandler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 	listener.HandleStartBreak(ctx, pos)
+	pl := ctx.Val()
+	main, off := pl.HeldItems()
+
+	putItem := func(inv *inventory.Inventory) {
+		_, _ = inv.AddItem(main)
+		pl.SetHeldItems(item.Stack{}, off)
+	}
+
+	if chest, ok := pl.Tx().Block(pos).(block.Chest); ok {
+		putItem(chest.Inventory(pl.Tx(), pos))
+	} else if _, ok := pl.Tx().Block(pos).(block.EnderChest); ok {
+		putItem(pl.EnderChestInventory())
+	}
 }
 
 func (PlayerHandler) HandlePunchAir(ctx *player.Context) {
@@ -507,15 +564,15 @@ func giveKit(pl *player.Player, g *BedWars) {
 	u := user.LookupPlayer(pl)
 	t := g.PlayerTeam(pl)
 
-	sword := item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1)
+	sword := item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1).AsUnbreakable()
 	if t.Upgrades.Sharpness > 0 {
 		sword = sword.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, t.Upgrades.Sharpness))
 	}
 	_, _ = u.AddItemWithHBConfig(0, sword)
 	if g.Type() == game.TypeBedFight {
-		_, _ = u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1))
-		_, _ = u.AddItemWithHBConfig(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1))
-		_, _ = u.AddItemWithHBConfig(3, item.NewStack(item.Shears{}, 1))
+		_, _ = u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable())
+		_, _ = u.AddItemWithHBConfig(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).AsUnbreakable())
+		_, _ = u.AddItemWithHBConfig(3, item.NewStack(item.Shears{}, 1).AsUnbreakable())
 		_, _ = u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: t.WoolColour()}, 64))
 	}
 

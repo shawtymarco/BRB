@@ -94,11 +94,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 	go func() {
 		stages := []*stage{
-			{action: "<diamond>Diamond Generators</diamond>", tier: 2, dur: 6 * time.Minute},
-			{action: "<emerald>Emerald Generators</emerald>", tier: 2, dur: 6 * time.Minute},
-			{action: "<diamond>Diamond Generators</diamond>", tier: 3, dur: 6 * time.Minute},
-			{action: "<emerald>Emerald Generators</emerald>", tier: 3, dur: 6 * time.Minute},
-			{action: "<red>Bed Gone</red>", dur: 6 * time.Minute},
+			//{action: "<diamond>Diamond Generators</diamond>", tier: 2, dur: 6 * time.Minute}, // TODO: CHANGE BACK
+			//{action: "<emerald>Emerald Generators</emerald>", tier: 2, dur: 6 * time.Minute},
+			//{action: "<diamond>Diamond Generators</diamond>", tier: 3, dur: 6 * time.Minute},
+			//{action: "<emerald>Emerald Generators</emerald>", tier: 3, dur: 6 * time.Minute},
+			{action: "<red>Bed Gone</red>", dur: 6 * time.Second},
 			{action: "<red>Sudden Death | Phase I</Red>", tier: 1, dur: 10 * time.Minute},
 			{action: "<red>Sudden Death | Phase II</Red>", tier: 2, dur: 3 * time.Minute},
 			{action: "<red>Sudden Death | Phase III</Red>", tier: 3, dur: 3 * time.Minute},
@@ -153,6 +153,8 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							for _, gen := range g.generators {
 								gen.Active = true
 							}
+
+							pl.Message(text.Colourf(language.Translate(pl).BedWars.TutorialMessage))
 						})
 
 						g.SetStage(game.Running)
@@ -175,6 +177,70 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							g.Punish(pl)
 							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.YouLostTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour())))
 						}
+
+						var name string
+						var mostKills int
+						g.WinningTeam().ForEachPlayer(pl.Tx(), func(p *player.Player) {
+							uwt := user.LookupPlayer(p)
+							if name == "" || mostKills < uwt.GameInfo.TotalBWKills() {
+								name = database.LobbyNameDisplay.Name(uwt.Data)
+								mostKills = uwt.GameInfo.TotalBWKills()
+							}
+						})
+
+						var sorted []*player.Player
+						for _, e := range g.OriginalPlayers() {
+							if p, ok := e.Entity(pl.Tx()); ok {
+								sorted = append(sorted, p.(*player.Player))
+							}
+						}
+
+						slices.SortFunc(sorted, func(a, b *player.Player) int {
+							ua := user.LookupPlayer(a)
+							ub := user.LookupPlayer(b)
+
+							return ub.GameInfo.TotalBWKills() - ua.GameInfo.TotalBWKills()
+						})
+
+						var l1, l2, l3, l4 string
+
+						if name != "" {
+							l1 = text.Colourf("<%v>%v</%v> <grey>-</grey> %v", g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour(), name)
+						}
+
+						if len(sorted) > 0 {
+							u := user.LookupPlayer(sorted[0])
+							l2 = text.Colourf("<yellow>1st Killer</yellow> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+						}
+						if len(sorted) > 1 {
+							u := user.LookupPlayer(sorted[1])
+							l3 = text.Colourf("<gold>2nd Killer</gold> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+						}
+						if len(sorted) > 2 {
+							u := user.LookupPlayer(sorted[2])
+							l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+						}
+
+						pl.Message(text.Colourf(
+							`<green>============================================================</green>
+                                    <bold>Bed Wars</bold>
+
+%v%v
+
+%v%v
+%v%v
+%v%v
+
+<green>============================================================</green>`,
+							strings.Repeat(" ", 80-len(l1)),
+							l1,
+							strings.Repeat(" ", 90-len(l2)),
+							l2,
+							strings.Repeat(" ", 90-len(l3)),
+							l3,
+							strings.Repeat(" ", 90-len(l4)),
+							l4,
+						))
 					})
 
 					g.SetStage(game.Ending)
@@ -342,6 +408,14 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 	for _, pos := range b.MapConfig().EmeraldGenerators {
 		b.generators = append(b.generators, b.emeraldGeneratorSettings.New(pos, tx))
 	}
+
+	for _, pos := range b.MapConfig().ChestPositions {
+		tx.AddEntity(entity.NewText(text.Colourf("<yellow>PUNCH TO</yellow>\n<yellow>DEPOSIT</yellow>"), pos))
+	}
+
+	for _, pos := range b.MapConfig().EnderChestPositions {
+		tx.AddEntity(entity.NewText(text.Colourf("<yellow>PUNCH TO</yellow>\n<yellow>DEPOSIT</yellow>"), pos))
+	}
 }
 
 func (b *BedWars) Type() game.TypeGame {
@@ -373,7 +447,7 @@ func (b *BedWars) Reward(pl *player.Player) {
 		ua := user.LookupPlayer(a)
 		ub := user.LookupPlayer(b)
 
-		return ub.GameInfo.BedWars.Kills - ua.GameInfo.BedWars.FinalKills
+		return ub.GameInfo.BedWars.Kills - ua.GameInfo.BedWars.Kills
 	})
 
 	mostKills := user.LookupPlayer(sorted[0]).GameInfo.BedWars.Kills + user.LookupPlayer(sorted[0]).GameInfo.BedWars.FinalKills

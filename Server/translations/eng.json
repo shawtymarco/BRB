@@ -16,7 +16,7 @@
     },
     "Error": {
       "Permission": "%v",
-      "CoolDown": "%v",
+      "CoolDown": "%.2f",
       "OnlyOneTarget": "",
       "RankHierarchy": "",
       "LinkExpired": "",
@@ -37,6 +37,7 @@
     }
   },
   "BedWars": {
+    "TutorialMessage": "<green>============================================================</green>\n                                                       <bold>Bed Wars</bold>\n\n             <bold><yellow>Protect your bed and destroy the enemy beds.</yellow></bold>\n             <bold><yellow>Upgrade yourself and your team by collecting.</yellow></bold>\n         <bold><yellow>Iron, Gold, Emerald, and Diamond from generators</yellow></bold>\n                       <bold><yellow>to access powerful upgrades.</yellow></bold>\n\n<green>============================================================</green>",
     "YouWonTitle": "",
     "YouLostTitle": "",
     "TeamWonSubTitle": "<%v>%v</%v>",

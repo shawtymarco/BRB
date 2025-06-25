@@ -20,7 +20,7 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 
 	var teamColourStr string
 	if nc.TeamColour != "" {
-		teamColourStr = fmt.Sprintf("<%v>[%v]</%v> ", nc.TeamColour, strings.ToUpper(nc.TeamColour), nc.TeamColour)
+		teamColourStr = fmt.Sprintf("<bold><%v>%v</%v></bold> ", nc.TeamColour, strings.ToUpper(string([]rune(nc.TeamColour)[0])), nc.TeamColour)
 	}
 
 	n := pd.Username

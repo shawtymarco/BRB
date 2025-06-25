@@ -65,6 +65,7 @@ type LangConfig struct {
 	}
 
 	BedWars struct {
+		TutorialMessage       string
 		YouWonTitle           string
 		YouLostTitle          string
 		TeamWonSubTitle       string

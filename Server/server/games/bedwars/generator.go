@@ -96,7 +96,7 @@ func (b *GeneratorBlockType) PlayersWithin(tx *world.Tx) []*player.Player {
 }
 
 func (b *GeneratorBlockType) CountResourcesWithin() (res int) {
-	for e := range b.Tx().EntitiesWithin(cube.Box(-2, -2, -2, 2, 2, 2).Translate(b.Position())) {
+	for e := range b.Tx().EntitiesWithin(cube.Box(-3, -3, -3, 3, 3, 3).Translate(b.Position())) {
 		if ent, ok := e.(*entity.Ent); ok && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
 				res += beh.Item().Count()
@@ -109,7 +109,7 @@ func (b *GeneratorBlockType) CountResourcesWithin() (res int) {
 func (b *GeneratorBlockType) ResourcesWithin(tx *world.Tx) []*entity.Ent {
 	var res []*entity.Ent
 
-	for e := range tx.EntitiesWithin(cube.Box(-2, -2, -2, 2, 2, 2).Translate(b.Position())) {
+	for e := range tx.EntitiesWithin(cube.Box(-3, -3, -3, 3, 3, 3).Translate(b.Position())) {
 		if ent, ok := e.(*entity.Ent); ok && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
 				res = append(res, ent)

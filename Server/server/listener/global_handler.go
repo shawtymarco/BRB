@@ -2,6 +2,7 @@ package listener
 
 import (
 	"server/server"
+	"server/server/database"
 	"server/server/items"
 	"server/server/user"
 	"time"
@@ -43,7 +44,7 @@ func HandlePunchAir(ctx *player.Context) {
 func HandleItemUse(ctx *player.Context) {
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
-	if u.IsCooldownActive(user.INTERACT, 50*time.Millisecond, false, false) {
+	if u.IsCooldownActive(user.Interact, 50*time.Millisecond, false, false) {
 		return
 	}
 
@@ -53,4 +54,9 @@ func HandleItemUse(ctx *player.Context) {
 		items.ItemHandlers[action].InteractClick(items.OnItemUse, pl, nil)
 		ctx.Cancel()
 	}
+}
+
+func CheckChatCoolDown(pl *player.Player) bool {
+	u := user.LookupPlayer(pl)
+	return u.Data.Rank() == database.Player && u.IsCooldownActive(user.Interact, 1*time.Second, false, true)
 }

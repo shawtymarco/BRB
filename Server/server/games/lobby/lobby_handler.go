@@ -68,6 +68,10 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
 
+	if listener.CheckChatCoolDown(pl) {
+		return
+	}
+
 	*msg = strings.ReplaceAll(*msg, "§r", "")
 	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
 	*msg = text.Colourf(newMsg)

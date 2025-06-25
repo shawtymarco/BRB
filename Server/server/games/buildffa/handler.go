@@ -81,6 +81,10 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	pl := ctx.Val()
 	u := user.LookupPlayer(pl)
 
+	if listener.CheckChatCoolDown(pl) {
+		return
+	}
+
 	*msg = strings.ReplaceAll(*msg, "§r", "")
 	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
 	*msg = text.Colourf(newMsg)
@@ -115,12 +119,15 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 		if attacker, ok := s.Attacker.(*player.Player); ok {
 			ua := user.LookupPlayer(attacker)
 			u.LastHit = attacker.H()
+			ua.LastHit = pl.H()
+			u.LastHitAt = time.Now()
+			ua.LastHitAt = time.Now()
 			if pl.Health() <= *damage {
 				onDeath(pl, u, ua)
 				ctx.Cancel()
 			}
 		}
-	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 30*time.Second {
+	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 15*time.Second {
 		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
 			if pla, ok := ea.(*player.Player); ok && pl.Health() <= *damage {
 				onDeath(pl, u, user.LookupPlayer(pla))

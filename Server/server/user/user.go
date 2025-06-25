@@ -310,3 +310,7 @@ type GameRuntimeData struct {
 		Kills int
 	}
 }
+
+func (d GameRuntimeData) TotalBWKills() int {
+	return d.BedWars.Kills + d.BedWars.FinalKills
+}
