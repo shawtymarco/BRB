@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
@@ -169,6 +170,9 @@ func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot
 		}
 	}
 
+	distance := float64(h.game.MapConfig().HeightLimit) - pl.Position().Y()
+	pl.SendTip(text.Colourf("<dark-red>HEIGHT LIMIT: </dark-red> %v", lo.If(distance <= 0, text.Colourf("<red>REACHED</red>")).Else(text.Colourf("<green>%.1f</green>", distance))))
+
 	if h.game.Stage() == game.Running && h.game.Type() == game.TypeBedWars {
 		team := h.game.PlayerTeam(pl)
 
@@ -332,7 +336,6 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}
 	}
 
-	ha := ua.Player().H()
 	go func() {
 		g.ForEachActivePlayer(func(p *player.Player) {
 			if ua == nil {
@@ -351,7 +354,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 
 		if ua != nil {
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-				if attacker, ok := ha.Entity(tx); ok {
+				if attacker, ok := ua.Player().H().Entity(tx); ok {
 					ua.Player().PlaySound(sound.Experience{})
 					rewardResources(attacker.(*player.Player), e.(*player.Player))
 				}
@@ -388,7 +391,6 @@ func (h PlayerHandler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b wor
 	pl := ctx.Val()
 	main, off := pl.HeldItems()
 	if h.game.Stage() < game.Running {
-		pl.Message(text.Colourf(language.Translate(pl).Game.Error.CannotBreakBlocksBecauseGameNotStarted))
 		ctx.Cancel()
 		return
 	}
@@ -452,6 +454,9 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		}
 
 		h.game.Teams()[teamIndex].Status = game.BedBroken
+		h.game.Teams()[teamIndex].ForEachPlayer(pl.Tx(), func(p *player.Player) {
+			p.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.BedBreakTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.BedBreakSubTitle)))
+		})
 
 		u.GameInfo.BedWars.BedsBroken++
 		if h.game.typeGame == game.TypeBedWars {

@@ -58,5 +58,5 @@ func HandleItemUse(ctx *player.Context) {
 
 func CheckChatCoolDown(pl *player.Player) bool {
 	u := user.LookupPlayer(pl)
-	return u.Data.Rank() == database.Player && u.IsCooldownActive(user.Interact, 1*time.Second, false, true)
+	return u.Data.Rank() == database.Player && u.IsCooldownActive(user.Chat, 1*time.Second, false, true)
 }

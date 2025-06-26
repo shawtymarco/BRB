@@ -3,6 +3,7 @@
     "Name": "Invasion",
     "Type": "bedwars",
     "Void": 70,
+    "HeightLimit": 100,
     "SpawnPoint": [
       0.5,
       120,
@@ -221,6 +222,7 @@
     "Name": "BedFight",
     "Type": "bedfight",
     "Void": -50,
+    "HeightLimit": -20,
     "SpawnPoint": [
       191.5,
       3.0,
@@ -243,6 +245,7 @@
     "Name": "BuildFFA",
     "Type": "buildffa",
     "Void": 60,
+    "HeightLimit": 90,
     "SpawnPoint": [
       0,
       100,

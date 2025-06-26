@@ -2,12 +2,14 @@ package database
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"strings"
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
 type nameConfig struct {
+	Rank       bool
 	ELO        bool
 	TeamColour string
 }
@@ -30,10 +32,10 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 	}
 
 	r := pd.Rank()
-	return text.Colourf("%v%v%v %v", teamColourStr, eloStr, r.ChatPrefix(), n)
+	return text.Colourf("%v%v%v %v", teamColourStr, eloStr, lo.If(nc.Rank, r.ChatPrefix()).Else(""), n)
 }
 
-var LobbyNameDisplay = nameConfig{ELO: true}
+var LobbyNameDisplay = nameConfig{Rank: true, ELO: true}
 var BedWarsNameDisplay = func(teamColour string) nameConfig {
-	return nameConfig{ELO: true, TeamColour: teamColour}
+	return nameConfig{TeamColour: teamColour}
 }

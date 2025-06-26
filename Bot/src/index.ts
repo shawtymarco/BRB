@@ -1,9 +1,8 @@
-import { Client, Collection, Events, GatewayIntentBits, MessageFlags } from "discord.js";
-import { jwtSecret, token } from "./config";
+import {Client, Collection, GatewayIntentBits, MessageFlags} from "discord.js";
+import {token} from "./config";
 import path from "path";
 import fs from "fs";
-import { pathToFileURL } from "url";
-import { InitiateWebsocket } from "./ws";
+import {pathToFileURL} from "url";
 
 export let slashCommands = new Collection<string, any>();
 export let messageCommands = new Collection<string, any>();
@@ -60,4 +59,4 @@ export var client = new Client({
 
 client.login(token);
 
-InitiateWebsocket();
+// InitiateWebsocket();

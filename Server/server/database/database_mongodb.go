@@ -18,7 +18,7 @@ func NewMongoDBDatabase(uri string) (*MongoDBDatabase, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = client.Database("tmc").CreateCollection(context.TODO(), "player_data"); err != nil {
+	if err = client.Database("brb").CreateCollection(context.TODO(), "player_data"); err != nil {
 		return nil, err
 	}
 	return &MongoDBDatabase{client: client, cache: NewLocalDatabase()}, nil

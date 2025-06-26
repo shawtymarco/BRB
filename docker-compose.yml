@@ -1,0 +1,41 @@
+services:
+  mc:
+    build: ./Server
+    environment:
+      - DATABASE_URI=mongodb://mongo:27017
+    volumes:
+      - ./Server:/Server
+      - ./certs:/certs:ro
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    ports:
+      - "19132:19132/udp"
+    depends_on:
+      - mongo
+
+  bot:
+    build: ./Bot
+    container_name: discord-bot
+    restart: unless-stopped
+    env_file: ./Bot/.env
+    volumes:
+      - ./Bot:/app
+      - ./certs:/certs:ro
+    ports:
+      - "8080:8080"
+    command: tsx src/index.ts
+    depends_on:
+      - mc
+
+  mongo:
+    container_name: mongodb
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo:/data/db
+
+volumes:
+  mongo:

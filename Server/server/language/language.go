@@ -24,7 +24,6 @@ func TranslateWithH(entityHandle *world.EntityHandle, tx *world.Tx) LangConfig {
 
 type LangConfig struct {
 	Misc struct {
-		NowPlaying       string
 		SelectedWoodSkin string
 		SelectedCape     string
 	}
@@ -52,30 +51,28 @@ type LangConfig struct {
 	}
 
 	Game struct {
-		JoinGame    string
-		QuitGame    string
-		Countdown   string
-		ChangeTeams string
+		JoinGame  string
+		QuitGame  string
+		Countdown string
 
 		Error struct {
-			NotInAGame                             string
-			TeamIsFull                             string
-			CannotBreakBlocksBecauseGameNotStarted string
+			NotInAGame string
 		}
 	}
 
 	BedWars struct {
 		TutorialMessage       string
-		YouWonTitle           string
-		YouLostTitle          string
-		TeamWonSubTitle       string
-		Draw                  string
+		VictoryTitle          string
+		DefeatTitle           string
+		DrawTitle             string
 		YouDiedTitle          string
 		YouDiedSubTitle       string
 		RespawningIn          string
 		KilledBy              string
 		VoidDeath             string
 		BedBreak              string
+		BedBreakTitle         string
+		BedBreakSubTitle      string
 		GiveIron              string
 		GiveGold              string
 		GiveDiamond           string
@@ -84,6 +81,7 @@ type LangConfig struct {
 		GeneratorUpgraded     string
 		BedGone               string
 		SuddenDeath           string
+		SuddenDeathTitle      string
 		MagicMilkEffectGive   string
 		MagicMilkEffectRemove string
 		Error                 struct {
@@ -97,10 +95,6 @@ type LangConfig struct {
 		YouDied     string
 		KilledBy    string
 		VoidDeath   string
-	}
-
-	Error struct {
-		InventoryFull string
 	}
 }
 

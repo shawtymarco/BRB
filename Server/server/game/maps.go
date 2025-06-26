@@ -12,7 +12,8 @@ type MapData struct {
 	Author string
 	Mode   int
 
-	Void int
+	Void        int
+	HeightLimit int
 
 	SpawnPoint      mgl64.Vec3
 	TeamSpawnPoints []mgl64.Vec3

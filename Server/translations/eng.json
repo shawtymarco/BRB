@@ -1,75 +1,69 @@
 {
   "Misc": {
-    "NowPlaying": "%v %v %v",
-    "SelectedWoodSkin": "%v",
-    "SelectedCape": "%v"
+    "SelectedWoodSkin": "<green>You have selected the Wood Skin <gold>%v</gold></green>",
+    "SelectedCape": "<green>You have selected the cape <gold>%v</gold></green>"
   },
   "Commands": {
     "Success": {
-      "Hub": "%v",
-      "Ping": "%v %v %v",
-      "PingSelf": "%v %v",
+      "Hub": "%v <green>You have been teleported to the HUB.</green>",
+      "Ping": "%v %v <ping is <green>%v ms</green>",
+      "PingSelf": "%v <yellow>Your ping is</yellow> <green>%v ms</green>",
       "GiveRank": "%v %v %v",
-      "Link": "%v %v",
-      "Warp": "%v",
-      "YouGotWarped": ""
+      "Link": "%v <green>Your code is %v. It will expire after 5 minutes!</green>",
+      "Warp": "%v <green>You have warped all the players to your game</green>",
+      "YouGotWarped": "<bold><green>You have successfully been warped.</green></bold>"
     },
     "Error": {
-      "Permission": "%v",
-      "CoolDown": "%.2f",
-      "OnlyOneTarget": "",
-      "RankHierarchy": "",
-      "LinkExpired": "",
-      "NoMorePlayersToWarp": "",
-      "NoGameToJoin": ""
+      "Permission": "<red>You need %v to do this</red>",
+      "CoolDown": "<red>%.2f before you can speak again!</red>",
+      "OnlyOneTarget": "<red>You can only choose one player at a time.</red>",
+      "RankHierarchy": "<red>This player holds a higher rank than you.</red>",
+      "LinkExpired": "<red>The linking code has expired</red>",
+      "NoMorePlayersToWarp": "<red>No players remain to be warped.</red>",
+      "NoGameToJoin": "<red>You are currently not in a game.</red>"
     }
   },
   "Game": {
-    "JoinGame": "%v %v %v",
-    "QuitGame": "%v %v %v",
-    "Countdown": "%v",
-    "ChangeTeams": "%v %v",
+    "JoinGame": "%v <yellow>has joined! (</yellow><aqua>%v</aqua>/<aqua>%v</aqua>)",
+    "QuitGame": "%v <yellow>has quit! (</yellow><aqua>%v</aqua>/<aqua>%v</aqua>)",
+    "Countdown": "<yellow>The game starts in %v seconds</yellow>",
     "Error": {
-      "NotInAGame": "",
-      "TeamIsFull": "",
-      "GameAlreadyStarted": "",
-      "CannotBreakBlocksBecauseGameNotStarted": "<dark-red>You cannot place blocks because the game has not started yet.</dark-red>"
+      "NotInAGame": "<red>Not in a game</red>"
     }
   },
   "BedWars": {
     "TutorialMessage": "<green>============================================================</green>\n                                                       <bold>Bed Wars</bold>\n\n             <bold><yellow>Protect your bed and destroy the enemy beds.</yellow></bold>\n             <bold><yellow>Upgrade yourself and your team by collecting.</yellow></bold>\n         <bold><yellow>Iron, Gold, Emerald, and Diamond from generators</yellow></bold>\n                       <bold><yellow>to access powerful upgrades.</yellow></bold>\n\n<green>============================================================</green>",
-    "YouWonTitle": "",
-    "YouLostTitle": "",
-    "TeamWonSubTitle": "<%v>%v</%v>",
-    "Draw": "<gold>DRAW!</gold>",
-    "YouDiedTitle": "",
-    "YouDiedSubTitle": "%v",
-    "RespawningIn": "%v",
-    "KilledBy": "%v %v %v",
-    "VoidDeath": "%v %v",
-    "BedBreak": "%v %v",
+    "VictoryTitle": "<bold><gold>VICTORY!</gold></bold>",
+    "DefeatTitle": "<bold><red>Defeated!</red></bold>",
+    "DrawTitle": "<gold>DRAW!</gold>",
+    "YouDiedTitle": "<bold><red>YOU DIED!</red></bold>",
+    "YouDiedSubTitle": "<gold>You will respawn in <red>%v</red> seconds!</gold>",
+    "RespawningIn": "<yellow>You will respawn in <red>%v</red> seconds</yellow>",
+    "KilledBy": "%v <grey>was killed by</grey> %v %v",
+    "VoidDeath": "%v <grey>fell into the void.</grey> %v",
+    "BedBreak": "<bold><white>BED DESTRUCTION ></white></bold> %v<grey>'s bed was broken by</grey> %v",
+    "BedBreakTitle": "<red>BED DESTROYED</red>",
+    "BedBreakSubTitle": "<grey>You will no longer respawn!</grey>",
     "GiveIron": "<iron>+%v Iron</iron>",
     "GiveGold": "<gold>+%v Gold</gold>",
     "GiveDiamond": "<diamond>+%v Diamond</diamond>",
     "GiveEmerald": "<emerald>+%v Emerald</emerald>",
     "TrapTriggered": "<red>TRAP TRIGGERED!</red>",
     "GeneratorUpgraded": "<yellow>%v have been upgraded to Tier <red>%v</red></yellow>",
-    "BedGone": "",
-    "SuddenDeath": "",
+    "BedGone": "<red>ALL BED HAS BEEN DESTROYED</red>",
+    "SuddenDeath": "<red>Sudden death has started</red>",
+    "SuddenDeathTitle": "<red>SUDDEN DEATH</red>",
     "MagicMilkEffectGive": "no more traps!",
     "MagicMilkEffectRemove": "traps enabled for u again bbg",
     "Error": {
-      "CannotBreakBed": "",
-      "CannotBreakMap": ""
+      "CannotBreakBed": "<red>You can't destroy your own bed!</red>",
+      "CannotBreakMap": "<red>Stop trying to break the map!</red>"
     }
   },
   "BuildFFA": {
-    "JoinMessage": "%v",
+    "JoinMessage": "<dark-grey>[<green>+</green>]</dark-grey> %v",
     "YouDied": "<bold><dark-red>YOU DIED</dark-red></bold>",
-    "KilledBy": "%v %v",
-    "VoidDeath": "%v"
-  },
-  "Error": {
-    "InventoryFull": ""
+    "KilledBy": "%v <grey>was killed by</grey> %v.",
+    "VoidDeath": "%v <grey>fell into the void.</grey>"
   }
 }

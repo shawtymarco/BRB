@@ -89,6 +89,7 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 
 	var d *database.PlayerData
 	if isBot {
+
 		d = utils.Panics(server.Database.FindPlayerFromName(pl.Name(), &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false}))
 	} else {
 		d = utils.Panics(server.Database.FindPlayer(pl.UUID()))
@@ -257,7 +258,7 @@ func (u *User) DropItem(it item.Stack, tx *world.Tx) {
 	tx.AddEntity(ent)
 }
 
-func (u *User) PlaySound(sound string, title, author string, volume, pitch float64) {
+func (u *User) PlaySound(sound string, volume, pitch float64) {
 	pos := u.pl.Position()
 	pk := &packet.PlaySound{
 		SoundName: sound,
@@ -266,9 +267,6 @@ func (u *User) PlaySound(sound string, title, author string, volume, pitch float
 		Pitch:     float32(pitch),
 	}
 	utils.WritePacket(utils.Session(u.pl), pk)
-	if title != "" && author != "" {
-		u.pl.Message(text.Colourf(language.Translate(u.pl).Misc.NowPlaying, server.Config.Prefix, title, author))
-	}
 }
 
 func (u *User) RefreshCape() {

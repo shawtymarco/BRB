@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"fmt"
+	"github.com/df-mc/dragonfly/server/world/sound"
 	"math/rand"
 	"server/server"
 	"server/server/database"
@@ -41,7 +42,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDuration = 1 * time.Second
+const startingInDuration = 30 * time.Second
 
 var Games = make(map[uuid.UUID]*BedWars)
 
@@ -94,11 +95,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 	go func() {
 		stages := []*stage{
-			//{action: "<diamond>Diamond Generators</diamond>", tier: 2, dur: 6 * time.Minute}, // TODO: CHANGE BACK
-			//{action: "<emerald>Emerald Generators</emerald>", tier: 2, dur: 6 * time.Minute},
-			//{action: "<diamond>Diamond Generators</diamond>", tier: 3, dur: 6 * time.Minute},
-			//{action: "<emerald>Emerald Generators</emerald>", tier: 3, dur: 6 * time.Minute},
-			{action: "<red>Bed Gone</red>", dur: 6 * time.Second},
+			{action: "<diamond>Diamond Generators</diamond>", tier: 2, dur: 6 * time.Minute},
+			{action: "<emerald>Emerald Generators</emerald>", tier: 2, dur: 6 * time.Minute},
+			{action: "<diamond>Diamond Generators</diamond>", tier: 3, dur: 6 * time.Minute},
+			{action: "<emerald>Emerald Generators</emerald>", tier: 3, dur: 6 * time.Minute},
+			{action: "<red>Bed Gone</red>", dur: 6 * time.Minute},
 			{action: "<red>Sudden Death | Phase I</Red>", tier: 1, dur: 10 * time.Minute},
 			{action: "<red>Sudden Death | Phase II</Red>", tier: 2, dur: 3 * time.Minute},
 			{action: "<red>Sudden Death | Phase III</Red>", tier: 3, dur: 3 * time.Minute},
@@ -120,6 +121,27 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.startingIn = startingInDuration
 					g.SetStage(game.Waiting)
 				} else {
+					cds := map[int]string{
+						30: "<green>30</green>",
+						20: "<gold>20</gold>",
+						10: "<gold>10</gold>",
+						5:  "<red>5</red>",
+						4:  "<red>4</red>",
+						3:  "<red>3</red>",
+						2:  "<red>2</red>",
+						1:  "<red>1</red>",
+					}
+
+					if cd := cds[int(g.startingIn.Seconds())]; cd != "" {
+						g.ForEachOriginalPlayer(func(pl *player.Player) {
+							pl.Message(text.Colourf(language.Translate(pl).Game.Countdown, cd))
+							if int(g.startingIn.Seconds()) <= 5 {
+								pl.SendTitle(title.New(text.Colourf(cd)))
+							}
+							pl.PlaySound(sound.Click{})
+						})
+					}
+
 					if g.startingIn == 0 {
 						g.World().Exec(func(tx *world.Tx) {
 							g.initBedWarsFeatures(tx)
@@ -172,10 +194,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.ForEachActivePlayer(func(pl *player.Player) {
 						if g.WinningTeam().Contains(pl) {
 							go g.Reward(pl)
-							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.YouWonTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour())))
+							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
 						} else {
 							g.Punish(pl)
-							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.YouLostTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.TeamWonSubTitle, g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour())))
+							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
 						}
 
 						var name string
@@ -272,6 +294,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								for e := range tx.Players() {
 									pl := e.(*player.Player)
 									pl.Message(text.Colourf(language.Translate(pl).BedWars.BedGone))
+									pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.BedBreakTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.BedBreakSubTitle)))
 								}
 								for _, team := range g.Teams() {
 									tx.SetBlock(cube.PosFromVec3(g.MapConfig().BedPositions[team.ID()*2]), block.Air{}, nil)
@@ -287,6 +310,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								for e := range tx.Players() {
 									pl := e.(*player.Player)
 									pl.Message(text.Colourf(language.Translate(pl).BedWars.SuddenDeath))
+									pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.SuddenDeathTitle)))
 								}
 							})
 
@@ -314,7 +338,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							g.World().Exec(func(tx *world.Tx) {
 								for e := range tx.Players() {
 									pl := e.(*player.Player)
-									pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.Draw)))
+									pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DrawTitle)))
 								}
 							})
 							g.SetStage(game.Ending)
@@ -637,7 +661,7 @@ func (b *BedWars) buyUpgrade(pl *player.Player, s item.Stack) bool {
 func (b *BedWars) playBedBrokenSound(tx *world.Tx) {
 	for e := range tx.Players() {
 		pl := e.(*player.Player)
-		user.LookupPlayer(pl).PlaySound("mob.enderdragon.growl", "", "", 1, 1)
+		user.LookupPlayer(pl).PlaySound("mob.enderdragon.growl", 1, 1)
 	}
 }
 

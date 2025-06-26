@@ -2,6 +2,7 @@ package buildffa
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"image/color"
 	"server/server/database"
 	"server/server/games/lobby"
@@ -97,11 +98,15 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 }
 
 func (h Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
+	pl := ctx.Val()
 	if newPos.Y() <= float64(Game.MapConfig().Void) {
 		damage := 30.0
 		immunityDur := time.Duration(0)
 		h.HandleHurt(ctx, &damage, false, &immunityDur, entity.VoidDamageSource{})
 	}
+
+	distance := float64(Game.MapConfig().HeightLimit) - pl.Position().Y()
+	pl.SendTip(text.Colourf("<dark-red>HEIGHT LIMIT: </dark-red> %v", lo.If(distance <= 0, text.Colourf("<red>REACHED</red>")).Else(text.Colourf("<green>%.1f</green>", distance))))
 }
 
 func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
