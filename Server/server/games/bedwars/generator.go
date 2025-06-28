@@ -96,7 +96,7 @@ func (b *GeneratorBlockType) PlayersWithin(tx *world.Tx) []*player.Player {
 }
 
 func (b *GeneratorBlockType) CountResourcesWithin() (res int) {
-	for e := range b.Tx().EntitiesWithin(cube.Box(-3, -3, -3, 3, 3, 3).Translate(b.Position())) {
+	for e := range b.Tx().EntitiesWithin(cube.Box(-4, -4, -4, 4, 4, 4).Translate(b.Position())) {
 		if ent, ok := e.(*entity.Ent); ok && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
 				res += beh.Item().Count()
@@ -109,7 +109,7 @@ func (b *GeneratorBlockType) CountResourcesWithin() (res int) {
 func (b *GeneratorBlockType) ResourcesWithin(tx *world.Tx) []*entity.Ent {
 	var res []*entity.Ent
 
-	for e := range tx.EntitiesWithin(cube.Box(-3, -3, -3, 3, 3, 3).Translate(b.Position())) {
+	for e := range tx.EntitiesWithin(cube.Box(-4, -4, -4, 4, 4, 4).Translate(b.Position())) {
 		if ent, ok := e.(*entity.Ent); ok && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
 				res = append(res, ent)
@@ -173,7 +173,7 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 		b.updateTier()
 	}
 
-	remainingDur := b.SpawnRate - time.Now().Sub(b.lastSpawn)
+	remainingDur := lo.If(b.CountResourcesWithin() >= b.Cap, b.SpawnRate).Else(b.SpawnRate - time.Now().Sub(b.lastSpawn))
 	if _, ok := b.Resource.Block().(block.Air); !ok && b.Team == nil {
 		b.SetNameTag(text.Colourf("<bold><yellow>Tier <red>%v</red></yellow></bold>\n%v\n<yellow>Spawns in <red>%.1f</red> seconds</yellow>", utils.IntToRoman(b.Tier), b.Name, remainingDur.Seconds()), tx)
 	}

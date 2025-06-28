@@ -23,7 +23,7 @@ type Cape interface {
 	ImagePath() string
 }
 
-func GetCapeByType(t string) (Cape, bool) {
+func GetCapeByIdentifier(t string) (Cape, bool) {
 	cape, ok := capeRegistry[t]
 	return cape, ok
 }

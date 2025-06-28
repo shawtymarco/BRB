@@ -53,6 +53,18 @@ func (d *MongoDBDatabase) SavePlayer(data *PlayerData) error {
 	return d.cache.SavePlayer(data)
 }
 
+func (d *MongoDBDatabase) DeletePlayerByName(playerName string, opts *PlayerNameSearchOpts) error {
+	player, err := d.FindPlayerByName(playerName, opts)
+	if err != nil {
+		return err
+	}
+	_, err = d.playerCollection().DeleteOne(context.TODO(), bson.D{{"uuid", player.Uuid}})
+	if err != nil {
+		return err
+	}
+	return d.cache.DeletePlayerByName(playerName, opts)
+}
+
 func (d *MongoDBDatabase) FindPlayer(uuid uuid.UUID) (*PlayerData, error) {
 	if data, err := d.cache.FindPlayer(uuid); err == nil {
 		return data, nil
@@ -67,8 +79,8 @@ func (d *MongoDBDatabase) FindPlayerByDiscordID(id string) (*PlayerData, error) 
 	return d.findPlayerFromQuery(bson.D{{"userid", id}}, id)
 }
 
-func (d *MongoDBDatabase) FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
-	if data, err := d.cache.FindPlayerFromName(playerName, opts); err == nil {
+func (d *MongoDBDatabase) FindPlayerByName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
+	if data, err := d.cache.FindPlayerByName(playerName, opts); err == nil {
 		return data, nil
 	}
 	if opts == nil {

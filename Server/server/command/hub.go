@@ -17,7 +17,7 @@ type HubCommand struct{}
 
 func (HubCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		u := user.LookupPlayer(pl)
+		u := user.GetUser(pl)
 		if u.IsCooldownActive(user.CommandHub, 5*time.Second, false, true) {
 			return
 		}

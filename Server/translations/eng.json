@@ -8,31 +8,50 @@
       "Hub": "%v <green>You have been teleported to the HUB.</green>",
       "Ping": "%v %v <ping is <green>%v ms</green>",
       "PingSelf": "%v <yellow>Your ping is</yellow> <green>%v ms</green>",
-      "GiveRank": "%v %v %v",
       "Link": "%v <green>Your code is %v. It will expire after 5 minutes!</green>",
       "Warp": "%v <green>You have warped all the players to your game</green>",
-      "YouGotWarped": "<bold><green>You have successfully been warped.</green></bold>"
+      "YouGotWarped": "<bold><green>You have successfully been warped.</green></bold>",
+      "FlyOn": "%v <green>Flying enabled.</green>",
+      "FlyOff": "%v <green>Flying disabled.</green>",
+      "Spectate": "%v <green>Currently spectating %v</green>",
+      "Nick": "%v <green>Nickname changed to %v.</green>",
+      "ELOClaim": "%v <green>You successfully claimed 250 ELO! Wait until next season to use this command again.</green>",
+      "GiveRank": "%v <green>%v's role has been set to %v</green>",
+      "AddCape": "%v <green>Cape successfully added to the player.</green>",
+      "RemoveCape": "%v <green>Cape successfully removed from the player.</green>",
+      "ResetStats": "%v <green>Reset the stats successfully.</green>",
+      "ResetStatsDisconnect": "<dark-red>Your stats have been reset! Open a support ticket if this was a mistake..</dark-red>"
     },
     "Error": {
       "Permission": "<red>You need %v to do this</red>",
       "CoolDown": "<red>%.2f before you can speak again!</red>",
       "OnlyOneTarget": "<red>You can only choose one player at a time.</red>",
-      "RankHierarchy": "<red>This player holds a higher rank than you.</red>",
       "LinkExpired": "<red>The linking code has expired</red>",
       "NoMorePlayersToWarp": "<red>No players remain to be warped.</red>",
-      "NoGameToJoin": "<red>You are currently not in a game.</red>"
+      "NoGameToJoin": "<red>You are currently not in a game.</red>",
+      "LobbyOnly": "<red>You can only execute this command in the lobby.</red>",
+      "MustBeInGame": "<red>The player must be in a game for this command to work.</red>",
+      "CannotSpectateOneSelf": "<red>You cannot spectate yourself, dummy!</red>",
+      "NicknameLength": "<red>Nickname must be between 3 and 12 characters long.</red>",
+      "NicknameSpace": "<red>Nickname cannot start or end with a space.</red>",
+      "NicknameSpecialChars": "<red>Nickname can only contain letters, numbers, and spaces.</red>",
+      "NicknameMultipleSpaces": "<red>Nickname cannot contain multiple spaces in a row.</red>",
+      "ELOAlreadyClaimed": "<red>You already claimed your 250 ELO this season. Please be patient until next season.</red>",
+      "RankHierarchy": "<red>This player holds a higher rank than you.</red>",
+      "CapeAlreadyOwned": "<red>This player already owns the specified cape.</red>",
+      "CapeNotOwned": "<red>This player doesn't own the specified cape in the first place.</red>"
     }
   },
   "Game": {
-    "JoinGame": "%v <yellow>has joined! (</yellow><aqua>%v</aqua>/<aqua>%v</aqua>)",
-    "QuitGame": "%v <yellow>has quit! (</yellow><aqua>%v</aqua>/<aqua>%v</aqua>)",
+    "JoinGame": "%v <yellow>has joined! (<aqua>%v</aqua>/<aqua>%v</aqua>)</yellow>",
+    "QuitGame": "%v <yellow>has quit! (<aqua>%v</aqua>/<aqua>%v</aqua>)</yellow>",
     "Countdown": "<yellow>The game starts in %v seconds</yellow>",
     "Error": {
       "NotInAGame": "<red>Not in a game</red>"
     }
   },
   "BedWars": {
-    "TutorialMessage": "<green>============================================================</green>\n                                                       <bold>Bed Wars</bold>\n\n             <bold><yellow>Protect your bed and destroy the enemy beds.</yellow></bold>\n             <bold><yellow>Upgrade yourself and your team by collecting.</yellow></bold>\n         <bold><yellow>Iron, Gold, Emerald, and Diamond from generators</yellow></bold>\n                       <bold><yellow>to access powerful upgrades.</yellow></bold>\n\n<green>============================================================</green>",
+    "TutorialMessage": "<green>============================================================</green>\n                                          <bold>Bed Wars</bold>\n\n             <bold><yellow>Protect your bed and destroy the enemy beds.</yellow></bold>\n             <bold><yellow>Upgrade yourself and your team by collecting.</yellow></bold>\n         <bold><yellow>Iron, Gold, Emerald, and Diamond from generators</yellow></bold>\n                       <bold><yellow>to access powerful upgrades.</yellow></bold>\n\n<green>============================================================</green>",
     "VictoryTitle": "<bold><gold>VICTORY!</gold></bold>",
     "DefeatTitle": "<bold><red>Defeated!</red></bold>",
     "DrawTitle": "<gold>DRAW!</gold>",
@@ -53,8 +72,8 @@
     "BedGone": "<red>ALL BED HAS BEEN DESTROYED</red>",
     "SuddenDeath": "<red>Sudden death has started</red>",
     "SuddenDeathTitle": "<red>SUDDEN DEATH</red>",
-    "MagicMilkEffectGive": "no more traps!",
-    "MagicMilkEffectRemove": "traps enabled for u again bbg",
+    "MagicMilkEffectGive": "<green>You will not trigger any enemy traps for 30 seconds!</green>",
+    "MagicMilkEffectRemove": "<red>The magic milk effect is gone now. You will trigger enemy traps now!</red>",
     "Error": {
       "CannotBreakBed": "<red>You can't destroy your own bed!</red>",
       "CannotBreakMap": "<red>Stop trying to break the map!</red>"

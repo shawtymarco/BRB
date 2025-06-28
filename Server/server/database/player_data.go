@@ -61,8 +61,11 @@ func (s Statistics) ELORank() EloRank {
 }
 
 type Cosmetics struct {
+	Nickname         string
 	SelectedWoodType block.WoodType
 	SelectedCape     string
+	OwnedCapes       []string
+	ELOClaimed       bool
 }
 
 type Settings struct {

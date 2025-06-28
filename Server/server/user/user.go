@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"server/server"
@@ -11,9 +10,12 @@ import (
 	"server/server/game"
 	"server/server/language"
 	"server/server/utils"
+	"slices"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sandertv/gophertunnel/minecraft/protocol"
 
 	"github.com/df-mc/dragonfly/server/block"
 
@@ -53,7 +55,7 @@ type User struct {
 	LastHitAt time.Time
 }
 
-func New(pl *player.Player, isBot bool) (*User, error) {
+func newUser(pl *player.Player, isBot bool) (*User, error) {
 	if pl == nil {
 		return nil, fmt.Errorf("new player should not be nil")
 	}
@@ -62,14 +64,19 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 	defer userMu.Unlock()
 
 	ft := false
-	if !isBot && DataFromPlayer(pl) == nil {
+	var d *database.PlayerData
+	if isBot {
+		d, _ = server.Database.FindPlayerByName(pl.Name(), &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false})
+	} else {
+		d, _ = server.Database.FindPlayer(pl.UUID())
+	}
+	if d == nil {
 		ft = true
 		pd := &database.PlayerData{
 			Uuid:      pl.UUID(),
 			Username:  pl.Name(),
 			FirstJoin: time.Now(),
 			LastJoin:  time.Now(),
-			DeviceOS:  utils.Session(pl).ClientData().DeviceOS,
 			Statistics: database.Statistics{
 				RankId: database.Player.Shortened(),
 				Level:  1,
@@ -82,17 +89,17 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 				QuickBuyConfig: make(map[int]*int),
 			},
 		}
+
+		if isBot {
+			pd.DeviceOS = protocol.DeviceAndroid
+		} else {
+			pd.DeviceOS = utils.Session(pl).ClientData().DeviceOS
+		}
+
 		if err := server.Database.CreatePlayer(pd); err != nil {
 			return nil, err
 		}
-	}
-
-	var d *database.PlayerData
-	if isBot {
-
-		d = utils.Panics(server.Database.FindPlayerFromName(pl.Name(), &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false}))
-	} else {
-		d = utils.Panics(server.Database.FindPlayer(pl.UUID()))
+		d = pd
 	}
 
 	if pl.Name() != d.Username {
@@ -118,29 +125,27 @@ func New(pl *player.Player, isBot bool) (*User, error) {
 }
 
 func Save(pl *player.Player) {
-	user := LookupPlayer(pl)
+	user := GetUser(pl)
 	user.Data.LastJoin = time.Now()
 	user.Data.Online = false
-	utils.Panic(server.Database.SavePlayer(user.Data))
+	_ = server.Database.SavePlayer(user.Data)
 }
 
-func Delete(pl *player.Player) {
+func GetUser(pl *player.Player) *User {
+	if users[pl.UUID()] == nil {
+		return utils.Panics(newUser(pl, slices.Contains([]string{"Mark", "Sam", "Steven"}, pl.Name())))
+	}
+
 	userMu.Lock()
 	defer userMu.Unlock()
-	delete(users, pl.UUID())
+
+	users[pl.UUID()].pl = pl
+	users[pl.UUID()].h = pl.H()
+
+	return users[pl.UUID()]
 }
 
-func LookupPlayer(pl *player.Player) *User {
-	return LookupUUID(pl.UUID())
-}
-
-func LookupUUID(uuid uuid.UUID) *User {
-	userMu.Lock()
-	defer userMu.Unlock()
-	return users[uuid]
-}
-
-func LookupUserID(userId string) *User {
+func GetUserByUserID(userId string) *User {
 	userMu.Lock()
 	defer userMu.Unlock()
 
@@ -152,16 +157,43 @@ func LookupUserID(userId string) *User {
 	return nil
 }
 
-func DataFromPlayer(pl *player.Player) *database.PlayerData {
-	d, err := server.Database.FindPlayer(pl.UUID())
-	if err != nil {
-		var playerDataNotFoundError utils.PlayerDataNotFoundError
-		if !errors.As(err, &playerDataNotFoundError) {
-			utils.Panic(err)
-		}
-		return nil
+func ResetUser(pl *player.Player) {
+	isBot := slices.Contains([]string{"Mark", "Sam", "Steven"}, pl.Name())
+	pd := &database.PlayerData{
+		Uuid:     pl.UUID(),
+		Username: pl.Name(),
+		LastJoin: time.Now(),
+		Statistics: database.Statistics{
+			RankId: database.Player.Shortened(),
+			Level:  1,
+		},
+		Cosmetics: database.Cosmetics{
+			SelectedWoodType: block.OakWood(),
+		},
+		Settings: database.Settings{
+			HotBarConfig:   [9]database.HotBarCategory(make([]database.HotBarCategory, 9)),
+			QuickBuyConfig: make(map[int]*int),
+		},
 	}
-	return d
+
+	if isBot {
+		pd.DeviceOS = protocol.DeviceAndroid
+	} else {
+		pd.DeviceOS = utils.Session(pl).ClientData().DeviceOS
+		pd.ProtocolId = utils.Session(pl).ClientData().GameVersion
+	}
+
+	u := &User{
+		pl: pl,
+		h:  pl.H(),
+
+		cooldownMap: cooldown.NewMappedCoolDown[PlayerCoolDowns](),
+
+		Data: pd,
+	}
+	users[pl.UUID()] = u
+
+	_ = server.Database.SavePlayer(pd)
 }
 
 func (u *User) Player() *player.Player {
@@ -187,7 +219,7 @@ func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Dura
 	}
 
 	if sendMessage && exists {
-		u.pl.Message(text.Colourf(language.Translate(u.pl).Commands.Error.CoolDown, coolDown.Remaining()))
+		u.pl.Message(text.Colourf(language.Translate(u.pl).Commands.Error.CoolDown, coolDown.Remaining().Seconds()))
 	}
 
 	return exists
@@ -270,14 +302,13 @@ func (u *User) PlaySound(sound string, volume, pitch float64) {
 }
 
 func (u *User) RefreshCape() {
-	cape, ok := database.GetCapeByType(u.Data.Cosmetics.SelectedCape)
-	if !ok {
-		return
-	}
-
 	skin := u.pl.Skin()
-	skin.Cape = skin2.NewCape(64, 32)
-	skin.Cape.Pix = database.CapeAsBytes(cape)
+	if cape, ok := database.GetCapeByIdentifier(u.Data.Cosmetics.SelectedCape); ok {
+		skin.Cape = skin2.NewCape(64, 32)
+		skin.Cape.Pix = database.CapeAsBytes(cape)
+	} else {
+		skin.Cape = skin2.NewCape(64, 32)
+	}
 
 	go func() {
 		u.h.ExecWorld(func(tx *world.Tx, e world.Entity) {

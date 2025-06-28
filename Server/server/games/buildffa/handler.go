@@ -2,7 +2,6 @@ package buildffa
 
 import (
 	"fmt"
-	"github.com/samber/lo"
 	"image/color"
 	"server/server/database"
 	"server/server/games/lobby"
@@ -10,8 +9,9 @@ import (
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
-	"strings"
 	"time"
+
+	"github.com/samber/lo"
 
 	"github.com/df-mc/dragonfly/server/world/sound"
 
@@ -30,7 +30,6 @@ import (
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/player"
-	"github.com/df-mc/dragonfly/server/player/chat"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
@@ -49,7 +48,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 	pl.Armour().Clear()
 	giveKit(pl)
 
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	u.Game = Game.Game
 	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BUILDFFA</yellow></bold>"))
 
@@ -69,7 +68,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 }
 
 func (Handler) HandleQuit(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	u.Game = nil
 	user.Save(pl)
 	Game.RemovePlayerFromTeam(pl)
@@ -77,20 +76,7 @@ func (Handler) HandleQuit(pl *player.Player) {
 }
 
 func (Handler) HandleChat(ctx *player.Context, msg *string) {
-	ctx.Cancel()
-
-	pl := ctx.Val()
-	u := user.LookupPlayer(pl)
-
-	if listener.CheckChatCoolDown(pl) {
-		return
-	}
-
-	*msg = strings.ReplaceAll(*msg, "§r", "")
-	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
-	*msg = text.Colourf(newMsg)
-
-	_, _ = fmt.Fprintf(chat.Global, *msg)
+	lobby.Handler{}.HandleChat(ctx, msg)
 }
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
@@ -113,7 +99,7 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 	listener.HandleHurt(ctx, damage, immune, attackImmunity, src)
 
 	pl := ctx.Val()
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	if _, ok := src.(entity.FallDamageSource); ok {
 		ctx.Cancel()
@@ -122,7 +108,7 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
 		if attacker, ok := s.Attacker.(*player.Player); ok {
-			ua := user.LookupPlayer(attacker)
+			ua := user.GetUser(attacker)
 			u.LastHit = attacker.H()
 			ua.LastHit = pl.H()
 			u.LastHitAt = time.Now()
@@ -135,7 +121,7 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 	} else if u.LastHit != nil && time.Now().Sub(u.LastHitAt) <= 15*time.Second {
 		if ea, ok := u.LastHit.Entity(pl.Tx()); ok {
 			if pla, ok := ea.(*player.Player); ok && pl.Health() <= *damage {
-				onDeath(pl, u, user.LookupPlayer(pla))
+				onDeath(pl, u, user.GetUser(pla))
 				ctx.Cancel()
 				return
 			}
@@ -177,6 +163,11 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
 	pl := ctx.Val()
 	h := pl.H()
+
+	if Game.MapConfig().HeightLimit <= pos.Y() {
+		ctx.Cancel()
+	}
+
 	if w, ok := b.(block.Wool); ok {
 		blocksPlaced[vec3ToString(pos.Vec3())] = time.Now()
 		time.AfterFunc(4*time.Second, func() {
@@ -234,7 +225,7 @@ func (Handler) HandleItemUse(ctx *player.Context) {
 }
 
 func giveKit(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	utils.Panics(u.AddItemWithHBConfig(0, item.NewStack(item.Sword{Tier: item.ToolTierStone}, 1).AsUnbreakable()))
 	utils.Panics(u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable()))
 	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).AsUnbreakable()))

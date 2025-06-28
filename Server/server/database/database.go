@@ -7,14 +7,16 @@ type Database interface {
 	String() string
 	// CreatePlayer saves the new *unique* player data.
 	CreatePlayer(data *PlayerData) error
+	// DeletePlayerByName deletes the player data using a player name
+	DeletePlayerByName(playerName string, opts *PlayerNameSearchOpts) error
 	// SavePlayer overwrites the existing player data with this new data.
 	SavePlayer(data *PlayerData) error
-	// FindPlayer finds a player from a uuid.
+	// FindPlayer finds a player from uuid.
 	FindPlayer(uuid uuid.UUID) (*PlayerData, error)
 	// FindPlayerByDiscordID finds a player using their Discord's ID (must be registered with Discord)
 	FindPlayerByDiscordID(id string) (*PlayerData, error)
-	// FindPlayerFromName finds a player from a player name.
-	FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error)
+	// FindPlayerByName finds a player from a player name.
+	FindPlayerByName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error)
 	// SaveAll saves all loaded players to the database.
 	SaveAll() map[string]error
 }

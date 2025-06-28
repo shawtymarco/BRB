@@ -19,7 +19,7 @@ type LinkCommand struct{}
 
 func (LinkCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		u := user.LookupPlayer(pl)
+		u := user.GetUser(pl)
 		if u.IsCooldownActive(user.CommandLink, 30*time.Second, false, true) {
 			return
 		}

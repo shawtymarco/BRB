@@ -3,7 +3,7 @@
     "Name": "Invasion",
     "Type": "bedwars",
     "Void": 70,
-    "HeightLimit": 100,
+    "HeightLimit": 108,
     "SpawnPoint": [
       0.5,
       120,

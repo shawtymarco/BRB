@@ -16,7 +16,7 @@ import (
 )
 
 func sendHotBarConfigUI(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	menuInv := inventory.New(54, func(slot int, before, after item.Stack) {
 		utils.Session(pl).ViewSlotChange(slot, after)
@@ -81,7 +81,7 @@ func sendHotBarConfigUI(pl *player.Player) {
 }
 
 func main(pl *player.Player) []item.Stack {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	items := make([]item.Stack, 54)
 

@@ -22,7 +22,7 @@ func initGetRequests(rg *gin.RouterGroup) {
 
 	rg.GET("/players/:player", jwtAuthMiddleware(), func(c *gin.Context) {
 		username := c.Param("player")
-		pd, err := server.Database.FindPlayerFromName(username, &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false})
+		pd, err := server.Database.FindPlayerByName(username, &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false})
 		if err != nil {
 			panic(err)
 		}

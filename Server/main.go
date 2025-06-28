@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"reflect"
 	core "server/server"
 	"server/server/capes"
 	"server/server/command"
@@ -14,16 +15,19 @@ import (
 	"server/server/games/buildffa"
 	"server/server/games/lobby"
 	"server/server/language"
+	"server/server/living/npc"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
 	"slices"
 	"strings"
+	"unsafe"
+
+	"github.com/google/uuid"
 
 	"github.com/df-mc/dragonfly/server/player"
 
 	"github.com/df-mc/dragonfly/server/world"
-	"github.com/df-mc/npc"
 
 	"github.com/df-mc/dragonfly/server/player/chat"
 
@@ -60,6 +64,10 @@ func main() {
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
 	conf.ReadOnlyWorld = true
+	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
+	//	v486.new(true),
+	//})
+
 	srv := conf.New()
 	utils.SetServer(srv)
 	srv.Listen()
@@ -84,7 +92,7 @@ func main() {
 	bedwars.NewBedWars(game.TypeBedWars, 2, 2, false) // TODO: REMOVE DEBUG
 
 	for pl := range srv.Accept() {
-		utils.Panics(user.New(pl, false))
+		user.GetUser(pl)
 		lobby.Join(pl)
 		joinRankedBedWars(pl)
 	}
@@ -95,39 +103,94 @@ func main() {
 	}
 }
 
-func registerCapes() {
-	database.RegisterCape(capes.CreeperCape{})
-}
-
-func initBots(tx *world.Tx) {
-	core.BotMark = createBot("Mark", tx)
-	utils.Panics(user.New(core.BotMark, true))
-	lobby.Join(core.BotMark)
-
-	core.BotSam = createBot("Sam", tx)
-	utils.Panics(user.New(core.BotSam, true))
-	lobby.Join(core.BotSam)
-
-	core.BotSteven = createBot("Steven", tx)
-	utils.Panics(user.New(core.BotSteven, true))
-	lobby.Join(core.BotSteven)
-}
-
-func createBot(name string, tx *world.Tx) *player.Player {
-	return npc.Create(npc.Settings{
-		Name:     name,
-		Skin:     npc.MustSkin(npc.MustParseTexture(path.Join(".", "config", "skins", fmt.Sprintf("%v.png", strings.ToLower(name)))), npc.DefaultModel),
-		Position: core.Config.Hub.SpawnPoint,
-		Scale:    1,
-	}, tx, nil)
-}
-
 func joinRankedBedWars(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	for _, g := range bedwars.Games {
 		if slices.Contains(g.UsersToJoin, u.Data.UserId) {
 			bedwars.Join(pl, pl.Tx(), g.TeamSize, g.TeamCount, g.Type(), false, g)
 			break
 		}
 	}
+}
+
+func registerCapes() {
+	database.RegisterCape(capes.CreeperCape{})
+}
+
+func initBots(tx *world.Tx) {
+	core.BotMark = createBot("Mark", tx)
+	core.BotSam = createBot("Sam", tx)
+	core.BotSteven = createBot("Steven", tx)
+	lobby.Join(core.BotMark)
+	lobby.Join(core.BotSam)
+	lobby.Join(core.BotSteven)
+}
+
+func createBot(name string, tx *world.Tx) *player.Player {
+	var id uuid.UUID
+	bpd, err := core.Database.FindPlayerByName(name, &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false})
+	if err != nil {
+		id, _ = uuid.NewUUID()
+	} else {
+		id = bpd.Uuid
+	}
+	bot := npc.Create(npc.Settings{
+		UUID:     id,
+		Name:     name,
+		Skin:     npc.MustSkin(npc.MustParseTexture(path.Join(".", "config", "skins", fmt.Sprintf("%v.png", strings.ToLower(name)))), npc.DefaultModel),
+		Position: core.Config.Hub.SpawnPoint,
+		Scale:    1,
+	}, tx, nil)
+
+	utils.Panic(setMapPrivateFieldKey(
+		core.MCServer,
+		"p",
+		bot.UUID(),
+		bot.H(),
+		bot.XUID(),
+		bot.Name(),
+	))
+
+	return bot
+}
+
+func setMapPrivateFieldKey(structPtr any, fieldName string, key, handle any, xuid, name string) error {
+	structValue := reflect.ValueOf(structPtr).Elem()
+	field := structValue.FieldByName(fieldName)
+
+	if !field.IsValid() {
+		return fmt.Errorf("field %s not found", fieldName)
+	}
+	if field.Kind() != reflect.Map {
+		return fmt.Errorf("field %s is not a map", fieldName)
+	}
+
+	field = reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
+	mapValueType := field.Type().Elem()
+
+	entryPtr := reflect.New(mapValueType.Elem())
+	entry := entryPtr.Elem()
+
+	setUnexportedField := func(structVal reflect.Value, fieldName string, value any) error {
+		f := structVal.FieldByName(fieldName)
+		if !f.IsValid() {
+			return fmt.Errorf("field %s not found", fieldName)
+		}
+		ptr := unsafe.Pointer(f.UnsafeAddr())
+		reflect.NewAt(f.Type(), ptr).Elem().Set(reflect.ValueOf(value))
+		return nil
+	}
+
+	if err := setUnexportedField(entry, "handle", handle); err != nil {
+		return err
+	}
+	if err := setUnexportedField(entry, "xuid", xuid); err != nil {
+		return err
+	}
+	if err := setUnexportedField(entry, "name", name); err != nil {
+		return err
+	}
+
+	field.SetMapIndex(reflect.ValueOf(key), entryPtr)
+	return nil
 }

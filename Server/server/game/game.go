@@ -131,7 +131,7 @@ func (g *Game) RemoveSpectator(pl *player.Player) {
 }
 
 func (g *Game) EnemyWith(p1 *player.Player, p2 *player.Player) bool {
-	return g.PlayerTeam(p1).Colour() != g.PlayerTeam(p2).Colour()
+	return g.PlayerTeam(p1) != g.PlayerTeam(p2)
 }
 
 func (g *Game) WinningTeam() *Team {

@@ -3,17 +3,12 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"server/server/utils"
-	"server/server/ws"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 var jwtSecret []byte
@@ -50,16 +45,13 @@ func init() {
 		initGetRequests(apiGroup)
 		initPostRequests(apiGroup)
 
-		// Add WebSocket route to same router, handle auth manually in WS handler
-		router.GET("/ws", wsHandler)
-
 		srv := &http.Server{
 			Addr:      ":8080",
 			Handler:   router,
 			TLSConfig: tlsConfig,
 		}
 
-		log.Println("Starting secure server with API + WebSocket on https://localhost:8080")
+		log.Println("Starting secure server with API on https://localhost:8080")
 		if err := srv.ListenAndServeTLS("../certs/server.pem", "../certs/server.key"); err != nil {
 			log.Fatal(err)
 		}
@@ -80,51 +72,5 @@ func jwtAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		c.Next()
-	}
-}
-
-// Gorilla websocket upgrader (allow all origins or customize)
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // Or restrict origins here
-	},
-}
-
-func wsHandler(c *gin.Context) {
-	// Manually validate JWT from header (since Gin middleware won't be applied here)
-	auth := c.GetHeader("Authorization")
-	if !strings.HasPrefix(auth, "Bearer ") {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing JWT"})
-		return
-	}
-	tokenStr := strings.TrimPrefix(auth, "Bearer ")
-	if tokenStr != string(jwtSecret) {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid JWT"})
-		return
-	}
-
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		log.Println("WebSocket upgrade error:", err)
-		return
-	}
-	defer conn.Close()
-
-	for {
-		mt, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Printf("Read error: %v", err)
-			break
-		}
-
-		var response ws.DiscordCommand
-		utils.Panic(json.Unmarshal(message, &response))
-
-		log.Printf("WS Received: %s", message)
-
-		fmt.Println(response)
-		success := "ok"
-
-		utils.Panic(conn.WriteMessage(mt, []byte(success)))
 	}
 }

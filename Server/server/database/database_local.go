@@ -30,6 +30,18 @@ func (d *LocalDatabase) CreatePlayer(data *PlayerData) error {
 	return nil
 }
 
+func (d *LocalDatabase) DeletePlayerByName(playerName string, opts *PlayerNameSearchOpts) error {
+	player, err := d.FindPlayerByName(playerName, opts)
+	if err != nil {
+		return err
+	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	delete(d.data, player.Uuid)
+	return nil
+}
+
 func (d *LocalDatabase) SavePlayer(data *PlayerData) error {
 	return d.CreatePlayer(data)
 }
@@ -54,7 +66,7 @@ func (d *LocalDatabase) FindPlayerByDiscordID(id string) (*PlayerData, error) {
 	return nil, utils.PlayerDataNotFoundError{Identifier: id}
 }
 
-func (d *LocalDatabase) FindPlayerFromName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
+func (d *LocalDatabase) FindPlayerByName(playerName string, opts *PlayerNameSearchOpts) (*PlayerData, error) {
 	if opts == nil {
 		opts = &PlayerNameSearchOpts{}
 	}

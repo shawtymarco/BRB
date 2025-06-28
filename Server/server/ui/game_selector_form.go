@@ -31,23 +31,21 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 		buildffa.Join(pl, pl.Tx())
 
 		if server.BotMark != nil {
-			go func() {
-				time.Sleep(5 * time.Second)
+			time.AfterFunc(5*time.Second, func() {
 				server.BotMark.H().ExecWorld(func(tx2 *world.Tx, e world.Entity) {
 					buildffa.Join(e.(*player.Player), tx2)
 				})
-			}()
+			})
 		}
 	case game.TypeBedFight:
 		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false, nil)
 
 		if server.BotMark != nil {
-			go func() {
-				time.Sleep(5 * time.Second)
+			time.AfterFunc(5*time.Second, func() {
 				server.BotMark.H().ExecWorld(func(tx2 *world.Tx, e world.Entity) {
 					bedwars.Join(e.(*player.Player), tx2, 1, 2, game.TypeBedFight, false, nil)
 				})
-			}()
+			})
 		}
 	}
 }

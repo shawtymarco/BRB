@@ -74,7 +74,7 @@ func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, 
 
 func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 	pl := shop.Player
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	menuInv := inventory.New(54, func(slot int, before, after item.Stack) {
 		utils.Session(pl).ViewSlotChange(slot, after)

@@ -6,30 +6,37 @@ type Rank int
 
 const (
 	Owner Rank = iota
+	Developer
 	Manager
 	Admin
+	Designer
 	Moderator
 	Helper
+	MediaManager
 	Prime
 	Premium
-	MediaPartner
+	Media
 	Booster
+	Partner
 	Player
 )
 
 var ShortenedRanks = []string{
-	"owner", "manager", "admin", "moderator", "helper",
-	"prime", "premium", "media_partner", "booster", "player",
+	"owner", "developer", "manager", "admin", "designer",
+	"moderator", "helper", "media_manager", "prime", "premium",
+	"media", "booster", "partner", "player",
 }
 
 var ChatPrefixes = []string{
-	"<lapis>", "<diamond>", "<dark-green>", "<amethyst>", "<copper>",
-	"<dark-purple>", "<aqua>", "<gold>", "<quartz>", "<grey>",
+	"black", "dark-purple", "blue", "dark-red", "aqua",
+	"dark-green", "gold", "lapis", "yellow", "aqua",
+	"copper", "purple", "amethyst", "grey",
 }
 
 var RankPrefixes = []string{
-	"<lapis>Owner</lapis>", "<diamond>Manager</diamond>", "<dark-green>Admin</dark-green>", "<amethyst>Moderator</amethyst>", "<copper>Helper</copper>",
-	"<dark-purple>Prime</dark-purple>", "<aqua>Premium</aqua>", "<gold>Media Partner</gold>", "<quartz>Booster</quartz>", "<grey>player</grey>",
+	"[Owner]", "[Dev]", "[Manager]", "[Admin]", "[Designer]",
+	"[Mod]", "[Helper]", "[Media Manager]", "[Prime]", "[Premium]",
+	"[Media]", "[Booster]", "[Partner]", "",
 }
 
 func (r Rank) Shortened() string {
@@ -41,7 +48,7 @@ func (r Rank) ChatPrefix() string {
 }
 
 func (r Rank) Prefix() string {
-	return RankPrefixes[r]
+	return text.Colourf("<%v>%v</%v>", r.ChatPrefix(), RankPrefixes[r], r.ChatPrefix())
 }
 
 func RankFromPrefix(prefix string) Rank {

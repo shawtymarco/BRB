@@ -28,7 +28,7 @@ func NewBuildFFA() {
 		for range time.NewTicker(250 * time.Millisecond).C {
 			var users []*user.User
 			Game.ForEachActivePlayer(func(pl *player.Player) {
-				users = append(users, user.LookupPlayer(pl))
+				users = append(users, user.GetUser(pl))
 			})
 
 			slices.SortFunc(users, func(a, b *user.User) int {
@@ -36,7 +36,7 @@ func NewBuildFFA() {
 			})
 
 			Game.ForEachActivePlayer(func(pl *player.Player) {
-				u := user.LookupPlayer(pl)
+				u := user.GetUser(pl)
 				u.Scoreboard.Set(1, "§0 ")
 				u.Scoreboard.Set(2, text.Colourf("<grey>Game:</grey> <emerald>Build UHC</emerald>"))
 				u.Scoreboard.Set(3, "§1 ")

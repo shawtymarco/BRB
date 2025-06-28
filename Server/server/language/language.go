@@ -33,20 +33,42 @@ type LangConfig struct {
 			Hub          string
 			Ping         string
 			PingSelf     string
-			GiveRank     string
 			Link         string
 			Warp         string
 			YouGotWarped string
+
+			FlyOn    string
+			FlyOff   string
+			Spectate string
+			Nick     string
+			ELOClaim string
+
+			GiveRank             string
+			AddCape              string
+			RemoveCape           string
+			ResetStats           string
+			ResetStatsDisconnect string
 		}
 
 		Error struct {
-			Permission          string
-			CoolDown            string
-			OnlyOneTarget       string
-			RankHierarchy       string
-			LinkExpired         string
-			NoMorePlayersToWarp string
-			NoGameToJoin        string
+			Permission    string
+			CoolDown      string
+			OnlyOneTarget string
+
+			LinkExpired            string
+			NoMorePlayersToWarp    string
+			NoGameToJoin           string
+			LobbyOnly              string
+			MustBeInGame           string
+			CannotSpectateOneSelf  string
+			NicknameLength         string
+			NicknameSpace          string
+			NicknameSpecialChars   string
+			NicknameMultipleSpaces string
+			ELOAlreadyClaimed      string
+			RankHierarchy          string
+			CapeAlreadyOwned       string
+			CapeNotOwned           string
 		}
 	}
 

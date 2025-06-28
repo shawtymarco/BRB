@@ -48,7 +48,7 @@ func (s *ItemShop) itemShopDashboard(showQuickBuy bool) []item.Stack {
 	items[7] = item.NewStack(block.TNT{}, 1).WithCustomName(text.Colourf("<aqua>Utility</aqua>"))
 
 	if showQuickBuy {
-		u := user.LookupPlayer(s.Player)
+		u := user.GetUser(s.Player)
 		allShops := s.All()
 		for _, slot := range quickBuySlots {
 			if id := u.Data.Settings.QuickBuyConfig[slot]; id != nil {
@@ -79,7 +79,7 @@ func (s *ItemShop) Blocks() []item.Stack {
 	}
 	items[21] = shopify(s.Player, item.NewStack(block.EndStone{}, 12), Iron, 24, false, false)
 	items[22] = shopify(s.Player, item.NewStack(block.Ladder{}, 16), Iron, 4, false, false)
-	items[23] = shopify(s.Player, item.NewStack(block.Planks{Wood: lo.If(s.Player != nil, user.LookupPlayer(s.Player).Data.Cosmetics.SelectedWoodType).Else(block.OakWood())}, 16), Gold, 4, false, false)
+	items[23] = shopify(s.Player, item.NewStack(block.Planks{Wood: lo.If(s.Player != nil, user.GetUser(s.Player).Data.Cosmetics.SelectedWoodType).Else(block.OakWood())}, 16), Gold, 4, false, false)
 	items[24] = shopify(s.Player, item.NewStack(block.Obsidian{}, 4), Gold, 3, false, false)
 	return items
 }

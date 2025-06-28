@@ -31,7 +31,7 @@ func (m MagicMilk) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool 
 	pl.SetHeldItems(main.Grow(-1), off)
 
 	m.game.trapIgnore[pl.UUID()] = true
-	user2.LookupPlayer(pl).PlaySound("random.drink", 1, 1)
+	user2.GetUser(pl).PlaySound("random.drink", 1, 1)
 	pl.Message(text.Colourf(language.Translate(pl).BedWars.MagicMilkEffectGive))
 
 	time.AfterFunc(30*time.Second, func() {

@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/df-mc/dragonfly/server/player/scoreboard"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
@@ -26,8 +28,7 @@ type Handler struct {
 }
 
 func Join(pl *player.Player) {
-	u := user.LookupPlayer(pl)
-
+	u := user.GetUser(pl)
 	pl.Handle(Handler{})
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 	pl.Teleport(core.Config.Hub.SpawnPoint)
@@ -46,7 +47,7 @@ func Join(pl *player.Player) {
 	u.Scoreboard.Set(2, text.Colourf("<yellow>▌</yellow> <white>ELO:</white> <green>%v</green>", u.Data.Statistics.ELO))
 	u.Scoreboard.Set(3, text.Colourf("<yellow>▌</yellow> <white>Rank:</white> <green>%v %v</green>", u.Data.Statistics.ELORank().EloIcon(), u.Data.Statistics.ELORank().EloPrefix()))
 	u.Scoreboard.Set(4, "§1")
-	u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <green>%v</green>", u.Data.Rank().Prefix()))
+	u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <grey>%v</grey>", lo.If(u.Data.Rank() == database.Player, "player").Else(u.Data.Rank().Prefix())))
 	u.Scoreboard.Set(6, "§2")
 	u.Scoreboard.Set(7, text.Colourf("<yellow>▌</yellow> <white>Coins:</white> <gold>%v</gold>", u.Data.Statistics.Coins))
 	u.Scoreboard.Set(8, text.Colourf("<yellow>▌</yellow> <white>Experience:</white> <aqua>%v</aqua>", u.Data.Statistics.XP))
@@ -66,14 +67,16 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	ctx.Cancel()
 
 	pl := ctx.Val()
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	if listener.CheckChatCoolDown(pl) {
 		return
 	}
 
+	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
+
 	*msg = strings.ReplaceAll(*msg, "§r", "")
-	newMsg := fmt.Sprintf("%v<white>: %v</white>", database.LobbyNameDisplay.Name(u.Data), *msg)
+	newMsg := fmt.Sprintf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
 	*msg = text.Colourf(newMsg)
 
 	_, _ = fmt.Fprintf(chat.Global, *msg)

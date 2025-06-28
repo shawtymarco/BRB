@@ -18,7 +18,7 @@ type PingCommand struct {
 
 func (p PingCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		u := user.LookupPlayer(pl)
+		u := user.GetUser(pl)
 		if u.IsCooldownActive(user.CommandPing, 5*time.Second, false, true) {
 			return
 		}

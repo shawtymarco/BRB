@@ -2,7 +2,8 @@ package database
 
 import (
 	"fmt"
-	"github.com/samber/lo"
+	"server/server/font"
+	"strconv"
 	"strings"
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
@@ -17,7 +18,7 @@ type nameConfig struct {
 func (nc nameConfig) Name(pd *PlayerData) string {
 	var eloStr string
 	if nc.ELO {
-		eloStr = fmt.Sprintf("<dark-grey>[%v %v]</dark-grey> ", pd.Statistics.ELORank().EloIcon(), pd.Statistics.ELO)
+		eloStr = fmt.Sprintf("<dark-grey>[%v %v]</dark-grey> ", pd.Statistics.ELORank().EloIcon(), font.Transform(strconv.Itoa(pd.Statistics.ELO)))
 	}
 
 	var teamColourStr string
@@ -25,14 +26,18 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 		teamColourStr = fmt.Sprintf("<bold><%v>%v</%v></bold> ", nc.TeamColour, strings.ToUpper(string([]rune(nc.TeamColour)[0])), nc.TeamColour)
 	}
 
-	n := pd.Username
+	r := pd.Rank()
 
-	if pd.Rank() == Player {
-		return text.Colourf("%v%v%v%v", eloStr, teamColourStr, pd.Rank().ChatPrefix(), n)
+	n := pd.Username
+	if pd.Cosmetics.Nickname != "" {
+		n = pd.Cosmetics.Nickname
 	}
 
-	r := pd.Rank()
-	return text.Colourf("%v%v%v %v", teamColourStr, eloStr, lo.If(nc.Rank, r.ChatPrefix()).Else(""), n)
+	if nc.Rank && r != Player {
+		return text.Colourf("%v%v%v <%v>%v</%v>", eloStr, teamColourStr, r.Prefix(), r.ChatPrefix(), n, r.ChatPrefix())
+	}
+
+	return text.Colourf("%v%v<grey>%v</grey>", eloStr, teamColourStr, n)
 }
 
 var LobbyNameDisplay = nameConfig{Rank: true, ELO: true}

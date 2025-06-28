@@ -4,6 +4,7 @@ import (
 	"server/server/database"
 	"server/server/language"
 	"server/server/user"
+	"slices"
 
 	"github.com/df-mc/dragonfly/server/block"
 	"github.com/df-mc/dragonfly/server/player"
@@ -22,6 +23,7 @@ func NewCosmeticsForm() CosmeticsForm {
 
 func (g CosmeticsForm) Submit(submitter form.Submitter, button form.Button, _ *world.Tx) {
 	pl := submitter.(*player.Player)
+
 	switch button.Text {
 	case "Wood Skins":
 		NewWoodSkinsForm().SendTo(pl)
@@ -48,7 +50,7 @@ func NewWoodSkinsForm() WoodSkinsForm {
 
 func (w WoodSkinsForm) Submit(submitter form.Submitter, button form.Button, _ *world.Tx) {
 	pl := submitter.(*player.Player)
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 
 	wt := Load[block.WoodType](pl, button.Text)
 	u.Data.Cosmetics.SelectedWoodType = wt
@@ -57,17 +59,19 @@ func (w WoodSkinsForm) Submit(submitter form.Submitter, button form.Button, _ *w
 }
 
 func (w WoodSkinsForm) SendTo(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	f := form.NewMenu(NewWoodSkinsForm(), text.Colourf("<emerald>Wood Skins</emerald>"))
 	for _, wt := range block.WoodTypes() {
-		f = f.WithButtons(
-			AddButtonWithValue(
-				pl,
-				text.Colourf("%v%v", wt.Name(), lo.If(u.Data.Cosmetics.SelectedWoodType == wt, text.Colourf("\n<green>Selected</green>")).Else("")),
-				"",
-				wt,
-			),
-		)
+		if u.Data.Rank() <= database.Prime {
+			f = f.WithButtons(
+				AddButtonWithValue(
+					pl,
+					text.Colourf("%v%v", wt.Name(), lo.If(u.Data.Cosmetics.SelectedWoodType == wt, text.Colourf("\n<green>Selected</green>")).Else("")),
+					"",
+					wt,
+				),
+			)
+		}
 	}
 	pl.SendForm(f)
 }
@@ -81,7 +85,7 @@ func NewCapesForm() CapesForm {
 
 func (c CapesForm) Submit(submitter form.Submitter, button form.Button, tx *world.Tx) {
 	pl := submitter.(*player.Player)
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	cape := Load[database.Cape](pl, button.Text)
 	u.Data.Cosmetics.SelectedCape = cape.Identifier()
 	u.RefreshCape()
@@ -90,17 +94,19 @@ func (c CapesForm) Submit(submitter form.Submitter, button form.Button, tx *worl
 }
 
 func (c CapesForm) SendTo(pl *player.Player) {
-	u := user.LookupPlayer(pl)
+	u := user.GetUser(pl)
 	f := form.NewMenu(NewCapesForm(), text.Colourf("<emerald>Capes</emerald>"))
 	for _, cape := range database.AllCapes() {
-		f = f.WithButtons(
-			AddButtonWithValue(
-				pl,
-				text.Colourf("%v%v", cape.Name(), lo.If(u.Data.Cosmetics.SelectedCape == cape.Identifier(), text.Colourf("\n<green>Selected</green>")).Else("")),
-				"",
-				cape,
-			),
-		)
+		if u.Data.Rank() <= database.Prime || slices.Contains(u.Data.Cosmetics.OwnedCapes, cape.Identifier()) {
+			f = f.WithButtons(
+				AddButtonWithValue(
+					pl,
+					text.Colourf("%v%v", cape.Name(), lo.If(u.Data.Cosmetics.SelectedCape == cape.Identifier(), text.Colourf("\n<green>Selected</green>")).Else("")),
+					"",
+					cape,
+				),
+			)
+		}
 	}
 	pl.SendForm(f)
 }
