@@ -16,12 +16,16 @@ import (
 	"server/server/games/lobby"
 	"server/server/language"
 	"server/server/living/npc"
+	"server/server/multiversion"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
 	"slices"
 	"strings"
 	"unsafe"
+
+	v486 "github.com/didntpot/multiversion/multiversion/protocols/v486"
+	"github.com/sandertv/gophertunnel/minecraft"
 
 	"github.com/google/uuid"
 
@@ -64,9 +68,10 @@ func main() {
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
 	conf.ReadOnlyWorld = true
-	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
-	//	v486.new(true),
-	//})
+
+	multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
+		v486.New(true),
+	})
 
 	srv := conf.New()
 	utils.SetServer(srv)

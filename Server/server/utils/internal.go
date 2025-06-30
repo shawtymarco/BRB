@@ -3,11 +3,9 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"math"
 	"math/rand"
-	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
@@ -85,10 +83,35 @@ func IntToRoman(num int) string {
 	return roman
 }
 
-func Rad2deg(rad float64) float64 {
-	return rad * (180 / math.Pi)
+func FriendlyDuration(d time.Duration) string {
+	if d <= 0 {
+		return "0 minutes"
+	}
+
+	days := int(d.Hours()) / 24
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+
+	var parts []string
+	if days > 0 {
+		parts = append(parts, fmt.Sprintf("%d day%s", days, plural(days)))
+	}
+	if hours > 0 {
+		parts = append(parts, fmt.Sprintf("%d hour%s", hours, plural(hours)))
+	}
+	if minutes > 0 {
+		parts = append(parts, fmt.Sprintf("%d minute%s", minutes, plural(minutes)))
+	}
+
+	return strings.Join(parts, " ")
 }
 
+func plural(n int) string {
+	if n != 1 {
+		return "s"
+	}
+	return ""
+}
 func ShortenNumber(num float64) string {
 	units := []string{"", text.Colourf("<yellow>K</yellow>"), text.Colourf("<dark-red>M</dark-red>"), text.Colourf("<purple>B</purple>"), text.Colourf("<black>T</black>"), text.Colourf("<red>QD</red>"), text.Colourf("<dark-rerd>QT</dark-red>")}
 	for i := 0; i < len(units); i++ {
@@ -99,55 +122,4 @@ func ShortenNumber(num float64) string {
 		}
 	}
 	return fmt.Sprintf("%.1f%s", num, units[len(units)-1]) // Handle numbers beyond trillions
-}
-
-func IsPrime(n int64) bool {
-	if n <= 1 {
-		return false
-	}
-	if n <= 3 {
-		return true
-	}
-
-	if n%2 == 0 || n%3 == 0 {
-		return false
-	}
-
-	for i := int64(5); i*i <= n; i += 6 {
-		if n%i == 0 || n%(i+2) == 0 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func NextPrime(n int64) int64 {
-	if n <= 1 {
-		return 2
-	}
-
-	prime := n + 1
-	for !IsPrime(prime) {
-		prime++
-	}
-	return prime
-}
-
-func Patch(url string, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest("PATCH", url, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", contentType)
-	return http.DefaultClient.Do(req)
-}
-
-func Delete(url string, contentType string, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequest("DELETE", url, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", contentType)
-	return http.DefaultClient.Do(req)
 }

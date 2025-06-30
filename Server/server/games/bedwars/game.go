@@ -179,7 +179,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							}
 
 							pl.SendTitle(title.New(text.Colourf("<green>GO!</green>")))
-							pl.Message(text.Colourf(language.Translate(pl).BedWars.TutorialMessage))
+							if g.typeGame == game.TypeBedWars {
+								pl.Message(text.Colourf(language.Translate(pl).BedWars.TutorialMessage))
+							}
 						})
 
 						g.SetStage(game.Running)

@@ -36,7 +36,7 @@ func (r SetRoleCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 		r := database.RankFromPrefix(string(r.Rank))
 		ds := utils.Panics(server.Database.FindPlayer(pl.UUID()))
 		dt := utils.Panics(server.Database.FindPlayer(t.UUID()))
-		if ds.Statistics.RankId >= r.Shortened() {
+		if ds.Rank() >= r {
 			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
 			return
 		}

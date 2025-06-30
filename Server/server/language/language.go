@@ -30,18 +30,27 @@ type LangConfig struct {
 
 	Commands struct {
 		Success struct {
-			Hub          string
-			Ping         string
-			PingSelf     string
-			Link         string
-			Warp         string
-			YouGotWarped string
+			Hub                 string
+			Ping                string
+			PingSelf            string
+			Link                string
+			Warp                string
+			YouGotWarped        string
+			DuelRequest         string
+			DuelRequestReceived string
+			DuelRevoked         string
+			NoDuelRequest       string
 
 			FlyOn    string
 			FlyOff   string
 			Spectate string
 			Nick     string
 			ELOClaim string
+
+			Ban           string
+			BanDisconnect string
+			Mute          string
+			Muted         string
 
 			GiveRank             string
 			AddCape              string
@@ -55,20 +64,25 @@ type LangConfig struct {
 			CoolDown      string
 			OnlyOneTarget string
 
-			LinkExpired            string
-			NoMorePlayersToWarp    string
-			NoGameToJoin           string
-			LobbyOnly              string
-			MustBeInGame           string
-			CannotSpectateOneSelf  string
-			NicknameLength         string
-			NicknameSpace          string
-			NicknameSpecialChars   string
-			NicknameMultipleSpaces string
-			ELOAlreadyClaimed      string
-			RankHierarchy          string
-			CapeAlreadyOwned       string
-			CapeNotOwned           string
+			LinkExpired                 string
+			NoMorePlayersToWarp         string
+			NoGameToJoin                string
+			LobbyOnly                   string
+			TargetLobbyOnly             string
+			MustBeInGame                string
+			AlreadyHaveDuelRequest      string
+			TargetAlreadyHasDuelRequest string
+			CannotSpectateOneSelf       string
+			NicknameLength              string
+			NicknameSpace               string
+			NicknameSpecialChars        string
+			NicknameMultipleSpaces      string
+			ELOAlreadyClaimed           string
+			AlreadyBanned               string
+			AlreadyMuted                string
+			RankHierarchy               string
+			CapeAlreadyOwned            string
+			CapeNotOwned                string
 		}
 	}
 

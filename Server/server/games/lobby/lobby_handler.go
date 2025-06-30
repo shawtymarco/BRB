@@ -6,6 +6,7 @@ import (
 	"server/server/database"
 	"server/server/font"
 	"server/server/items/stacks"
+	"server/server/language"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
@@ -29,6 +30,17 @@ type Handler struct {
 
 func Join(pl *player.Player) {
 	u := user.GetUser(pl)
+
+	if b := u.Data.Punishments.ActiveBan(); b != nil {
+		pl.Disconnect(
+			language.Translate(pl).Commands.Success.BanDisconnect,
+			lo.If(b.Permanent, "permanently").Else("temporarily"),
+			lo.If(b.Permanent, "").Else("for "+utils.FriendlyDuration(b.EndsAt.Sub(time.Now()))),
+			b.Reason,
+		)
+		return
+	}
+
 	pl.Handle(Handler{})
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 	pl.Teleport(core.Config.Hub.SpawnPoint)
@@ -38,8 +50,8 @@ func Join(pl *player.Player) {
 
 	u.RefreshCape()
 
-	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
 	utils.Panic(pl.Inventory().SetItem(0, stacks.CosmeticsStack()))
+	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
 	utils.Panic(pl.Inventory().SetItem(8, stacks.SettingsStack()))
 
 	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BRBW</yellow></bold>"))

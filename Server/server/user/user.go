@@ -53,6 +53,10 @@ type User struct {
 
 	LastHit   *world.EntityHandle
 	LastHitAt time.Time
+
+	LastMessenger *world.EntityHandle
+
+	PendingDuelRequestTo *world.EntityHandle
 }
 
 func newUser(pl *player.Player, isBot bool) (*User, error) {

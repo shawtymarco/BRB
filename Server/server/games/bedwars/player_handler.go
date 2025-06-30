@@ -163,7 +163,7 @@ func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, for
 
 func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
 	pl := ctx.Val()
-	if newPos.Y() <= float64(h.game.MapConfig().Void) {
+	if pl.GameMode() != world.GameModeSpectator && newPos.Y() <= float64(h.game.MapConfig().Void) {
 		if h.game.Stage() < game.Running {
 			pl.Teleport(h.game.MapConfig().SpawnPoint)
 		} else {

@@ -14,7 +14,7 @@ import (
 )
 
 type NickCommand struct {
-	Nickname string `json:"nickname"`
+	Nickname string `cmd:"nickname"`
 }
 
 func (NickCommand) Allow(src cmd.Source) bool {

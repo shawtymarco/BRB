@@ -1,10 +1,14 @@
 package listener
 
 import (
+	"github.com/samber/lo"
+	"github.com/sandertv/gophertunnel/minecraft/text"
 	"server/server"
 	"server/server/database"
 	"server/server/items"
+	"server/server/language"
 	"server/server/user"
+	"server/server/utils"
 	"time"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
@@ -58,5 +62,18 @@ func HandleItemUse(ctx *player.Context) {
 
 func CheckChatCoolDown(pl *player.Player) bool {
 	u := user.GetUser(pl)
-	return u.Data.Rank() > database.Partner && u.IsCooldownActive(user.Chat, 1*time.Second, false, true)
+	ok1 := u.Data.Rank() > database.Partner && u.IsCooldownActive(user.Chat, 1*time.Second, false, true)
+	var ok2 bool
+
+	if m := u.Data.Punishments.ActiveMute(); m != nil {
+		ok2 = true
+		pl.Message(text.Colourf(
+			language.Translate(pl).Commands.Success.Muted,
+			lo.If(m.Permanent, "permanently").Else("temporarily"),
+			lo.If(m.Permanent, "").Else("for "+utils.FriendlyDuration(m.EndsAt.Sub(time.Now()))),
+			m.Reason,
+		))
+	}
+
+	return ok1 || ok2
 }

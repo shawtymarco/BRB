@@ -20,16 +20,17 @@ type PlayerData struct {
 	AlternativeMCAccounts []string
 	AlternativeDCAccounts []string
 
-	Username   string
-	Online     bool
-	FirstJoin  time.Time
-	LastJoin   time.Time
-	DeviceOS   protocol.DeviceOS
-	ProtocolId string
-	Statistics Statistics
-	Cosmetics  Cosmetics
-	Settings   Settings
-	Games      Games
+	Username    string
+	Online      bool
+	FirstJoin   time.Time
+	LastJoin    time.Time
+	DeviceOS    protocol.DeviceOS
+	ProtocolId  string
+	Statistics  Statistics
+	Cosmetics   Cosmetics
+	Settings    Settings
+	Punishments Punishments
+	Games       Games
 }
 
 func (pd PlayerData) IsRegistered() bool {
@@ -130,6 +131,39 @@ func HotBarCategoryFromStack(stack item.Stack) HotBarCategory {
 		return Axe
 	}
 	return None
+}
+
+type Punishments struct {
+	Bans  []*PunishmentData
+	Mutes []*PunishmentData
+}
+
+func (p Punishments) ActiveBan() *PunishmentData {
+	for _, ban := range p.Bans {
+		if ban.RemovedBy == "" && (ban.Permanent || ban.EndsAt.After(time.Now())) {
+			return ban
+		}
+	}
+	return nil
+}
+
+func (p Punishments) ActiveMute() *PunishmentData {
+	for _, mute := range p.Mutes {
+		if mute.RemovedBy == "" && (mute.Permanent || mute.EndsAt.After(time.Now())) {
+			return mute
+		}
+	}
+	return nil
+}
+
+type PunishmentData struct {
+	PunishedBy    string
+	PunishedSince time.Time
+	EndsAt        time.Time
+	Permanent     bool
+	Reason        string
+
+	RemovedBy string
 }
 
 type Games struct {

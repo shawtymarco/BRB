@@ -2,12 +2,14 @@ package command
 
 import (
 	"fmt"
+	"github.com/df-mc/dragonfly/server/world"
 	"server/server"
 	"server/server/database"
 	"server/server/language"
 	"server/server/user"
-
-	"github.com/df-mc/dragonfly/server/world"
+	"server/server/utils"
+	"strconv"
+	"time"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
@@ -29,6 +31,7 @@ const (
 	SetRole
 	ChangeCape
 	ResetStats
+	Sudo
 )
 
 func (p Permission) Test(src cmd.Source) bool {
@@ -66,14 +69,14 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 var rankPermissions = map[database.Rank][]Permission{
 	database.Owner:     {},
 	database.Manager:   {},
-	database.Admin:     {SetRole, ChangeCape},
+	database.Admin:     {ResetStats, SetRole, ChangeCape},
 	database.Moderator: {Alias, Ban},
 	database.Helper:    {Mute},
 	database.Prime:     {Nick, ClaimELO},
 	database.Premium:   {Fly, Spectate},
 	database.Media:     {},
 	database.Booster:   {},
-	database.Player:    {ResetStats}, // TODO: PUT BACK TO OWNER PERMS
+	database.Player:    {Sudo}, // PUT IN OWNER PERMS OR STH
 }
 
 type ArgumentPlayer string
@@ -127,4 +130,39 @@ func (arg ArgumentPlayer) ExecWithPlayerSafe(currentTx *world.Tx, fn func(tx *wo
 		return fmt.Errorf("player %s could not be resolved", string(arg))
 	}
 	return nil
+}
+
+type Duration string
+
+func (Duration) Type() string {
+	return "duration"
+}
+
+func (Duration) Options(_ cmd.Source) []string {
+	var durs []string
+	for i := 1; i <= 90; i++ {
+		durs = append(durs, fmt.Sprintf("%vm", i))
+		durs = append(durs, fmt.Sprintf("%vh", i))
+		durs = append(durs, fmt.Sprintf("%vd", i))
+	}
+	return durs
+}
+
+func (arg Duration) Parse() time.Duration {
+	dur := string(arg)
+	numPart := dur[:len(dur)-1]
+	unit := dur[len(dur)-1]
+
+	value := utils.Panics(strconv.Atoi(numPart))
+
+	switch unit {
+	case 'm':
+		return time.Duration(value) * time.Minute
+	case 'h':
+		return time.Duration(value) * time.Hour
+	case 'd':
+		return time.Duration(value) * 24 * time.Hour
+	default:
+		return 0
+	}
 }

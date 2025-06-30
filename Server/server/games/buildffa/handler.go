@@ -85,7 +85,7 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 
 func (h Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
 	pl := ctx.Val()
-	if newPos.Y() <= float64(Game.MapConfig().Void) {
+	if pl.GameMode() != world.GameModeSpectator && newPos.Y() <= float64(Game.MapConfig().Void) {
 		damage := 30.0
 		immunityDur := time.Duration(0)
 		h.HandleHurt(ctx, &damage, false, &immunityDur, entity.VoidDamageSource{})

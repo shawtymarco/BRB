@@ -8,6 +8,7 @@ require (
 	github.com/bedrock-gophers/inv v0.3.0
 	github.com/df-mc/atomic v1.10.0
 	github.com/df-mc/dragonfly v0.10.4
+	github.com/didntpot/multiversion v0.0.0-20250629080347-b02e938c9e03
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-gl/mathgl v1.2.0
 	github.com/google/uuid v1.6.0
@@ -52,7 +53,7 @@ require (
 	github.com/onsi/gomega v1.37.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
-	github.com/sandertv/go-raknet v1.14.3-0.20250305181847-6af3e95113d6 // indirect
+	github.com/sandertv/go-raknet v1.14.3-0.20250525005230-991ee492a907 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
@@ -71,3 +72,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
+
+replace github.com/sandertv/go-raknet => github.com/tedacmc/tedac-raknet v0.0.6
+
+replace github.com/sandertv/gophertunnel => github.com/tedacmc/tedac-gophertunnel v0.0.44
