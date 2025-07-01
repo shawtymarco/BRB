@@ -1,7 +1,12 @@
 package database
 
 import (
+	"server/server/language"
+	"server/server/utils"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/player"
+	"github.com/samber/lo"
 
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/sandertv/gophertunnel/minecraft/text"
@@ -14,11 +19,14 @@ import (
 )
 
 type PlayerData struct {
-	Uuid   uuid.UUID
+	UUID   uuid.UUID
 	UserId string
 
-	AlternativeMCAccounts []string
-	AlternativeDCAccounts []string
+	AlternativeMCAccounts []*AltAccount
+
+	DeviceID      string
+	HashedIP      string
+	IPStoredSince time.Time
 
 	Username    string
 	Online      bool
@@ -33,20 +41,36 @@ type PlayerData struct {
 	Games       Games
 }
 
-func (pd PlayerData) IsRegistered() bool {
+type AltAccount struct {
+	UUID     uuid.UUID
+	Username string
+}
+
+func (pd *PlayerData) IsRegistered() bool {
 	return pd.UserId != ""
 }
 
-func (pd PlayerData) IsTouch() bool {
+func (pd *PlayerData) IsTouch() bool {
 	return pd.DeviceOS == protocol.DeviceAndroid || pd.DeviceOS == protocol.DeviceIOS || pd.DeviceOS == protocol.DeviceFireOS || pd.DeviceOS == protocol.DeviceWP
 }
 
-func (pd PlayerData) Rank() Rank {
+func (pd *PlayerData) Rank() Rank {
 	return RankFromName(pd.Statistics.RankId)
 }
 
-func (pd PlayerData) MaxXP() int {
+func (pd *PlayerData) MaxXP() int {
 	return 5000 * pd.Statistics.Level
+}
+
+func (pd *PlayerData) AddAlt(d *PlayerData) {
+	for _, alt := range pd.AlternativeMCAccounts {
+		if alt.UUID == d.UUID {
+			return // already added
+		}
+	}
+
+	pd.AlternativeMCAccounts = append(pd.AlternativeMCAccounts, &AltAccount{UUID: d.UUID, Username: d.Username})
+	d.AlternativeMCAccounts = append(d.AlternativeMCAccounts, &AltAccount{UUID: pd.UUID, Username: pd.Username})
 }
 
 type Statistics struct {
@@ -138,25 +162,18 @@ type Punishments struct {
 	Mutes []*PunishmentData
 }
 
-func (p Punishments) ActiveBan() *PunishmentData {
-	for _, ban := range p.Bans {
-		if ban.RemovedBy == "" && (ban.Permanent || ban.EndsAt.After(time.Now())) {
-			return ban
-		}
-	}
-	return nil
-}
-
-func (p Punishments) ActiveMute() *PunishmentData {
-	for _, mute := range p.Mutes {
-		if mute.RemovedBy == "" && (mute.Permanent || mute.EndsAt.After(time.Now())) {
-			return mute
-		}
-	}
-	return nil
+func (p Punishments) Ban(pl *player.Player, punishment *PunishmentData) {
+	pl.Disconnect(text.Colourf(
+		language.Translate(pl).Commands.Success.BanDisconnect,
+		lo.If(punishment.Permanent, "permanently").Else("temporarily"),
+		lo.If(punishment.Permanent, "").Else(" for "+utils.FriendlyDuration(punishment.EndsAt.Sub(time.Now()))),
+		punishment.Reason,
+		punishment.PunishedSince.Format("Mon, Jan 2, 2006 at 3:04 PM"),
+	))
 }
 
 type PunishmentData struct {
+	ID            string
 	PunishedBy    string
 	PunishedSince time.Time
 	EndsAt        time.Time

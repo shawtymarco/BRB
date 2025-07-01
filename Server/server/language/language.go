@@ -48,9 +48,12 @@ type LangConfig struct {
 			ELOClaim string
 
 			Ban           string
+			Unban         string
 			BanDisconnect string
 			Mute          string
+			Unmute        string
 			Muted         string
+			Alias         string
 
 			GiveRank             string
 			AddCape              string
@@ -60,9 +63,10 @@ type LangConfig struct {
 		}
 
 		Error struct {
-			Permission    string
-			CoolDown      string
-			OnlyOneTarget string
+			Permission     string
+			CoolDown       string
+			OnlyOneTarget  string
+			PlayerNotExist string
 
 			LinkExpired                 string
 			NoMorePlayersToWarp         string
@@ -79,7 +83,9 @@ type LangConfig struct {
 			NicknameMultipleSpaces      string
 			ELOAlreadyClaimed           string
 			AlreadyBanned               string
+			NotBanned                   string
 			AlreadyMuted                string
+			NotMuted                    string
 			RankHierarchy               string
 			CapeAlreadyOwned            string
 			CapeNotOwned                string

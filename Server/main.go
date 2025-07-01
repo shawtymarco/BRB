@@ -22,6 +22,7 @@ import (
 	"server/server/worldmanager"
 	"slices"
 	"strings"
+	"time"
 	"unsafe"
 
 	v486 "github.com/didntpot/multiversion/multiversion/protocols/v486"
@@ -94,10 +95,22 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	bedwars.NewBedWars(game.TypeBedWars, 2, 2, false) // TODO: REMOVE DEBUG
 
 	for pl := range srv.Accept() {
-		user.GetUser(pl)
+		u := user.GetUser(pl)
+
+		allData := utils.Panics(core.Database.FindAllPlayers())
+		for _, d := range allData {
+			if d.UUID == u.Data.UUID {
+				continue
+			}
+
+			if d.DeviceID == u.Data.DeviceID || time.Since(d.IPStoredSince) <= 24*time.Hour && d.HashedIP == u.Data.HashedIP {
+				u.Data.AddAlt(d)
+				utils.Panic(core.Database.SavePlayer(d))
+			}
+		}
+
 		lobby.Join(pl)
 		joinRankedBedWars(pl)
 	}
@@ -137,7 +150,7 @@ func createBot(name string, tx *world.Tx) *player.Player {
 	if err != nil {
 		id, _ = uuid.NewUUID()
 	} else {
-		id = bpd.Uuid
+		id = bpd.UUID
 	}
 	bot := npc.Create(npc.Settings{
 		UUID:     id,

@@ -44,7 +44,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDuration = 5 * time.Second // TODO: Change back
+const startingInDuration = 30 * time.Second
 
 var Games = make(map[uuid.UUID]*BedWars)
 
@@ -91,9 +91,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	gameWorld := utils.Panics(server.WorldManager.World(mapName))
 	gameWorld.Handle(WorldHandler{game: g})
 	g.Game = game.NewGame(newId, gameWorld, "")
-	if g.Type() == game.TypeBedWars {
-		g.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1248405762204504066", "1152316442709073941"} // TODO: REMOVE DEBUG
-	}
 
 	go func() {
 		stages := []*stage{
@@ -402,14 +399,14 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 		Resource:  Iron,
 		Tier:      1,
 		Cap:       48,
-		SpawnRate: 100 * time.Millisecond, // TODO: Change back to 400ms
+		SpawnRate: 400 * time.Millisecond,
 	}
 	b.goldGeneratorSettings = &GeneratorSettings{
 		Game:      b,
 		Resource:  Gold,
 		Tier:      1,
 		Cap:       12,
-		SpawnRate: 400 * time.Millisecond, // TODO: Change back to 4s
+		SpawnRate: 4 * time.Second,
 	}
 	b.diamondGeneratorSettings = &GeneratorSettings{
 		Resource:  Diamond,
@@ -479,10 +476,11 @@ func (b *BedWars) Reward(pl *player.Player) {
 		return ub.GameInfo.BedWars.Kills - ua.GameInfo.BedWars.Kills
 	})
 
-	mostKills := user.GetUser(sorted[0]).GameInfo.BedWars.Kills + user.GetUser(sorted[0]).GameInfo.BedWars.FinalKills
+	mostKills := user.GetUser(sorted[0]).GameInfo.TotalBWKills()
 
 	u := user.GetUser(pl)
-	if u.GameInfo.BedWars.Kills+u.GameInfo.BedWars.FinalKills == mostKills {
+	if u.GameInfo.TotalBWKills() == mostKills {
+		u.Data.Games.BedWars.MVPCount++
 		switch u.Data.Statistics.ELORank() {
 		case database.Bronze:
 			u.Data.Statistics.ELO += 25

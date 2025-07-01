@@ -26,7 +26,7 @@ func (d *LocalDatabase) String() string {
 func (d *LocalDatabase) CreatePlayer(data *PlayerData) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	d.data[data.Uuid] = data
+	d.data[data.UUID] = data
 	return nil
 }
 
@@ -38,7 +38,7 @@ func (d *LocalDatabase) DeletePlayerByName(playerName string, opts *PlayerNameSe
 
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	delete(d.data, player.Uuid)
+	delete(d.data, player.UUID)
 	return nil
 }
 
@@ -84,16 +84,22 @@ func (d *LocalDatabase) FindPlayerByName(playerName string, opts *PlayerNameSear
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 	for _, playerData := range d.data {
-		for _, name := range playerData.AlternativeMCAccounts {
-			if opts.CaseInsensitive {
-				name = strings.ToLower(name)
-			}
-			if pattern.MatchString(name) {
-				return playerData, nil
-			}
+		if pattern.MatchString(playerData.Username) {
+			return playerData, nil
 		}
 	}
 	return nil, utils.PlayerDataNotFoundError{Identifier: playerName}
+}
+
+func (d *LocalDatabase) FindAllPlayers() ([]*PlayerData, error) {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	players := make([]*PlayerData, 0, len(d.data))
+	for _, player := range d.data {
+		players = append(players, player)
+	}
+	return players, nil
 }
 
 func (d *LocalDatabase) SaveAll() map[string]error {

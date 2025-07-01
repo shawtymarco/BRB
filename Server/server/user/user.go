@@ -1,7 +1,8 @@
 package user
 
 import (
-	"fmt"
+	"crypto/sha256"
+	"encoding/hex"
 	"math/rand"
 	"server/server"
 	"server/server/cooldown"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/session"
 
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
 
@@ -60,10 +63,6 @@ type User struct {
 }
 
 func newUser(pl *player.Player, isBot bool) (*User, error) {
-	if pl == nil {
-		return nil, fmt.Errorf("new player should not be nil")
-	}
-
 	userMu.Lock()
 	defer userMu.Unlock()
 
@@ -77,7 +76,7 @@ func newUser(pl *player.Player, isBot bool) (*User, error) {
 	if d == nil {
 		ft = true
 		pd := &database.PlayerData{
-			Uuid:      pl.UUID(),
+			UUID:      pl.UUID(),
 			Username:  pl.Name(),
 			FirstJoin: time.Now(),
 			LastJoin:  time.Now(),
@@ -113,6 +112,13 @@ func newUser(pl *player.Player, isBot bool) (*User, error) {
 	d.Online = true
 	if !isBot {
 		d.ProtocolId = utils.Session(pl).ClientData().GameVersion
+		d.DeviceID = utils.Session(pl).ClientData().DeviceID
+
+		conn := utils.FetchPrivateField[session.Conn](utils.Session(pl), "conn")
+		hasher := sha256.New()
+		hasher.Write([]byte(conn.RemoteAddr().String() + "big fat boobs"))
+		d.HashedIP = hex.EncodeToString(hasher.Sum(nil))
+		d.IPStoredSince = time.Now()
 	}
 
 	u := &User{
@@ -126,13 +132,6 @@ func newUser(pl *player.Player, isBot bool) (*User, error) {
 	}
 	users[pl.UUID()] = u
 	return u, nil
-}
-
-func Save(pl *player.Player) {
-	user := GetUser(pl)
-	user.Data.LastJoin = time.Now()
-	user.Data.Online = false
-	_ = server.Database.SavePlayer(user.Data)
 }
 
 func GetUser(pl *player.Player) *User {
@@ -161,12 +160,38 @@ func GetUserByUserID(userId string) *User {
 	return nil
 }
 
+func Save(pl *player.Player) {
+	user := GetUser(pl)
+	user.Data.LastJoin = time.Now()
+	user.Data.Online = false
+	_ = server.Database.SavePlayer(user.Data)
+}
+
+func UpdateUserData(pd *database.PlayerData) {
+	userMu.Lock()
+	defer userMu.Unlock()
+
+	if users[pd.UUID] == nil {
+		return
+	}
+	users[pd.UUID].Data = pd
+}
+
 func ResetUser(pl *player.Player) {
+	ut := GetUser(pl)
 	isBot := slices.Contains([]string{"Mark", "Sam", "Steven"}, pl.Name())
 	pd := &database.PlayerData{
-		Uuid:     pl.UUID(),
-		Username: pl.Name(),
-		LastJoin: time.Now(),
+		UUID:                  pl.UUID(),
+		UserId:                ut.Data.UserId,
+		AlternativeMCAccounts: ut.Data.AlternativeMCAccounts,
+		DeviceID:              ut.Data.DeviceID,
+		HashedIP:              ut.Data.HashedIP,
+		IPStoredSince:         ut.Data.IPStoredSince,
+		Username:              pl.Name(),
+		FirstJoin:             ut.Data.FirstJoin,
+		LastJoin:              ut.Data.LastJoin,
+		DeviceOS:              ut.Data.DeviceOS,
+		ProtocolId:            ut.Data.ProtocolId,
 		Statistics: database.Statistics{
 			RankId: database.Player.Shortened(),
 			Level:  1,
@@ -227,6 +252,44 @@ func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Dura
 	}
 
 	return exists
+}
+
+func ActiveBan(pd *database.PlayerData) *database.PunishmentData {
+	checkBan := func(data *database.PlayerData) *database.PunishmentData {
+		for _, ban := range slices.Concat(data.Punishments.Bans) {
+			if ban.RemovedBy == "" && (ban.Permanent || ban.EndsAt.After(time.Now())) {
+				return ban
+			}
+		}
+		return nil
+	}
+
+	for _, alt := range pd.AlternativeMCAccounts {
+		if ok := checkBan(utils.Panics(server.Database.FindPlayer(alt.UUID))); ok != nil {
+			return ok
+		}
+	}
+
+	return checkBan(pd)
+}
+
+func ActiveMute(pd *database.PlayerData) *database.PunishmentData {
+	checkMute := func(data *database.PlayerData) *database.PunishmentData {
+		for _, mute := range slices.Concat(data.Punishments.Mutes) {
+			if mute.RemovedBy == "" && (mute.Permanent || mute.EndsAt.After(time.Now())) {
+				return mute
+			}
+		}
+		return nil
+	}
+
+	for _, alt := range pd.AlternativeMCAccounts {
+		if ok := checkMute(utils.Panics(server.Database.FindPlayer(alt.UUID))); ok != nil {
+			return ok
+		}
+	}
+
+	return checkMute(pd)
 }
 
 func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err error) {

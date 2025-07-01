@@ -85,12 +85,13 @@ func IntToRoman(num int) string {
 
 func FriendlyDuration(d time.Duration) string {
 	if d <= 0 {
-		return "0 minutes"
+		return "0 seconds"
 	}
 
 	days := int(d.Hours()) / 24
 	hours := int(d.Hours()) % 24
 	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
 
 	var parts []string
 	if days > 0 {
@@ -101,6 +102,9 @@ func FriendlyDuration(d time.Duration) string {
 	}
 	if minutes > 0 {
 		parts = append(parts, fmt.Sprintf("%d minute%s", minutes, plural(minutes)))
+	}
+	if seconds > 0 {
+		parts = append(parts, fmt.Sprintf("%d second%s", seconds, plural(seconds)))
 	}
 
 	return strings.Join(parts, " ")

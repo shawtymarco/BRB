@@ -23,6 +23,13 @@ func RegisterCommands() {
 	cmd.Register(cmd.New("nick", "To change your nickname", nil, NickCommand{}))
 	cmd.Register(cmd.New("claimelo", "To claim your seasonal 250 ELO", nil, ClaimELOCommand{}))
 
+	// Staff Commands
+	cmd.Register(cmd.New("ban", "To ban a player", nil, BanCommand{}))
+	cmd.Register(cmd.New("unban", "To unban a player", nil, UnbanCommand{}))
+	cmd.Register(cmd.New("mute", "To mute a player", nil, MuteCommand{}))
+	cmd.Register(cmd.New("unmute", "To unmute a player", nil, UnmuteCommand{}))
+	cmd.Register(cmd.New("alias", "To see all alt accounts of a player", nil, AliasCommand{}))
+
 	// Admin Commands
 	cmd.Register(cmd.New("rank", "To set a specific player's rank", nil, SetRoleCommand{}))
 	cmd.Register(cmd.New("addcape", "To add a cape to a specific player", nil, AddCapeCommand{}))

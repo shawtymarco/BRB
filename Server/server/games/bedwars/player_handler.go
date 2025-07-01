@@ -104,7 +104,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u := user.GetUser(pl)
 	u.Game = nil
-	//user.Save(pl) // TODO: Uncomment (Bug from bots)
+	user.Save(pl)
 	h.game.RemovePlayerFromTeam(pl)
 	lobby.Join(pl)
 }

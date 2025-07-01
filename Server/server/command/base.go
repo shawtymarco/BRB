@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/df-mc/dragonfly/server/world"
 	"server/server"
 	"server/server/database"
 	"server/server/language"
@@ -10,6 +9,8 @@ import (
 	"server/server/utils"
 	"strconv"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/world"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
@@ -67,7 +68,7 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 }
 
 var rankPermissions = map[database.Rank][]Permission{
-	database.Owner:     {},
+	database.Owner:     {Sudo},
 	database.Manager:   {},
 	database.Admin:     {ResetStats, SetRole, ChangeCape},
 	database.Moderator: {Alias, Ban},
@@ -76,7 +77,7 @@ var rankPermissions = map[database.Rank][]Permission{
 	database.Premium:   {Fly, Spectate},
 	database.Media:     {},
 	database.Booster:   {},
-	database.Player:    {Sudo}, // PUT IN OWNER PERMS OR STH
+	database.Player:    {},
 }
 
 type ArgumentPlayer string
@@ -139,7 +140,7 @@ func (Duration) Type() string {
 }
 
 func (Duration) Options(_ cmd.Source) []string {
-	var durs []string
+	durs := []string{"permanent"}
 	for i := 1; i <= 90; i++ {
 		durs = append(durs, fmt.Sprintf("%vm", i))
 		durs = append(durs, fmt.Sprintf("%vh", i))

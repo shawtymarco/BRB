@@ -165,7 +165,7 @@ func (s *ItemShop) Utility() []item.Stack {
 	items[19] = shopify(s.Player, item.NewStack(item.GoldenApple{}, 1), Gold, 3, false, false)
 	items[20] = shopify(s.Player, item.NewStack(SilverfishSnowball{game: s.game}, 1), Iron, 20, false, false)
 	items[21] = editName(shopify(s.Player, item.NewStack(block.TNT{}, 1), Gold, 8, false, false), "TNT")
-	items[22] = shopify(s.Player, item.NewStack(item.EnderPearl{}, 1), Iron, 4, false, false) // TODO: change back price
+	items[22] = shopify(s.Player, item.NewStack(item.EnderPearl{}, 1), Emerald, 4, false, false)
 	items[23] = shopify(s.Player, item.NewStack(item.Bucket{Content: item.LiquidBucketContent(block.Water{})}, 1), Gold, 3, false, false)
 	if s.team != nil {
 		items[24] = editName(shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: s.team.WoolColour()}}, 1), Emerald, 1, false, false), text.Colourf("<green>Bridge Egg</green>"))

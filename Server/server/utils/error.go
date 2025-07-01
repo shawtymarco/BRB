@@ -49,7 +49,7 @@ func Panic(err error) {
 					data := FetchPrivateField[world.EntityData](handle, "data")
 					s := FetchPrivateField[*session.Session](data.Data, "s")
 					if s != nil {
-						s.Disconnect("Disconnected [code: " + errorCode + "]") // TODO: insert human message here
+						s.Disconnect("Disconnected [code: " + errorCode + "]")
 					}
 					wg.Done()
 				}

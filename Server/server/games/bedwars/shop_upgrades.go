@@ -117,7 +117,7 @@ func (s *upgradesShop) Main() []item.Stack {
 
 func (s *upgradesShop) uShopify(stack item.Stack, name, description string, tier int, costs []int, isTrap bool) item.Stack {
 	if len(costs)-1 >= tier {
-		stack = stack.WithValue("resource", int(Iron)).WithValue("cost", costs[tier]) // TODO: Change back to diamond
+		stack = stack.WithValue("resource", int(Diamond)).WithValue("cost", costs[tier])
 	}
 
 	infoMsg := "<yellow>Click to purchase!</yellow>"

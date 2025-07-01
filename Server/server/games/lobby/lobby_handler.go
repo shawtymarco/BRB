@@ -6,7 +6,6 @@ import (
 	"server/server/database"
 	"server/server/font"
 	"server/server/items/stacks"
-	"server/server/language"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
@@ -31,13 +30,8 @@ type Handler struct {
 func Join(pl *player.Player) {
 	u := user.GetUser(pl)
 
-	if b := u.Data.Punishments.ActiveBan(); b != nil {
-		pl.Disconnect(
-			language.Translate(pl).Commands.Success.BanDisconnect,
-			lo.If(b.Permanent, "permanently").Else("temporarily"),
-			lo.If(b.Permanent, "").Else("for "+utils.FriendlyDuration(b.EndsAt.Sub(time.Now()))),
-			b.Reason,
-		)
+	if b := user.ActiveBan(u.Data); b != nil {
+		u.Data.Punishments.Ban(pl, b)
 		return
 	}
 

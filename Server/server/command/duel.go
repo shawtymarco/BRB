@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"server/server"
 	"server/server/database"
 	"server/server/game"
@@ -57,7 +56,6 @@ type DuelAcceptCommand struct {
 }
 
 func (d DuelAcceptCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
-	fmt.Println(10)
 	pl, ok := src.(*player.Player)
 	if !ok {
 		o.Error(text.Colourf("<red>You must run this command in-game.</red>"))

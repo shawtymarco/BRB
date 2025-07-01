@@ -46,7 +46,7 @@ func (d *MongoDBDatabase) CreatePlayer(data *PlayerData) error {
 }
 
 func (d *MongoDBDatabase) SavePlayer(data *PlayerData) error {
-	res := d.playerCollection().FindOneAndReplace(context.TODO(), bson.D{{"uuid", data.Uuid}}, data)
+	res := d.playerCollection().FindOneAndReplace(context.TODO(), bson.D{{"uuid", data.UUID}}, data)
 	if res.Err() != nil {
 		return res.Err()
 	}
@@ -58,7 +58,7 @@ func (d *MongoDBDatabase) DeletePlayerByName(playerName string, opts *PlayerName
 	if err != nil {
 		return err
 	}
-	_, err = d.playerCollection().DeleteOne(context.TODO(), bson.D{{"uuid", player.Uuid}})
+	_, err = d.playerCollection().DeleteOne(context.TODO(), bson.D{{"uuid", player.UUID}})
 	if err != nil {
 		return err
 	}
@@ -92,6 +92,42 @@ func (d *MongoDBDatabase) FindPlayerByName(playerName string, opts *PlayerNameSe
 	}
 	query := bson.D{{"username", primitive.Regex{Pattern: pattern, Options: regexOptions(opts)}}}
 	return d.findPlayerFromQuery(query, playerName)
+}
+
+func (d *MongoDBDatabase) FindAllPlayers() ([]*PlayerData, error) {
+	// If cache already loaded, return from cache
+	d.cache.mu.RLock()
+	if len(d.cache.data) > 0 {
+		players := make([]*PlayerData, 0, len(d.cache.data))
+		for _, player := range d.cache.data {
+			players = append(players, player)
+		}
+		d.cache.mu.RUnlock()
+		return players, nil
+	}
+	d.cache.mu.RUnlock()
+
+	// Load from MongoDB and populate cache
+	cursor, err := d.playerCollection().Find(context.TODO(), bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var players []*PlayerData
+	for cursor.Next(context.TODO()) {
+		var player PlayerData
+		if err := cursor.Decode(&player); err != nil {
+			return nil, err
+		}
+		players = append(players, &player)
+		_ = d.cache.CreatePlayer(&player) // fill cache
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return players, nil
 }
 
 func (d *MongoDBDatabase) findPlayerFromQuery(query bson.D, identifier string) (*PlayerData, error) {

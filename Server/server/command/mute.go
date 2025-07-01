@@ -1,13 +1,14 @@
 package command
 
 import (
-	"github.com/samber/lo"
 	"server/server"
 	"server/server/database"
 	"server/server/language"
 	"server/server/user"
 	"server/server/utils"
 	"time"
+
+	"github.com/samber/lo"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
@@ -16,9 +17,9 @@ import (
 )
 
 type MuteCommand struct {
-	Player   ArgumentPlayer `cmd:"player"`
-	Duration Duration       `cmd:"duration"`
-	Reason   string         `cmd:"reason"`
+	Player   string      `cmd:"player"`
+	Duration Duration    `cmd:"duration"`
+	Reason   cmd.Varargs `cmd:"reason"`
 }
 
 func (MuteCommand) Allow(src cmd.Source) bool {
@@ -37,52 +38,62 @@ func (m MuteCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 	}
 	u := user.GetUser(pl)
 
-	utils.Panic(m.Player.ExecWithPlayerSafe(tx, func(tgtTx *world.Tx, target *player.Player) {
-		ut := user.GetUser(target)
-		if u.Data.Rank() > ut.Data.Rank() {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
-			return
-		}
+	dt, err := server.Database.FindPlayerByName(m.Player, &database.PlayerNameSearchOpts{CaseInsensitive: true, PartialMatch: true})
+	if err != nil {
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.PlayerNotExist))
+		return
+	}
 
-		now := time.Now()
+	if u.Data.Rank() > dt.Rank() {
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
+		return
+	}
 
-		if u.Data.Punishments.ActiveMute() != nil {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.AlreadyMuted))
-			return
-		}
+	now := time.Now()
 
-		punishment := &database.PunishmentData{
-			PunishedBy:    pl.Name(),
-			PunishedSince: now,
-			Reason:        m.Reason,
-			RemovedBy:     "",
-		}
+	if user.ActiveMute(dt) != nil {
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.AlreadyMuted))
+		return
+	}
 
-		var dur time.Duration
-		if m.Duration == "permanent" {
-			punishment.Permanent = true
-		} else {
-			dur = m.Duration.Parse()
-			punishment.EndsAt = now.Add(dur)
-		}
+	punishment := &database.PunishmentData{
+		PunishedBy:    pl.Name(),
+		PunishedSince: now,
+		Reason:        string(m.Reason),
+		RemovedBy:     "",
+	}
 
-		u.Data.Punishments.Mutes = append(u.Data.Punishments.Mutes, punishment)
+	var dur time.Duration
+	if m.Duration == "permanent" {
+		punishment.Permanent = true
+	} else {
+		dur = m.Duration.Parse()
+		punishment.EndsAt = now.Add(dur)
+	}
 
-		durationStr := lo.If(punishment.Permanent, "").Else("for " + utils.FriendlyDuration(dur))
+	dt.Punishments.Mutes = append(dt.Punishments.Mutes, punishment)
 
-		target.Message(text.Colourf(
-			language.Translate(target).Commands.Success.Muted,
-			lo.If(punishment.Permanent, "permanently").Else("temporarily"),
-			durationStr,
-			punishment.Reason,
-		))
+	durationStr := lo.If(punishment.Permanent, "").Else("for " + utils.FriendlyDuration(dur))
 
-		pl.Message(text.Colourf(
-			language.Translate(pl).Commands.Success.Mute,
-			server.Config.Prefix,
-			target.Name(),
-			durationStr,
-			punishment.Reason,
-		))
-	}))
+	if h, ok := server.MCServer.Player(dt.UUID); ok {
+		go h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+			e.(*player.Player).Message(text.Colourf(
+				language.Translate(e.(*player.Player)).Commands.Success.Muted,
+				lo.If(punishment.Permanent, "permanently").Else("temporarily"),
+				durationStr,
+				punishment.Reason,
+			))
+		})
+	}
+
+	user.UpdateUserData(dt)
+	utils.Panic(server.Database.SavePlayer(dt))
+
+	pl.Message(text.Colourf(
+		language.Translate(pl).Commands.Success.Mute,
+		server.Config.Prefix,
+		dt.Username,
+		durationStr,
+		punishment.Reason,
+	))
 }

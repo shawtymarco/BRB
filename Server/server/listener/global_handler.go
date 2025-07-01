@@ -1,8 +1,6 @@
 package listener
 
 import (
-	"github.com/samber/lo"
-	"github.com/sandertv/gophertunnel/minecraft/text"
 	"server/server"
 	"server/server/database"
 	"server/server/items"
@@ -10,6 +8,9 @@ import (
 	"server/server/user"
 	"server/server/utils"
 	"time"
+
+	"github.com/samber/lo"
+	"github.com/sandertv/gophertunnel/minecraft/text"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/player"
@@ -65,7 +66,7 @@ func CheckChatCoolDown(pl *player.Player) bool {
 	ok1 := u.Data.Rank() > database.Partner && u.IsCooldownActive(user.Chat, 1*time.Second, false, true)
 	var ok2 bool
 
-	if m := u.Data.Punishments.ActiveMute(); m != nil {
+	if m := user.ActiveMute(u.Data); m != nil {
 		ok2 = true
 		pl.Message(text.Colourf(
 			language.Translate(pl).Commands.Success.Muted,
