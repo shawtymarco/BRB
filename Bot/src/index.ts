@@ -58,5 +58,3 @@ export var client = new Client({
 })();
 
 client.login(token);
-
-// InitiateWebsocket();

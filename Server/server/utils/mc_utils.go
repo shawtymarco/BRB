@@ -68,6 +68,10 @@ func ColorSlice(slice []string) []string {
 	return coloredSlice
 }
 
+func VecSetY(v mgl64.Vec3, y float64) mgl64.Vec3 {
+	return mgl64.Vec3{v.X(), y, v.Z()}
+}
+
 func VecNoY(v mgl64.Vec3) mgl64.Vec3 {
 	return mgl64.Vec3{v.X(), 0, v.Z()}
 }

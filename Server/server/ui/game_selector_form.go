@@ -1,11 +1,9 @@
 package ui
 
 import (
-	"server/server"
 	"server/server/game"
 	"server/server/games/bedwars"
 	"server/server/games/buildffa"
-	"time"
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
 
@@ -29,14 +27,6 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 	switch gt {
 	case game.TypeBuildFFA:
 		buildffa.Join(pl, pl.Tx())
-
-		if server.BotMark != nil {
-			time.AfterFunc(5*time.Second, func() {
-				server.BotMark.H().ExecWorld(func(tx2 *world.Tx, e world.Entity) {
-					buildffa.Join(e.(*player.Player), tx2)
-				})
-			})
-		}
 	case game.TypeBedFight:
 		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false, nil)
 	}

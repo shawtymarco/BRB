@@ -6,6 +6,7 @@ import (
 	"server/server/database"
 	"server/server/game"
 	"server/server/games/lobby"
+	"server/server/inv"
 	"server/server/language"
 	"server/server/listener"
 	"server/server/user"
@@ -17,8 +18,6 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/df-mc/dragonfly/server/item/inventory"
-
-	"github.com/bedrock-gophers/inv/inv"
 
 	"github.com/df-mc/dragonfly/server/item/enchantment"
 
@@ -70,6 +69,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	pl.Handle(PlayerHandler{game: bwGame})
 
 	tx.RemoveEntity(pl)
+
 	bwGame.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
 	})
@@ -97,7 +97,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	} else {
 		bwGame.ForEachActivePlayer(func(pl *player.Player) {
 			pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
-		})
+		}, tx)
 	}
 }
 
@@ -244,6 +244,11 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
 		if attacker, ok := s.Attacker.(*player.Player); ok {
+			if !h.game.EnemyWith(pl, attacker) {
+				ctx.Cancel()
+				return
+			}
+
 			ua := user.GetUser(attacker)
 			u.LastHit = attacker.H()
 			ua.LastHit = pl.H()
@@ -341,33 +346,29 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}
 	}
 
-	go func() {
-		g.ForEachActivePlayer(func(p *player.Player) {
-			if ua == nil {
-				p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
-			} else {
-				c1 := g.PlayerTeam(pl).Colour()
-				c2 := g.PlayerTeam(ua.Player()).Colour()
-				p.Message(text.Colourf(
-					language.Translate(p).BedWars.KilledBy,
-					text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
-					text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
-					finalKill,
-				))
-			}
-		})
+	g.ForEachActivePlayer(func(p *player.Player) {
+		if ua == nil {
+			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
+		} else {
+			c1 := g.PlayerTeam(pl).Colour()
+			c2 := g.PlayerTeam(ua.Player()).Colour()
+			p.Message(text.Colourf(
+				language.Translate(p).BedWars.KilledBy,
+				text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
+				text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
+				finalKill,
+			))
+		}
+	}, pl.Tx())
 
-		pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-			if ua != nil {
-				if attacker, ok := ua.Player().H().Entity(tx); ok {
-					ua.Player().PlaySound(sound.Experience{})
-					rewardResources(attacker.(*player.Player), e.(*player.Player))
-				}
-			}
-			e.(*player.Player).Inventory().Clear()
-			e.(*player.Player).Armour().Clear()
-		})
-	}()
+	if ua != nil {
+		if attacker, ok := ua.Player().H().Entity(pl.Tx()); ok {
+			ua.Player().PlaySound(sound.Experience{})
+			rewardResources(attacker.(*player.Player), pl)
+		}
+	}
+	pl.Inventory().Clear()
+	pl.Armour().Clear()
 
 	if g.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Deaths++
@@ -444,16 +445,16 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		switch bb.Colour {
 		case item.ColourRed():
 			teamIndex = 0
-			bedColor = text.Colourf("<red>Red</red> Bed")
+			bedColor = text.Colourf("<red>Red Bed</red>")
 		case item.ColourBlue():
 			teamIndex = 1
-			bedColor = text.Colourf("<blue>Blue</blue> Bed")
+			bedColor = text.Colourf("<blue>Blue Bed</blue>")
 		case item.ColourGreen():
 			teamIndex = 2
-			bedColor = text.Colourf("<green>Green</green> Bed")
+			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourYellow():
 			teamIndex = 3
-			bedColor = text.Colourf("<yellow>Yellow</yello> Bed")
+			bedColor = text.Colourf("<yellow>Yellow Bed</yello>")
 		}
 
 		if h.game.PlayerTeam(pl).ID() == teamIndex {

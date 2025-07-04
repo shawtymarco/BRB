@@ -55,28 +55,24 @@ func (g *Game) ActivePlayers() (handles []*world.EntityHandle) {
 	return handles
 }
 
-func (g *Game) ForEachOriginalPlayer(f func(pl *player.Player)) {
-	<-g.world.Exec(func(tx *world.Tx) {
-		for _, e := range g.OriginalPlayers() {
-			if e, ok := e.Entity(tx); ok {
-				if pl, ok := e.(*player.Player); ok {
-					f(pl)
-				}
+func (g *Game) ForEachOriginalPlayer(f func(pl *player.Player), tx *world.Tx) {
+	for _, e := range g.OriginalPlayers() {
+		if e, ok := e.Entity(tx); ok {
+			if pl, ok := e.(*player.Player); ok {
+				f(pl)
 			}
 		}
-	})
+	}
 }
 
-func (g *Game) ForEachActivePlayer(f func(pl *player.Player)) {
-	<-g.world.Exec(func(tx *world.Tx) {
-		for _, e := range g.ActivePlayers() {
-			if e, ok := e.Entity(tx); ok {
-				if pl, ok := e.(*player.Player); ok {
-					f(pl)
-				}
+func (g *Game) ForEachActivePlayer(f func(pl *player.Player), tx *world.Tx) {
+	for _, e := range g.ActivePlayers() {
+		if e, ok := e.Entity(tx); ok {
+			if pl, ok := e.(*player.Player); ok {
+				f(pl)
 			}
 		}
-	})
+	}
 }
 
 func (g *Game) PlayerTeam(pl *player.Player) *Team {
@@ -154,8 +150,8 @@ type Essentials interface {
 	Maps() []string
 	MapConfig() MapData
 	Handler() player.Handler
-	Reward(player *player.Player)
-	Punish(player *player.Player)
+	Reward(player *player.Player, tx *world.Tx) (before, after int, mvp bool)
+	Punish(player *player.Player, tx *world.Tx) (before, after int)
 }
 
 const (

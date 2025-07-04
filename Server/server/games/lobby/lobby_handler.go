@@ -5,12 +5,18 @@ import (
 	core "server/server"
 	"server/server/database"
 	"server/server/font"
+	"server/server/inv"
 	"server/server/items/stacks"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/event"
+	"github.com/df-mc/dragonfly/server/item/inventory"
+
+	"github.com/df-mc/dragonfly/server/item"
 
 	"github.com/samber/lo"
 
@@ -35,7 +41,24 @@ func Join(pl *player.Player) {
 		return
 	}
 
+	if u.Data.Rank() == database.Prime && !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
+		u.Data.Statistics.RankEndsIn = time.Time{}
+		u.Data.Statistics.RankId = database.Player.Shortened()
+		pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
+	}
+
 	pl.Handle(Handler{})
+	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			ctx.Cancel()
+		},
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			ctx.Cancel()
+		},
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			ctx.Cancel()
+		},
+	}})
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 	pl.Teleport(core.Config.Hub.SpawnPoint)
 	pl.SetGameMode(world.GameModeSurvival)
@@ -93,6 +116,18 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 }
 
 func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
+	ctx.Cancel()
+}
+
+func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
+	ctx.Cancel()
+}
+
+func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
+	ctx.Cancel()
+}
+
+func (Handler) HandleItemDrop(ctx *player.Context, s item.Stack) {
 	ctx.Cancel()
 }
 

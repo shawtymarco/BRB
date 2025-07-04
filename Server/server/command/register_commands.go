@@ -31,9 +31,9 @@ func RegisterCommands() {
 	cmd.Register(cmd.New("alias", "To see all alt accounts of a player", nil, AliasCommand{}))
 
 	// Admin Commands
-	cmd.Register(cmd.New("rank", "To set a specific player's rank", nil, SetRoleCommand{}))
+	cmd.Register(cmd.New("setrole", "To set a specific player's rank", nil, SetRoleCommand{}))
 	cmd.Register(cmd.New("addcape", "To add a cape to a specific player", nil, AddCapeCommand{}))
 	cmd.Register(cmd.New("removecape", "To remove a cape from a specific player", nil, RemoveCapeCommand{}))
 	cmd.Register(cmd.New("resetstats", "To reset a specific player's statistics", nil, ResetStatsCommand{}))
-	cmd.Register(cmd.New("sudo", "To execute commands from another player's perspective", nil, SudoCommand{}))
+	//cmd.Register(cmd.New("sudo", "To execute commands from another player's perspective", nil, SudoCommand{}))
 }

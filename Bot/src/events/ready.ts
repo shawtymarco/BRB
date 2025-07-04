@@ -10,9 +10,30 @@ module.exports = {
         await deploy();
         console.log(`Ready! Logged in as ${client.user?.tag}`);
 
-        const data = await Request.get(APIEndpoints.CONNECT);
-        console.log(data.message);
+        detectServerRestart();
 
-        await gamesDB.load(raw => Object.assign(new Game(raw.id, raw.threadId, raw.vcId, raw.teamSize, raw.memberIds, raw.captainIds), raw));
+        await gamesDB.load(raw => Object.assign(new Game(raw.id, raw.threadId, raw.vcId, "", "", raw.teamSize, raw.memberIds, raw.captainIds), raw));
     },
 };
+
+function detectServerRestart() {
+    let initialTime: number | null = null;
+    setInterval(async () => {
+        try {
+            const res = await Request.get(APIEndpoints.CONNECT);
+            const currentTime = res.time;
+
+            if (initialTime === null) {
+                initialTime = currentTime;
+            } else if (currentTime !== initialTime) {
+                console.log("⚠️ Server restart detected!");
+                gamesDB.data.map(game => {
+                    game.terminateGame(null);
+                })
+                initialTime = currentTime;
+            }
+        } catch (err) {
+            console.error("Failed to connect to server");
+        }
+    }, 1000);
+}

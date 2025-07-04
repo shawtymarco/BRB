@@ -3,6 +3,7 @@ services:
     build: ./Server
     environment:
       - DATABASE_URI=mongodb://mongo:27017
+      - TEBEX_SECRET=ZfGR4j0CWqDrKmvpgEU7UkGErS5i8ck5
     volumes:
       - ./Server:/Server
       - ./certs:/certs:ro

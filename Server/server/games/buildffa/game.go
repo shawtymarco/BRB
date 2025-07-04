@@ -9,6 +9,8 @@ import (
 	"slices"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/world"
+
 	"github.com/google/uuid"
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
@@ -23,39 +25,40 @@ type BuildFFA struct {
 }
 
 func NewBuildFFA() {
-	Game = &BuildFFA{Game: game.NewGame(uuid.New(), utils.Panics(server.WorldManager.World(game.TypeBuildFFA.Title())), "grey")}
+	Game = &BuildFFA{Game: game.NewGame(uuid.New(), utils.Panics(server.WorldManager.World("BFFA")), "grey")}
 	go func() {
 		for range time.NewTicker(250 * time.Millisecond).C {
-			var users []*user.User
-			Game.ForEachActivePlayer(func(pl *player.Player) {
-				users = append(users, user.GetUser(pl))
-			})
+			Game.World().Exec(func(tx *world.Tx) {
+				var users []*user.User
+				Game.ForEachActivePlayer(func(pl *player.Player) {
+					users = append(users, user.GetUser(pl))
+				}, tx)
+				slices.SortFunc(users, func(a, b *user.User) int {
+					return b.GameInfo.BuildFFA.Kills - a.GameInfo.BuildFFA.Kills
+				})
 
-			slices.SortFunc(users, func(a, b *user.User) int {
-				return b.GameInfo.BuildFFA.Kills - a.GameInfo.BuildFFA.Kills
-			})
-
-			Game.ForEachActivePlayer(func(pl *player.Player) {
-				u := user.GetUser(pl)
-				u.Scoreboard.Set(1, "§0 ")
-				u.Scoreboard.Set(2, text.Colourf("<grey>Game:</grey> <emerald>Build UHC</emerald>"))
-				u.Scoreboard.Set(3, "§1 ")
-				u.Scoreboard.Set(4, text.Colourf("<grey>Leaderboard</grey>"))
-				if len(users) > 0 {
-					u.Scoreboard.Set(5, text.Colourf("<grey>1. %v</grey> <black>-</black> <emerald>%v</emerald>", users[0].Data.Username, users[0].GameInfo.BuildFFA.Kills))
-				}
-				if len(users) > 1 {
-					u.Scoreboard.Set(6, text.Colourf("<grey>2. %v</grey> <black>-</black> <emerald>%v</emerald>", users[1].Data.Username, users[1].GameInfo.BuildFFA.Kills))
-				}
-				if len(users) > 2 {
-					u.Scoreboard.Set(7, text.Colourf("<grey>3. %v</grey> <black>-</black> <emerald>%v</emerald>", users[2].Data.Username, users[2].GameInfo.BuildFFA.Kills))
-				}
-				u.Scoreboard.Set(8, "§2 ")
-				u.Scoreboard.Set(9, text.Colourf("<grey>Kills:</grey> <emerald>%v</emerald>", u.GameInfo.BuildFFA.Kills))
-				u.Scoreboard.Set(10, text.Colourf("<grey>Position:</grey> <emerald>#%v</emerald>", slices.Index(users, u)+1))
-				u.Scoreboard.Set(11, "§3 ")
-				u.Scoreboard.Set(12, font.Transform(server.IP))
-				u.SendScoreboard(5)
+				Game.ForEachActivePlayer(func(pl *player.Player) {
+					u := user.GetUser(pl)
+					u.Scoreboard.Set(1, "§0 ")
+					u.Scoreboard.Set(2, text.Colourf("<grey>Game:</grey> <emerald>Build FFA</emerald>"))
+					u.Scoreboard.Set(3, "§1 ")
+					u.Scoreboard.Set(4, text.Colourf("<grey>Leaderboard</grey>"))
+					if len(users) > 0 {
+						u.Scoreboard.Set(5, text.Colourf("<grey>1. %v</grey> <black>-</black> <emerald>%v</emerald>", users[0].Data.Username, users[0].GameInfo.BuildFFA.Kills))
+					}
+					if len(users) > 1 {
+						u.Scoreboard.Set(6, text.Colourf("<grey>2. %v</grey> <black>-</black> <emerald>%v</emerald>", users[1].Data.Username, users[1].GameInfo.BuildFFA.Kills))
+					}
+					if len(users) > 2 {
+						u.Scoreboard.Set(7, text.Colourf("<grey>3. %v</grey> <black>-</black> <emerald>%v</emerald>", users[2].Data.Username, users[2].GameInfo.BuildFFA.Kills))
+					}
+					u.Scoreboard.Set(8, "§2 ")
+					u.Scoreboard.Set(9, text.Colourf("<grey>Kills:</grey> <emerald>%v</emerald>", u.GameInfo.BuildFFA.Kills))
+					u.Scoreboard.Set(10, text.Colourf("<grey>Position:</grey> <emerald>#%v</emerald>", slices.Index(users, u)+1))
+					u.Scoreboard.Set(11, "§3 ")
+					u.Scoreboard.Set(12, font.Transform(server.IP))
+					u.SendScoreboard(5)
+				}, tx)
 			})
 		}
 	}()
@@ -66,7 +69,7 @@ func (b *BuildFFA) Type() game.TypeGame {
 }
 
 func (b *BuildFFA) Maps() []string {
-	return []string{"./maps/BuildFFA"}
+	return []string{"./maps/BFFA"}
 }
 
 func (b *BuildFFA) MapConfig() game.MapData {
@@ -77,8 +80,10 @@ func (b *BuildFFA) Handler() player.Handler {
 	return Handler{}
 }
 
-func (b *BuildFFA) Reward(player *player.Player) {
+func (b *BuildFFA) Reward(_ *player.Player, tx *world.Tx) (before, after int, mvp bool) {
+	return 0, 0, false
 }
 
-func (b *BuildFFA) Punish(player *player.Player) {
+func (b *BuildFFA) Punish(_ *player.Player, tx *world.Tx) (before, after int) {
+	return 0, 0
 }

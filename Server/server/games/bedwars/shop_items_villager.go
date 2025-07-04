@@ -2,6 +2,8 @@ package bedwars
 
 import (
 	"server/server/game"
+	"server/server/inv"
+	inv2 "server/server/inv"
 	"server/server/living"
 	"server/server/user"
 	"server/server/utils"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
 
-	"github.com/bedrock-gophers/inv/inv"
 	"github.com/df-mc/dragonfly/server/event"
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/df-mc/dragonfly/server/item/inventory"
@@ -86,7 +87,7 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 
 	var inArmoury bool
 
-	menuInv.Handle(utils.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	menuInv.Handle(inv2.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 

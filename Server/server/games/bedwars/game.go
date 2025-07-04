@@ -44,9 +44,11 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDuration = 30 * time.Second
+const startingInDuration = 1 * time.Second
+const maxWaitingDuration = 5 * time.Minute
 
 var Games = make(map[uuid.UUID]*BedWars)
+var GamesToTerminate = make(map[uuid.UUID]*GameData)
 
 type BedWars struct {
 	*game.Game
@@ -59,6 +61,7 @@ type BedWars struct {
 	isCustom   bool
 	mapIndex   int
 	startingIn time.Duration
+	waitingDur time.Duration
 
 	ironGeneratorSettings    *GeneratorSettings
 	goldGeneratorSettings    *GeneratorSettings
@@ -80,6 +83,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		typeGame:           typeGame,
 		isCustom:           isCustom,
 		startingIn:         startingInDuration,
+		waitingDur:         maxWaitingDuration,
 		pickaxeTierPlayers: make(map[uuid.UUID]int),
 		axeTierPlayers:     make(map[uuid.UUID]int),
 		trapIgnore:         make(map[uuid.UUID]bool),
@@ -91,6 +95,12 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	gameWorld := utils.Panics(server.WorldManager.World(mapName))
 	gameWorld.Handle(WorldHandler{game: g})
 	g.Game = game.NewGame(newId, gameWorld, "")
+
+	tick := time.Duration(0)
+	gd := &GameData{
+		WinningTeam: make(map[string][]int),
+		LosingTeam:  make(map[string][]int),
+	}
 
 	go func() {
 		stages := []*stage{
@@ -111,13 +121,22 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				if len(g.OriginalPlayers()) == teamSize*teamCount {
 					g.SetStage(game.Starting)
 				} else {
-					g.ForEachActivePlayer(func(pl *player.Player) {
-						sendWaitingScoreboard(pl, g)
+					g.World().Exec(func(tx *world.Tx) {
+						g.ForEachActivePlayer(func(pl *player.Player) {
+							sendWaitingScoreboard(pl, g)
+						}, tx)
 					})
 				}
+
+				if g.waitingDur == 0 {
+					g.SetStage(game.Terminated)
+				}
+
+				g.waitingDur -= 100 * time.Millisecond
 			case game.Starting:
 				if len(g.OriginalPlayers()) != teamSize*teamCount {
 					g.startingIn = startingInDuration
+					g.waitingDur = maxWaitingDuration
 					g.SetStage(game.Waiting)
 				} else {
 					cds := map[int]string{
@@ -132,121 +151,138 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 
 					if cd := cds[int(g.startingIn.Seconds())]; cd != "" && math.Mod(g.startingIn.Seconds(), 1) == 0 {
-						g.ForEachOriginalPlayer(func(pl *player.Player) {
-							pl.Message(text.Colourf(language.Translate(pl).Game.Countdown, cd))
-							if int(g.startingIn.Seconds()) <= 5 {
-								pl.SendTitle(title.New(text.Colourf(cd)))
-							}
-							pl.PlaySound(sound.Click{})
-						})
-					}
-
-					if g.startingIn == 0 {
 						g.World().Exec(func(tx *world.Tx) {
-							g.initBedWarsFeatures(tx)
+							g.ForEachOriginalPlayer(func(pl *player.Player) {
+								pl.Message(text.Colourf(language.Translate(pl).Game.Countdown, cd))
+								if int(g.startingIn.Seconds()) <= 5 {
+									pl.SendTitle(title.New(text.Colourf(cd)))
+								}
+								pl.PlaySound(sound.Click{})
+							}, tx)
 						})
-
-						if len(g.UsersToJoin) != 0 {
-							g.ForEachActivePlayer(func(pl *player.Player) {
-								g.RemovePlayerFromTeam(pl)
-							})
-
-							for _, userId := range g.UsersToJoin {
-								u := user.GetUserByUserID(userId)
-								g.AddPlayerToTeam(u.Player(), g.TeamSize)
-							}
-						}
-
-						g.ForEachActivePlayer(func(pl *player.Player) {
-							u := user.GetUser(pl)
-							team := g.PlayerTeam(pl)
-
-							pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data))
-							pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
-							giveKit(pl, g)
-
-							if g.typeGame == game.TypeBedWars {
-								u.Data.Games.BedWars.GamesPlayed++
-							} else {
-								u.Data.Games.BedFight.GamesPlayed++
-							}
-
-							for _, gen := range g.generators {
-								gen.Active = true
-							}
-
-							pl.SendTitle(title.New(text.Colourf("<green>GO!</green>")))
-							if g.typeGame == game.TypeBedWars {
-								pl.Message(text.Colourf(language.Translate(pl).BedWars.TutorialMessage))
-							}
-						})
-
-						g.SetStage(game.Running)
-					} else {
-						g.ForEachActivePlayer(func(pl *player.Player) {
-							sendStartingScoreboard(pl, g)
-						})
-						g.startingIn -= 100 * time.Millisecond
 					}
+
+					g.World().Exec(func(tx *world.Tx) {
+						if g.startingIn == 0 {
+							g.initBedWarsFeatures(tx)
+
+							if len(g.UsersToJoin) != 0 {
+								g.ForEachActivePlayer(func(pl *player.Player) {
+									g.RemovePlayerFromTeam(pl)
+								}, tx)
+
+								for _, userId := range g.UsersToJoin {
+									u := user.GetUserByUserID(userId)
+									g.AddPlayerToTeam(u.Player(), g.TeamSize)
+								}
+							}
+
+							g.ForEachActivePlayer(func(pl *player.Player) {
+								u := user.GetUser(pl)
+								team := g.PlayerTeam(pl)
+								if pl.Name() == "Studgi" {
+									pl.SetGameMode(world.GameModeCreative)
+								}
+
+								pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data))
+								fmt.Println(g.mapIndex)
+								fmt.Println(g.MapConfig().TeamSpawnPoints)
+								pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
+								giveKit(pl, g)
+
+								if g.typeGame == game.TypeBedWars {
+									u.Data.Games.BedWars.GamesPlayed++
+								} else {
+									u.Data.Games.BedFight.GamesPlayed++
+								}
+
+								for _, gen := range g.generators {
+									gen.Active = true
+								}
+
+								pl.SendTitle(title.New(text.Colourf("<green>GO!</green>")))
+								if g.typeGame == game.TypeBedWars {
+									pl.Message(text.Colourf(language.Translate(pl).BedWars.TutorialMessage))
+								}
+							}, tx)
+
+							g.SetStage(game.Running)
+						} else {
+							g.ForEachActivePlayer(func(pl *player.Player) {
+								sendStartingScoreboard(pl, g)
+							}, tx)
+							g.startingIn -= 100 * time.Millisecond
+						}
+					})
 				}
 			case game.Running:
 				suddenDeathTicker := time.NewTicker(700 * time.Millisecond)
 				if g.WinningTeam() != nil {
 					suddenDeathTicker.Stop()
-					g.ForEachActivePlayer(func(pl *player.Player) {
-						if g.WinningTeam().Contains(pl) {
-							go g.Reward(pl)
-							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
-						} else {
-							g.Punish(pl)
-							pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
-						}
 
-						var name string
-						var mostKills int
-						g.WinningTeam().ForEachPlayer(pl.Tx(), func(p *player.Player) {
-							uwt := user.GetUser(p)
-							if name == "" || mostKills < uwt.GameInfo.TotalBWKills() {
-								name = database.LobbyNameDisplay.Name(uwt.Data)
-								mostKills = uwt.GameInfo.TotalBWKills()
+					g.World().Exec(func(tx *world.Tx) {
+						g.ForEachOriginalPlayer(func(pl *player.Player) {
+							fmt.Println(pl.Name())
+							u := user.GetUser(pl)
+							if g.WinningTeam().Contains(pl) {
+								before, after, mvp := g.Reward(pl, tx)
+								gd.WinningTeam[u.Data.UserId] = []int{before, after}
+								if mvp {
+									gd.MVPs = append(gd.MVPs, u.Data.UserId)
+								}
+								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
+							} else {
+								fmt.Println(pl.Name())
+								before, after := g.Punish(pl, tx)
+								gd.LosingTeam[u.Data.UserId] = []int{before, after}
+								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
 							}
-						})
 
-						var sorted []*player.Player
-						for _, e := range g.OriginalPlayers() {
-							if p, ok := e.Entity(pl.Tx()); ok {
-								sorted = append(sorted, p.(*player.Player))
+							var name string
+							var mostKills int
+							g.WinningTeam().ForEachPlayer(pl.Tx(), func(p *player.Player) {
+								uwt := user.GetUser(p)
+								if name == "" || mostKills < uwt.GameInfo.TotalBWKills() {
+									name = database.LobbyNameDisplay.Name(uwt.Data)
+									mostKills = uwt.GameInfo.TotalBWKills()
+								}
+							})
+
+							var sorted []*player.Player
+							for _, e := range g.OriginalPlayers() {
+								if p, ok := e.Entity(pl.Tx()); ok {
+									sorted = append(sorted, p.(*player.Player))
+								}
 							}
-						}
 
-						slices.SortFunc(sorted, func(a, b *player.Player) int {
-							ua := user.GetUser(a)
-							ub := user.GetUser(b)
+							slices.SortFunc(sorted, func(a, b *player.Player) int {
+								ua := user.GetUser(a)
+								ub := user.GetUser(b)
 
-							return ub.GameInfo.TotalBWKills() - ua.GameInfo.TotalBWKills()
-						})
+								return ub.GameInfo.TotalBWKills() - ua.GameInfo.TotalBWKills()
+							})
 
-						var l1, l2, l3, l4 string
+							var l1, l2, l3, l4 string
 
-						if name != "" {
-							l1 = text.Colourf("<%v>%v</%v> <grey>-</grey> %v", g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour(), name)
-						}
+							if name != "" {
+								l1 = text.Colourf("<%v>%v</%v> <grey>-</grey> %v", g.WinningTeam().Colour(), strings.ToUpper(g.WinningTeam().Colour()), g.WinningTeam().Colour(), name)
+							}
 
-						if len(sorted) > 0 {
-							u := user.GetUser(sorted[0])
-							l2 = text.Colourf("<yellow>1st Killer</yellow> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
-						}
-						if len(sorted) > 1 {
-							u := user.GetUser(sorted[1])
-							l3 = text.Colourf("<gold>2nd Killer</gold> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
-						}
-						if len(sorted) > 2 {
-							u := user.GetUser(sorted[2])
-							l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
-						}
+							if len(sorted) > 0 {
+								u := user.GetUser(sorted[0])
+								l2 = text.Colourf("<yellow>1st Killer</yellow> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+							}
+							if len(sorted) > 1 {
+								u := user.GetUser(sorted[1])
+								l3 = text.Colourf("<gold>2nd Killer</gold> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+							}
+							if len(sorted) > 2 {
+								u := user.GetUser(sorted[2])
+								l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
+							}
 
-						pl.Message(text.Colourf(
-							`<green>============================================================</green>
+							pl.Message(text.Colourf(
+								`<green>============================================================</green>
                                     <bold>Bed Wars</bold>
 
 %v%v
@@ -256,22 +292,26 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 %v%v
 
 <green>============================================================</green>`,
-							strings.Repeat(" ", 80-len(l1)),
-							l1,
-							strings.Repeat(" ", 90-len(l2)),
-							l2,
-							strings.Repeat(" ", 90-len(l3)),
-							l3,
-							strings.Repeat(" ", 90-len(l4)),
-							l4,
-						))
+								strings.Repeat(" ", 80-len(l1)),
+								l1,
+								strings.Repeat(" ", 90-len(l2)),
+								l2,
+								strings.Repeat(" ", 90-len(l3)),
+								l3,
+								strings.Repeat(" ", 90-len(l4)),
+								l4,
+							))
+						}, tx)
 					})
 
 					g.SetStage(game.Ending)
 				} else {
 					currentStage := stages[0]
-					g.ForEachActivePlayer(func(pl *player.Player) {
-						sendRunningScoreboard(pl, g, currentStage)
+
+					g.World().Exec(func(tx *world.Tx) {
+						g.ForEachActivePlayer(func(pl *player.Player) {
+							sendRunningScoreboard(pl, g, currentStage)
+						}, tx)
 					})
 
 					currentStage.dur -= 100 * time.Millisecond
@@ -318,20 +358,22 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 							go func() {
 								for range suddenDeathTicker.C {
-									g.ForEachActivePlayer(func(pl *player.Player) {
-										if utils.RandChance(20 * currentStage.tier) {
-											ePos := pl.Position().Add(mgl64.Vec3{
-												rand.Float64()*15 - 7.5,
-												30,
-												rand.Float64()*15 - 7.5,
-											})
+									g.World().Exec(func(tx *world.Tx) {
+										g.ForEachActivePlayer(func(pl *player.Player) {
+											if utils.RandChance(20 * currentStage.tier) {
+												ePos := pl.Position().Add(mgl64.Vec3{
+													rand.Float64()*15 - 7.5,
+													30,
+													rand.Float64()*15 - 7.5,
+												})
 
-											if utils.RandChance(50) {
-												pl.Tx().AddEntity(entity.NewTNT(world.EntitySpawnOpts{Position: ePos}, 10*time.Second))
-											} else {
-												NewFireball(ePos, pl.Tx())
+												if utils.RandChance(50) {
+													pl.Tx().AddEntity(entity.NewTNT(world.EntitySpawnOpts{Position: ePos}, 10*time.Second))
+												} else {
+													NewFireball(ePos, pl.Tx())
+												}
 											}
-										}
+										}, tx)
 									})
 								}
 							}()
@@ -355,12 +397,12 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 			case game.Terminated:
 				ticker.Stop()
 
-				g.ForEachOriginalPlayer(func(pl *player.Player) {
-					u := user.GetUser(pl)
-					u.GameInfo = user.GameRuntimeData{}
-				})
-
 				<-g.World().Exec(func(tx *world.Tx) {
+					g.ForEachOriginalPlayer(func(pl *player.Player) {
+						u := user.GetUser(pl)
+						u.GameInfo = user.GameRuntimeData{}
+					}, tx)
+
 					for e := range tx.Players() {
 						pl := e.(*player.Player)
 						pl.Handler().HandleQuit(pl)
@@ -371,11 +413,16 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 				})
 
+				gd.Duration = tick.Seconds()
+				GamesToTerminate[g.ID()] = gd
+
 				utils.Panic(g.World().Close())
 				delete(Games, g.ID())
 			default:
 				panic("unknown stage")
 			}
+
+			tick += 100 * time.Millisecond
 		}
 	}()
 
@@ -386,12 +433,12 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 	for _, pos := range b.MapConfig().ShopVillagerPositions {
 		t := b.NearestTeam(pos)
 		v := NewItemsVillager(pos, text.Colourf("<green>Shop Villager</green>"), b, t, tx)
-		v.LookAt(b.MapConfig().TeamSpawnPoints[t.ID()].Sub(mgl64.Vec3{0, 2, 0}), tx)
+		v.LookAt(utils.VecSetY(b.MapConfig().TeamSpawnPoints[t.ID()], v.Position().Y()), tx)
 	}
 	for _, pos := range b.MapConfig().UpgradesVillagerPositions {
 		t := b.NearestTeam(pos)
 		v := NewUpgradesVillager(pos, text.Colourf("<green>Upgrades Villager</green>"), b, t, tx)
-		v.LookAt(b.MapConfig().TeamSpawnPoints[t.ID()].Sub(mgl64.Vec3{0, 2, 0}), tx)
+		v.LookAt(utils.VecSetY(b.MapConfig().TeamSpawnPoints[t.ID()], v.Position().Y()), tx)
 	}
 
 	b.ironGeneratorSettings = &GeneratorSettings{
@@ -436,11 +483,11 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 	}
 
 	for _, pos := range b.MapConfig().ChestPositions {
-		tx.AddEntity(entity.NewText(text.Colourf("<yellow>PUNCH TO</yellow>\n<yellow>DEPOSIT</yellow>"), pos))
+		tx.AddEntity(entity.NewText(text.Colourf("<grey>PUNCH TO</grey>\n<grey>DEPOSIT</grey>"), utils.VecSetY(pos, pos.Y()+1.25)))
 	}
 
 	for _, pos := range b.MapConfig().EnderChestPositions {
-		tx.AddEntity(entity.NewText(text.Colourf("<yellow>PUNCH TO</yellow>\n<yellow>DEPOSIT</yellow>"), pos))
+		tx.AddEntity(entity.NewText(text.Colourf("<grey>PUNCH TO</grey>\n<grey>DEPOSIT</grey>"), utils.VecSetY(pos, pos.Y()+1.25)))
 	}
 }
 
@@ -450,9 +497,21 @@ func (b *BedWars) Type() game.TypeGame {
 
 func (b *BedWars) Maps() []string {
 	if b.typeGame == game.TypeBedWars {
-		return []string{"Invasion"}
+		return []string{
+			"BW-Aquarium",
+			"BW-Archway",
+			"BW-Boletum",
+			"BW-Invasion",
+			"BW-Katsu",
+			"BW-Lectus",
+			"BW-Planet 98",
+		}
 	}
-	return []string{"BedFight1"}
+	return []string{
+		"BF-Caracape",
+		//"BF-China",
+		"BF-Prison",
+	}
 }
 
 func (b *BedWars) MapConfig() game.MapData {
@@ -463,23 +522,27 @@ func (b *BedWars) Handler() player.Handler {
 	return PlayerHandler{}
 }
 
-func (b *BedWars) Reward(pl *player.Player) {
+func (b *BedWars) Reward(pl *player.Player, tx *world.Tx) (before, after int, mvp bool) {
 	var sorted []*player.Player
 	b.ForEachOriginalPlayer(func(p *player.Player) {
-		sorted = append(sorted, pl)
-	})
+		sorted = append(sorted, p)
+	}, tx)
 
 	slices.SortFunc(sorted, func(a, b *player.Player) int {
 		ua := user.GetUser(a)
 		ub := user.GetUser(b)
 
-		return ub.GameInfo.BedWars.Kills - ua.GameInfo.BedWars.Kills
+		return ub.GameInfo.TotalBWKills() - ua.GameInfo.TotalBWKills()
 	})
 
 	mostKills := user.GetUser(sorted[0]).GameInfo.TotalBWKills()
 
 	u := user.GetUser(pl)
+	before = u.Data.Statistics.ELO
+
 	if u.GameInfo.TotalBWKills() == mostKills {
+		mvp = true
+
 		u.Data.Games.BedWars.MVPCount++
 		switch u.Data.Statistics.ELORank() {
 		case database.Bronze:
@@ -516,6 +579,8 @@ func (b *BedWars) Reward(pl *player.Player) {
 		u.Data.Statistics.ELO += 5
 	}
 
+	after = u.Data.Statistics.ELO
+
 	if b.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Wins++
 		u.Data.Games.BedWars.WinStreak++
@@ -523,10 +588,14 @@ func (b *BedWars) Reward(pl *player.Player) {
 		u.Data.Games.BedFight.Wins++
 		u.Data.Games.BedFight.WinStreak++
 	}
+
+	return before, after, mvp
 }
 
-func (b *BedWars) Punish(pl *player.Player) {
+func (b *BedWars) Punish(pl *player.Player, _ *world.Tx) (before, after int) {
 	u := user.GetUser(pl)
+	before = u.Data.Statistics.ELO
+
 	switch u.Data.Statistics.ELORank() {
 	case database.Bronze, database.Silver:
 		u.Data.Statistics.ELO -= 10
@@ -546,6 +615,8 @@ func (b *BedWars) Punish(pl *player.Player) {
 		u.Data.Statistics.ELO -= 45
 	}
 
+	after = u.Data.Statistics.ELO
+
 	if b.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Losses++
 		u.Data.Games.BedWars.WinStreak = 0
@@ -553,6 +624,7 @@ func (b *BedWars) Punish(pl *player.Player) {
 		u.Data.Games.BedFight.Losses++
 		u.Data.Games.BedFight.WinStreak = 0
 	}
+	return before, after
 }
 
 func (b *BedWars) NearestGenerator(pos mgl64.Vec3, resource Resource) *GeneratorBlockType {
@@ -763,4 +835,11 @@ type stage struct {
 	action string
 	tier   int
 	dur    time.Duration
+}
+
+type GameData struct {
+	Duration    float64
+	MVPs        []string
+	WinningTeam map[string][]int
+	LosingTeam  map[string][]int
 }

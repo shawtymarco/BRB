@@ -19,7 +19,6 @@ module.exports = {
                         });
                         game.step++;
                         await game.updateCaptainPickingMessage();
-                        gamesDB.save();
 
                         interaction.reply({
                             embeds: [EmbedUtil.create({

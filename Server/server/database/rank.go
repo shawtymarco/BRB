@@ -51,18 +51,6 @@ func (r Rank) Prefix() string {
 	return text.Colourf("<%v>%v</%v>", r.ChatPrefix(), RankPrefixes[r], r.ChatPrefix())
 }
 
-func RankFromPrefix(prefix string) Rank {
-	id := Owner
-	for _, rank := range RankPrefixes {
-		if text.Colourf(rank) == text.Colourf(prefix) {
-			return id
-		}
-		id++
-	}
-
-	return -1
-}
-
 func RankFromName(name string) Rank {
 	id := Owner
 	for _, rank := range ShortenedRanks {

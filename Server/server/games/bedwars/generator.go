@@ -51,7 +51,7 @@ func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockTy
 		Drops: []living.Drop{living.NewDropWithStack(item.NewStack(gs.Resource.Item(), 1))},
 	}
 
-	gb := tx.AddEntity(world.EntitySpawnOpts{Position: pos}.New(conf.EntityType, conf)).(*GeneratorBlockType)
+	gb := tx.AddEntity(world.EntitySpawnOpts{Position: pos.Add(mgl64.Vec3{0, 2, 0})}.New(conf.EntityType, conf)).(*GeneratorBlockType)
 	gb.SetImmobile(true, tx)
 
 	_, ok1 := gb.Resource.Block().(block.Air)

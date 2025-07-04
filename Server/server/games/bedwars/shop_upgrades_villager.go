@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"server/server/game"
+	"server/server/inv"
 	"server/server/living"
 	"server/server/utils"
 	"strings"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/sandertv/gophertunnel/minecraft/text"
 
-	"github.com/bedrock-gophers/inv/inv"
 	"github.com/df-mc/dragonfly/server/event"
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/df-mc/dragonfly/server/item/inventory"
@@ -81,7 +81,7 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 	menu := inv.NewCustomMenu(text.Colourf("<emerald>Upgrades Shop</emerald>"), inv.ContainerChest{DoubleChest: true}, menuInv, nil)
 	menu.WithStacks(shop.Main()...)
 
-	menuInv.Handle(utils.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	menuInv.Handle(inv.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 

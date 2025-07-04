@@ -21,9 +21,6 @@ export async function execute(interaction: CommandInteraction) {
     const thread = interaction.channel as PrivateThreadChannel;
     const game = gamesDB.data.get(thread.id);
     if (game != null) {
-        await game.thread().delete();
-        await game.vc().delete();
-        gamesDB.remove(thread.id)
-        return;
+        await game.terminateGame();
     }
 }

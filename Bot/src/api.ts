@@ -15,6 +15,7 @@ export enum APIEndpoints {
     VERIFY = "api/verify",
     GET_PLAYER = "api/players",
     GET_REGISTERED_PLAYER = "api/registered-players",
+    GET_GAMES_TO_TERMINATE = "api/games/pending-termination",
     GAME_CREATE = "api/games/create",
     GAME_CONNECT_USERS = "api/games/connect-users"
 }

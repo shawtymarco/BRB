@@ -74,11 +74,12 @@ func (pd *PlayerData) AddAlt(d *PlayerData) {
 }
 
 type Statistics struct {
-	RankId string
-	Level  int
-	XP     int
-	ELO    int
-	Coins  int
+	RankId     string
+	RankEndsIn time.Time
+	Level      int
+	XP         int
+	ELO        int
+	Coins      int
 }
 
 func (s Statistics) ELORank() EloRank {
@@ -186,7 +187,7 @@ type PunishmentData struct {
 type Games struct {
 	BedWars struct {
 		GamesPlayed int
-		MVPCount    int // TODO behavior
+		MVPCount    int
 		Wins        int
 		WinStreak   int
 		Losses      int

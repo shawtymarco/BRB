@@ -141,7 +141,7 @@ func (Duration) Type() string {
 
 func (Duration) Options(_ cmd.Source) []string {
 	durs := []string{"permanent"}
-	for i := 1; i <= 90; i++ {
+	for i := 1; i <= 180; i++ {
 		durs = append(durs, fmt.Sprintf("%vm", i))
 		durs = append(durs, fmt.Sprintf("%vh", i))
 		durs = append(durs, fmt.Sprintf("%vd", i))

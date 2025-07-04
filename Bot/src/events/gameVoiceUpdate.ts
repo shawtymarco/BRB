@@ -85,7 +85,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
         })
     })
 
-    const gameName = `Game ${res.id.slice(0, 6)} | ${teamSize}v${teamSize}`
+    const gameName = `#${res.id.slice(0, 4)} | Lobby (${teamSize}v${teamSize})`
 
     const gameVC = await guild.channels.create({
         name: gameName,
@@ -108,7 +108,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
 
     const captains = pick2Captains(members);
 
-    const game = new Game(res.id, gameThread.id, gameVC.id, teamSize, members.map(m => m.id), captains.map(m => m.id));
+    const game = new Game(res.id, gameThread.id, gameVC.id, "", "", teamSize, members.map(m => m.id), captains.map(m => m.id));
     gamesDB.add(gameThread.id, game)
 
     await game.sendIntroductionMessage()

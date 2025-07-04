@@ -2,10 +2,11 @@ package ui
 
 import (
 	"server/server/database"
+	"server/server/inv"
+	inv2 "server/server/inv"
 	"server/server/user"
 	"server/server/utils"
 
-	"github.com/bedrock-gophers/inv/inv"
 	"github.com/df-mc/dragonfly/server/event"
 	"github.com/df-mc/dragonfly/server/item"
 	"github.com/df-mc/dragonfly/server/item/inventory"
@@ -24,7 +25,7 @@ func sendHotBarConfigUI(pl *player.Player) {
 	menu := inv.NewCustomMenu(text.Colourf("<emerald>HotBar Editor</emerald>"), inv.ContainerChest{DoubleChest: true}, menuInv, nil)
 	menu.WithStacks(main(pl)...)
 
-	menuInv.Handle(utils.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	menuInv.Handle(inv2.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 

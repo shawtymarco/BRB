@@ -54,13 +54,12 @@ func Join(pl *player.Player, tx *world.Tx) {
 
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 
-	Game.ForEachActivePlayer(func(pl *player.Player) {
-		pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
-	})
-
 	tx.RemoveEntity(pl)
 	Game.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
+		Game.ForEachActivePlayer(func(pl *player.Player) {
+			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
+		}, tx)
 	})
 	Game.AddPlayerToTeam(pl, 1)
 
@@ -145,13 +144,13 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 	pl.Teleport(Game.MapConfig().SpawnPoint)
 
 	pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BuildFFA.YouDied)))
-	go Game.ForEachActivePlayer(func(pl *player.Player) {
+	Game.ForEachActivePlayer(func(pl *player.Player) {
 		if ua == nil {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.VoidDeath, database.LobbyNameDisplay.Name(u.Data)))
 		} else {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.KilledBy, database.LobbyNameDisplay.Name(u.Data), database.LobbyNameDisplay.Name(ua.Data)))
 		}
-	})
+	}, pl.Tx())
 
 	if ua != nil {
 		ua.GameInfo.BuildFFA.Kills++

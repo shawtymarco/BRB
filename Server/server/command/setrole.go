@@ -4,7 +4,9 @@ import (
 	"server/server"
 	"server/server/database"
 	"server/server/language"
+	"server/server/user"
 	"server/server/utils"
+	"time"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
@@ -13,8 +15,9 @@ import (
 )
 
 type SetRoleCommand struct {
-	Targets []cmd.Target `cmd:"target"`
-	Rank    Rank         `cmd:"role"`
+	Player   string                 `cmd:"player"`
+	Rank     Rank                   `cmd:"role"`
+	Duration cmd.Optional[Duration] `cmd:"duration"`
 }
 
 func (SetRoleCommand) Allow(src cmd.Source) bool {
@@ -27,23 +30,32 @@ func (SetRoleCommand) PermissionMessage(src cmd.Source) string {
 
 func (r SetRoleCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		if len(r.Targets) != 1 {
-			o.Error(text.Colourf(language.Translate(pl).Commands.Error.OnlyOneTarget))
+		dt, err := server.Database.FindPlayerByName(r.Player, &database.PlayerNameSearchOpts{CaseInsensitive: true, PartialMatch: true})
+		if err != nil {
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.PlayerNotExist))
 			return
 		}
-		t := r.Targets[0].(*player.Player)
-		oldName := t.NameTag()
-		r := database.RankFromPrefix(string(r.Rank))
-		ds := utils.Panics(server.Database.FindPlayer(pl.UUID()))
-		dt := utils.Panics(server.Database.FindPlayer(t.UUID()))
-		if ds.Rank() >= r {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
-			return
+
+		rank := database.RankFromName(string(r.Rank))
+
+		dt.Statistics.RankId = rank.Shortened()
+		if dur, ok := r.Duration.Load(); ok {
+			dt.Statistics.RankEndsIn = time.Now().Add(dur.Parse())
+		} else {
+			dt.Statistics.RankEndsIn = time.Time{}
 		}
-		dt.Statistics.RankId = r.Shortened()
+
+		user.UpdateUserData(dt)
 		utils.Panic(server.Database.SavePlayer(dt))
-		t.SetNameTag(database.LobbyNameDisplay.Name(dt))
-		pl.Message(text.Colourf(language.Translate(pl).Commands.Success.GiveRank, server.Config.Prefix, oldName, r.Prefix()))
+
+		if h, ok := server.MCServer.Player(dt.UUID); ok {
+			go h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+				ut := user.GetUser(e.(*player.Player))
+				e.(*player.Player).SetNameTag(database.LobbyNameDisplay.Name(ut.Data))
+			})
+		}
+
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Success.GiveRank, server.Config.Prefix, dt.Username, rank.Prefix()))
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))
 	}
@@ -56,10 +68,5 @@ func (Rank) Type() string {
 }
 
 func (Rank) Options(_ cmd.Source) []string {
-	var coloredRankPrefixes []string
-	for _, rp := range database.RankPrefixes {
-		rank := database.RankFromPrefix(rp)
-		coloredRankPrefixes = append(coloredRankPrefixes, text.Colourf(rank.Prefix()))
-	}
-	return coloredRankPrefixes
+	return database.ShortenedRanks
 }

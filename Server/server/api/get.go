@@ -7,6 +7,7 @@ import (
 	"server/server/game"
 	"server/server/games/bedwars"
 	"strconv"
+	"time"
 
 	"github.com/samber/lo"
 
@@ -14,9 +15,11 @@ import (
 )
 
 func initGetRequests(rg *gin.RouterGroup) {
+	now := time.Now()
 	rg.GET("/connect", jwtAuthMiddleware(), func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "API successfully connected",
+			"time":    now.Second(),
 		})
 	})
 
@@ -50,6 +53,12 @@ func initGetRequests(rg *gin.RouterGroup) {
 
 		c.JSON(http.StatusOK, gin.H{
 			"id": g.ID().String(),
+		})
+	})
+
+	rg.GET("/games/pending-termination", jwtAuthMiddleware(), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"ids": bedwars.GamesToTerminate,
 		})
 	})
 }

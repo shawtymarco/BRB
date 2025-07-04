@@ -41,7 +41,7 @@ import (
 )
 
 func main() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.SetLogLoggerLevel(slog.LevelInfo)
 	chat.Global.Subscribe(chat.StdoutSubscriber{})
 
 	log := slog.Default()
@@ -74,6 +74,9 @@ func main() {
 		v486.New(true),
 	})
 
+	//intercept.Hook(inv.PacketHandlerInv{})
+	//conf.Listeners = intercept.WrapListeners(conf.Listeners)
+
 	srv := conf.New()
 	utils.SetServer(srv)
 	srv.Listen()
@@ -82,6 +85,7 @@ func main() {
 	srv.World().StopThundering()
 	srv.World().StopTime()
 	srv.CloseOnProgramEnd()
+	//intercept.Start(srv)
 	core.MCServer = srv
 
 	srv.World().Exec(func(tx *world.Tx) {
@@ -97,6 +101,7 @@ func main() {
 	buildffa.NewBuildFFA()
 
 	for pl := range srv.Accept() {
+		_ = pl
 		u := user.GetUser(pl)
 
 		allData := utils.Panics(core.Database.FindAllPlayers())
