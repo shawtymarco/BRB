@@ -30,7 +30,7 @@ services:
       - mc
 
   mongo:
-    container_name: mongodb
+    container_name: mongodb-brb
     image: mongo:8
     restart: unless-stopped
     ports:
