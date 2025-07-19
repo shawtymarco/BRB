@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-gl/mathgl/mgl64"
+
 	"github.com/df-mc/dragonfly/server/event"
 	"github.com/df-mc/dragonfly/server/item/inventory"
 
@@ -76,7 +78,7 @@ func Join(pl *player.Player) {
 	u.Scoreboard.Set(2, text.Colourf("<yellow>▌</yellow> <white>ELO:</white> <green>%v</green>", u.Data.Statistics.ELO))
 	u.Scoreboard.Set(3, text.Colourf("<yellow>▌</yellow> <white>Rank:</white> <green>%v %v</green>", u.Data.Statistics.ELORank().EloIcon(), u.Data.Statistics.ELORank().EloPrefix()))
 	u.Scoreboard.Set(4, "§1")
-	u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <grey>%v</grey>", lo.If(u.Data.Rank() == database.Player, "player").Else(u.Data.Rank().Prefix())))
+	u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <grey>%v</grey>", lo.If(u.Data.Rank() == database.Player, "Player").Else(u.Data.Rank().Prefix())))
 	u.Scoreboard.Set(6, "§2")
 	u.Scoreboard.Set(7, text.Colourf("<yellow>▌</yellow> <white>Coins:</white> <gold>%v</gold>", u.Data.Statistics.Coins))
 	u.Scoreboard.Set(8, text.Colourf("<yellow>▌</yellow> <white>Experience:</white> <aqua>%v</aqua>", u.Data.Statistics.XP))
@@ -89,6 +91,7 @@ func Join(pl *player.Player) {
 }
 
 func (Handler) HandleQuit(pl *player.Player) {
+	pl.Inventory().Handle(inventory.NopHandler{})
 	user.Save(pl)
 }
 
@@ -109,6 +112,15 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	*msg = text.Colourf(newMsg)
 
 	_, _ = fmt.Fprintf(chat.Global, *msg)
+}
+
+func (Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
+	pl := ctx.Val()
+	jumpBox := cube.Box(-105.5, 98.0, -141.5, -104.5, 102.0, -145.5)
+	middle := mgl64.Vec3{-36.5, 103.0, -143.5}
+	if jumpBox.Vec3Within(newPos) && !pl.Flying() {
+		pl.SetVelocity(middle.Sub(newPos).Mul(0.1))
+	}
 }
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {

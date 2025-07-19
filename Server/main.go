@@ -16,7 +16,6 @@ import (
 	"server/server/games/lobby"
 	"server/server/language"
 	"server/server/living/npc"
-	"server/server/multiversion"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
@@ -25,8 +24,10 @@ import (
 	"time"
 	"unsafe"
 
-	v486 "github.com/didntpot/multiversion/multiversion/protocols/v486"
-	"github.com/sandertv/gophertunnel/minecraft"
+	"github.com/df-mc/dragonfly/server/block/cube"
+	"github.com/df-mc/dragonfly/server/entity"
+	"github.com/go-gl/mathgl/mgl64"
+	"github.com/sandertv/gophertunnel/minecraft/text"
 
 	"github.com/google/uuid"
 
@@ -70,12 +71,9 @@ func main() {
 	conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
 	conf.ReadOnlyWorld = true
 
-	multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
-		v486.New(true),
-	})
-
-	//intercept.Hook(inv.PacketHandlerInv{})
-	//conf.Listeners = intercept.WrapListeners(conf.Listeners)
+	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
+	//	v486.New(true),
+	//})
 
 	srv := conf.New()
 	utils.SetServer(srv)
@@ -85,7 +83,6 @@ func main() {
 	srv.World().StopThundering()
 	srv.World().StopTime()
 	srv.CloseOnProgramEnd()
-	//intercept.Start(srv)
 	core.MCServer = srv
 
 	srv.World().Exec(func(tx *world.Tx) {
@@ -99,6 +96,12 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
+
+	srv.World().Exec(func(tx *world.Tx) {
+		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}
+		tx.Block(cube.PosFromVec3(txtPos))
+		tx.AddEntity(entity.NewText(text.Colourf("<green>Welcome to BRBW!</green>\n<grey>The #1 Ranked Bedwars server on Bedrock</grey>\n§0\n<white>Join our Discord!.</white>\n<aqua>discord.gg/brbw</aqua>"), txtPos))
+	})
 
 	for pl := range srv.Accept() {
 		_ = pl

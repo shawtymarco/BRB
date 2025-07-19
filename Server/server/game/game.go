@@ -3,6 +3,8 @@ package game
 import (
 	"slices"
 
+	"github.com/samber/lo"
+
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/google/uuid"
@@ -84,7 +86,7 @@ func (g *Game) PlayerTeam(pl *player.Player) *Team {
 	return nil
 }
 
-func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int) {
+func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGame) {
 	for _, team := range g.teams {
 		if len(team.originalHandles) < teamSize {
 			team.AddPlayer(pl)
@@ -94,8 +96,8 @@ func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int) {
 
 	var newTeam *Team
 	if g.teamColor == "" {
-		teamColors := []string{"red", "blue", "green", "yellow"}
-		newTeam = &Team{id: len(g.teams), color: teamColors[len(g.teams)]}
+		teamColor := lo.If(typeGame == TypeBedWars, []string{"red", "green", "blue", "yellow"}).Else([]string{"red", "blue", "green", "yellow"})[len(g.teams)]
+		newTeam = &Team{id: ColorToID(teamColor, typeGame), color: teamColor}
 	} else {
 		newTeam = &Team{color: g.teamColor}
 	}

@@ -111,6 +111,7 @@ const (
 	Shears
 	Pickaxe
 	Axe
+	Ladder
 )
 
 func (c HotBarCategory) AsStack() item.Stack {
@@ -131,6 +132,8 @@ func (c HotBarCategory) AsStack() item.Stack {
 		return item.NewStack(item.Pickaxe{Tier: item.ToolTierIron}, 1).WithCustomName(text.Colourf("<emerald>Pickaxe</emerald>"))
 	case Axe:
 		return item.NewStack(item.Axe{Tier: item.ToolTierIron}, 1).WithCustomName(text.Colourf("<emerald>Axe</emerald>"))
+	case Ladder:
+		return item.NewStack(block.Ladder{}, 1).WithCustomName(text.Colourf("<emerald>Ladder</emerald>"))
 	default:
 		return item.NewStack(block.StainedGlass{Colour: item.ColourRed()}, 1).WithCustomName(text.Colourf("<red>Empty Slot</red>"))
 	}
@@ -154,6 +157,8 @@ func HotBarCategoryFromStack(stack item.Stack) HotBarCategory {
 		return Pickaxe
 	case stack.Equal(Axe.AsStack()):
 		return Axe
+	case stack.Equal(Ladder.AsStack()):
+		return Ladder
 	}
 	return None
 }

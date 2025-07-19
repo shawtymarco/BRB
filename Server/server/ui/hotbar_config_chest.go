@@ -31,11 +31,11 @@ func sendHotBarConfigUI(pl *player.Player) {
 
 			sword, err := menuInv.Item(11)
 			if err == nil && sword.Equal(database.Melee.AsStack()) {
-				if slot <= 26 {
+				if slot <= 35 {
 					go func() {
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 
-						for i := 11; i <= 23; i++ {
+						for i := 11; i <= 35; i++ {
 							utils.Panic(menuInv.SetItem(i, item.Stack{}))
 						}
 
@@ -94,6 +94,7 @@ func main(pl *player.Player) []item.Stack {
 	items[21] = database.Shears.AsStack()
 	items[22] = database.Pickaxe.AsStack()
 	items[23] = database.Axe.AsStack()
+	items[31] = database.Ladder.AsStack()
 
 	for i := 0; i < 9; i++ {
 		items[i+36] = u.Data.Settings.HotBarConfig[i].AsStack()

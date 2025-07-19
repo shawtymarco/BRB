@@ -123,7 +123,6 @@ type LangConfig struct {
 		GeneratorUpgraded     string
 		BedGone               string
 		SuddenDeath           string
-		SuddenDeathTitle      string
 		MagicMilkEffectGive   string
 		MagicMilkEffectRemove string
 		Error                 struct {

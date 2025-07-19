@@ -88,13 +88,12 @@
     "TrapTriggered": "<red>TRAP TRIGGERED!</red>",
     "GeneratorUpgraded": "<yellow>%v have been upgraded to Tier <red>%v</red></yellow>",
     "BedGone": "<red>ALL BED HAS BEEN DESTROYED</red>",
-    "SuddenDeath": "<red>Sudden death has started</red>",
-    "SuddenDeathTitle": "<red>SUDDEN DEATH</red>",
+    "SuddenDeath": "<red>%v has started</red>",
     "MagicMilkEffectGive": "<green>You will not trigger any enemy traps for 30 seconds!</green>",
     "MagicMilkEffectRemove": "<red>The magic milk effect is gone now. You will trigger enemy traps now!</red>",
     "Error": {
       "CannotBreakBed": "<red>You can't destroy your own bed!</red>",
-      "CannotBreakMap": "<red>Stop trying to break the map!</red>"
+      "CannotBreakMap": "<red>You can only break the blocks players placed!</red>"
     }
   },
   "BuildFFA": {

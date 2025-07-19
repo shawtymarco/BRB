@@ -1,10 +1,24 @@
-import { ActionRowBuilder, ChannelType, Collection, EmbedBuilder, Guild, GuildMember, OverwriteResolvable, OverwriteType, PermissionFlagsBits, PrivateThreadChannel, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, VoiceChannel } from "discord.js";
+import {
+    ActionRowBuilder,
+    ChannelType,
+    Collection,
+    EmbedBuilder,
+    Guild,
+    GuildMember,
+    OverwriteResolvable,
+    OverwriteType,
+    PermissionFlagsBits,
+    PrivateThreadChannel,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
+    VoiceChannel
+} from "discord.js";
 import path from "path";
-import { client } from "..";
-import { APIEndpoints, Request } from "../api";
-import { dconfig } from "../config";
-import { CacheUtils } from "./CacheUtil";
-import { DB } from "./DB";
+import {client} from "..";
+import {APIEndpoints, Request} from "../api";
+import {dconfig} from "../config";
+import {CacheUtils} from "./CacheUtil";
+import {DB} from "./DB";
 
 export var gamesDB: DB<Game> = new DB(path.join(".", "db", "games.json"));
 
@@ -113,7 +127,7 @@ export class Game {
                     **Team 2 Captain:** <@${captains[1].id}>`,
                 color: 0xFFFFFF,
                 footer: {
-                    text: `eliagic.club | <t:${Math.floor(Date.now() / 1000)}>`
+                    text: `brbw.net | <t:${Math.floor(Date.now() / 1000)}>`
                 },
             }]
         });
@@ -158,7 +172,7 @@ export class Game {
                     description: `The captains finished picking the teams.`,
                     color: 0xFFFFFF,
                     footer: {
-                        text: `eliagic.club`
+                        text: `brbw.net`
                     },
                 }],
                 components: []
@@ -190,7 +204,7 @@ export class Game {
                 description: `Hey <@${this.isTeam1Turn() ? captains[0].id : captains[1].id}>!\nIt's your turn to pick ${picks === 1 ? '**ONE** teammate' : '**TWO** teammates'}.`,
                 color: 0xFFFFFF,
                 footer: {
-                    text: `eliagic.club`
+                    text: `brbw.net`
                 },
             }],
             components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -227,10 +241,16 @@ export class Game {
             member.voice.setChannel(t1.includes(member) ? this.team1VC() : this.team2VC())
         })
 
-        await Request.post(APIEndpoints.GAME_CONNECT_USERS, {
-            Users: [...t1.map(m => m.id), ...t2.map(m => m.id)],
-            code: this.id
-        });
+        try {
+            await Request.post(APIEndpoints.GAME_CONNECT_USERS, {
+                Users: [...t1.map(m => m.id), ...t2.map(m => m.id)],
+                code: this.id
+            });
+        } catch (err) {
+            console.log(t1.map(m => m.id));
+            console.log(t2.map(m => m.id));
+            console.log([...t1.map(m => m.id), ...t2.map(m => m.id)])
+        }
 
         thread.send({
             content: `${members.map(m => `<@${m.id}>`).join(" ")}\n## Team making is DONE. Join as soon as possible to start playing!`,
@@ -240,13 +260,13 @@ export class Game {
                     icon_url: 'https://images-ext-1.discordapp.net/external/xPUGYxZAJDXj4ScgckfwI0SvwkRQDNQDTi2gF27kRNc/%3Fsize%3D4096/https/cdn.discordapp.com/avatars/1209943786252144690/6d272ead1117efac2cf674582fceff1f.png?format=webp&quality=lossless&width=801&height=801'
                 },
                 description: `
-                - Log into the server (eliagic.club) and you will automatically be teleported to the game.\n**OR**\n- In the lobby, type the command \`/join\` to manually join your game.
+                - Join the server (brbw.net) and you will automatically be warped to the game.\n**OR**\n- In the lobby, type the command \`/join\` to manually join your game.
 
-                Once there, wait up for the other players and you can execute \`/warp\` to teleport your game players from the lobby right into your game!
+                Once there, you can execute \`/warp\` to warp players from the lobby into your game!
                 `,
                 color: 0xFFFFFF,
                 footer: {
-                    text: `eliagic.club`
+                    text: `brbw.net`
                 },
             }]
         });
@@ -303,14 +323,14 @@ export class Game {
         });
 
         const team1VC = await this.guild.channels.create({
-            name: `#${this.id.slice(0, 4)} | Team 1`,
+            name: `#${this.id.slice(0, 4).toUpperCase()} | Team 1`,
             type: ChannelType.GuildVoice,
             parent: dconfig.categories.games,
             permissionOverwrites: team1Permissions
         });
 
         const team2VC = await this.guild.channels.create({
-            name: `#${this.id.slice(0, 4)} | Team 2`,
+            name: `#${this.id.slice(0, 4).toUpperCase()} | Team 2`,
             type: ChannelType.GuildVoice,
             parent: dconfig.categories.games,
             permissionOverwrites: team1Permissions
@@ -325,17 +345,21 @@ export class Game {
     async terminateGame(data: any) {
         const waitingRoom = CacheUtils.getChannel(this.guild, dconfig.channels.waitingRoom);
 
-        this.thread().setLocked(true);
-        this.thread().setArchived(true);
-        for (const [, member] of await this.thread().members.fetch()) {
-            this.thread().members.remove(member.id);
+        if (this.thread()) {
+            this.thread().setLocked(true);
+            this.thread().setArchived(true);
+            for (const [, member] of await this.thread().members.fetch()) {
+                this.thread().members.remove(member.id);
+            }
         }
 
-        this.lobbyVC().members.forEach(member => {
-            member.voice.setChannel(waitingRoom as VoiceChannel);
-        });
+        if (this.lobbyVC()) {
+            this.lobbyVC().members.forEach(member => {
+                member.voice.setChannel(waitingRoom as VoiceChannel);
+            });
+        }
 
-        if (this.team1VCId) {
+        if (this.team1VC()) {
             this.team1VC().members.forEach(member => {
                 member.voice.setChannel(waitingRoom as VoiceChannel);
             });
@@ -345,7 +369,7 @@ export class Game {
         }
 
         setTimeout(async () => {
-            await this.lobbyVC().delete();
+            if (this.lobbyVC()) await this.lobbyVC().delete();
             if (this.team1VCId) {
                 await this.team1VC().delete();
                 await this.team2VC().delete();
@@ -356,7 +380,7 @@ export class Game {
         if (data) {
             embed = new EmbedBuilder()
                 .setColor(0x2f3136)
-                .setTitle(`#${this.id.slice(0, 4) } - Eliagic Ranked Bedwars`)
+                .setTitle(`#${this.id.slice(0, 4).toUpperCase()} - Bedrock Ranked Bedwars`)
                 .addFields(
                     { name: "Game:", value: `#${this.id}`, inline: true },
                     { name: "Duration:", value: Game.formatDuration(data.Duration), inline: true },
@@ -367,7 +391,7 @@ export class Game {
         } else {
             embed = new EmbedBuilder()
                 .setColor(0x2f3136)
-                .setTitle(`#${this.id.slice(0, 4)} - Eliagic Ranked Bedwars`)
+                .setTitle(`#${this.id.slice(0, 4).toUpperCase()} - Bedrock Ranked Bedwars`)
                 .addFields(
                     { name: "Game:", value: `#${this.id}`, inline: true },
                     { name: "Status:", value: "**Voided**", inline: true },

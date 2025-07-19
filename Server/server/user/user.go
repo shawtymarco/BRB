@@ -298,6 +298,8 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 	switch it.Item().(type) {
 	case item.Sword, item.Stick:
 		category = database.Melee
+	case block.Ladder:
+		category = database.Ladder
 	case world.Block:
 		category = database.Blocks
 	case item.Bow:

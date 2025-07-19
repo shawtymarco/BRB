@@ -3,7 +3,7 @@
     "Name": "BuildFFA",
     "Type": "buildffa",
     "Void": 60,
-    "HeightLimit": 90,
+    "HeightLimit": 104,
     "SpawnPoint": [
       0,
       100,
@@ -1272,7 +1272,7 @@
     ],
     "EnderChestPositions": [
       [
-        50.5,
+        -50.5,
         66.0,
         -49.5
       ],

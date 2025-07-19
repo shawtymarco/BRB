@@ -89,7 +89,8 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		panic("Unhandled game type")
 	}
 
-	bwGame.AddPlayerToTeam(pl, teamSize)
+	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
+
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
 	if bwGame.Stage() == game.Running {
@@ -209,15 +210,15 @@ func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot
 				case game.CounterOffensive:
 					nearestEnemyTeam.ForEachPlayer(pl.Tx(), func(p *player.Player) {
 						if _, ok := pl.Effect(effect.Speed); !ok {
-							p.AddEffect(effect.New(effect.Speed, 2, 15*time.Second))
-							p.AddEffect(effect.New(effect.JumpBoost, 2, 15*time.Second))
+							p.AddEffect(effect.New(effect.Speed, 2, 10*time.Second))
+							p.AddEffect(effect.New(effect.JumpBoost, 2, 10*time.Second))
 						}
 					})
 				case game.Alarm:
 					pl.RemoveEffect(effect.Invisibility)
 				case game.MinerFatigue:
 					if _, ok := pl.Effect(effect.MiningFatigue); !ok {
-						pl.AddEffect(effect.New(effect.MiningFatigue, 3, 10*time.Second))
+						pl.AddEffect(effect.New(effect.MiningFatigue, 1, 10*time.Second))
 					}
 				default:
 					panic("unhandled default case")
@@ -515,12 +516,15 @@ func (PlayerHandler) HandlePunchAir(ctx *player.Context) {
 
 func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	pl := ctx.Val()
-	gen := h.game.NearestGenerator(pl.Position(), Iron)
 
-	genPlayers := gen.PlayersWithin(pl.Tx())
-	if len(genPlayers) > 1 && !i.Empty() {
-		ctx.Cancel()
-		split(pl, genPlayers, h)
+	if h.game.typeGame == game.TypeBedWars {
+		gen := h.game.NearestGenerator(pl.Position(), Iron)
+
+		genPlayers := gen.PlayersWithin(pl.Tx())
+		if len(genPlayers) > 1 && !i.Empty() {
+			ctx.Cancel()
+			split(pl, genPlayers, h)
+		}
 	}
 }
 
@@ -585,8 +589,8 @@ func giveKit(pl *player.Player, g *BedWars) {
 	}
 	_, _ = u.AddItemWithHBConfig(0, sword)
 	if g.Type() == game.TypeBedFight {
-		_, _ = u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable())
-		_, _ = u.AddItemWithHBConfig(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).AsUnbreakable())
+		_, _ = u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable())
+		_, _ = u.AddItemWithHBConfig(2, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable())
 		_, _ = u.AddItemWithHBConfig(3, item.NewStack(item.Shears{}, 1).AsUnbreakable())
 		_, _ = u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: t.WoolColour()}, 64))
 	}

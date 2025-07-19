@@ -4,7 +4,6 @@ import (
 	"iter"
 	"maps"
 	"math"
-	"math/rand"
 	"slices"
 	"time"
 
@@ -103,7 +102,7 @@ func (l *Living) DropItems(tx *world.Tx) {
 		if _, ok := it.Enchantment(enchantment.CurseOfVanishing); ok {
 			continue
 		}
-		opts := world.EntitySpawnOpts{Position: pos, Velocity: mgl64.Vec3{rand.Float64()*0.2 - 0.1, 0.2, rand.Float64()*0.2 - 0.1}}
+		opts := world.EntitySpawnOpts{Position: pos}
 		tx.AddEntity(entity.NewItem(opts, it))
 	}
 }

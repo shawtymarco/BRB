@@ -1,15 +1,33 @@
-import { ChannelType, Collection, Events, Guild, GuildMember, GuildTextBasedChannel, OverwriteResolvable, OverwriteType, PermissionFlagsBits, PermissionOverwrites, TextChannel, VoiceState } from "discord.js";
-import { dconfig } from "../config";
-import { APIEndpoints, Request } from "../api";
-import { EmbedUtil } from "../core/EmbedUtil";
-import { CacheUtils } from "../core/CacheUtil";
-import { Game, gamesDB } from "../core/GameCore";
+import {
+    ChannelType,
+    Collection,
+    Events,
+    Guild,
+    GuildMember,
+    OverwriteResolvable,
+    OverwriteType,
+    PermissionFlagsBits,
+    TextChannel
+} from "discord.js";
+import {dconfig} from "../config";
+import {APIEndpoints, Request} from "../api";
+import {EmbedUtil} from "../core/EmbedUtil";
+import {CacheUtils} from "../core/CacheUtil";
+import {Game, gamesDB} from "../core/GameCore";
+
+const recentlyStarted = new Set();
 
 module.exports = {
     name: Events.VoiceStateUpdate,
-    async execute(oldState, newState: VoiceState) {
+    async execute(oldState, newState) {
         if (newState.channelId === null) return;
-        if (![dconfig.channels.touch2v2, dconfig.channels.touch3v3, dconfig.channels.all3v3, dconfig.channels.all4v4].includes(newState.channelId)) return;
+
+        if (![
+            dconfig.channels.touch2v2,
+            dconfig.channels.touch3v3,
+            dconfig.channels.all3v3,
+            dconfig.channels.all4v4
+        ].includes(newState.channelId)) return;
 
         let alertsId = dconfig.channels.allAlerts;
         let isTouch = false;
@@ -32,7 +50,7 @@ module.exports = {
             return;
         }
 
-        Game.refreshMemberNickname(newState.member as GuildMember);
+        Game.refreshMemberNickname(newState.member);
 
         if (isTouch && !res.isTouch) {
             CacheUtils.getChannel(newState.guild, alertsId).send({
@@ -46,20 +64,33 @@ module.exports = {
             return;
         }
 
+        const chId = newState.channelId;
         const chMembers = newState.channel?.members;
 
-        switch (newState.channelId) {
+        if (recentlyStarted.has(chId)) return;
+
+        switch (chId) {
             case dconfig.channels.touch2v2:
-                if (chMembers?.size == 4) await initGameChannel(newState.guild, chMembers, 2, 2);
+                if (chMembers?.size === 4) {
+                    recentlyStarted.add(chId);
+                    setTimeout(() => recentlyStarted.delete(chId), 5000);
+                    await initGameChannel(newState.guild, chMembers, 2, 2);
+                }
                 break;
             case dconfig.channels.touch3v3:
-                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, 3, 2);
-                break;
             case dconfig.channels.all3v3:
-                if (chMembers?.size == 6) await initGameChannel(newState.guild, chMembers, 3, 2);
+                if (chMembers?.size === 6) {
+                    recentlyStarted.add(chId);
+                    setTimeout(() => recentlyStarted.delete(chId), 5000);
+                    await initGameChannel(newState.guild, chMembers, 3, 2);
+                }
                 break;
             case dconfig.channels.all4v4:
-                if (chMembers?.size == 8) await initGameChannel(newState.guild, chMembers, 4, 2);
+                if (chMembers?.size === 8) {
+                    recentlyStarted.add(chId);
+                    setTimeout(() => recentlyStarted.delete(chId), 5000);
+                    await initGameChannel(newState.guild, chMembers, 4, 2);
+                }
                 break;
         }
     },
@@ -85,7 +116,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
         })
     })
 
-    const gameName = `#${res.id.slice(0, 4)} | Lobby (${teamSize}v${teamSize})`
+    const gameName = `#${res.id.slice(0, 4).toUpperCase()} | Lobby (${teamSize}v${teamSize})`
 
     const gameVC = await guild.channels.create({
         name: gameName,
@@ -95,7 +126,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
     });
 
     const gameThread = await (CacheUtils.getChannel(guild, dconfig.channels.gameChat) as TextChannel).threads.create({
-        name: gameName,
+        name: `Game #${res.id.slice(0, 4).toUpperCase()}`,
         autoArchiveDuration: 60,
         type: ChannelType.PrivateThread,
         invitable: false,

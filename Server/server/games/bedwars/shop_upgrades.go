@@ -85,7 +85,7 @@ func (s *upgradesShop) Main() []item.Stack {
 		"Heal Pool",
 		"Gives Regeneration I to all team members whenever inside the team island",
 		upgrades.HealPool,
-		[]int{8},
+		[]int{3},
 		false,
 	)
 	items[23] = s.uShopify(
@@ -122,7 +122,7 @@ func (s *upgradesShop) uShopify(stack item.Stack, name, description string, tier
 
 	infoMsg := "<yellow>Click to purchase!</yellow>"
 	if len(costs)-1 < tier {
-		infoMsg = "<emerald>Purchased!</emerald>"
+		infoMsg = "<emerald>Maxed!</emerald>"
 	} else if !canAfford(s.player, stack) {
 		infoMsg = "<red>You cannot afford this!</red>"
 	}

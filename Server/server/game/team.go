@@ -145,6 +145,34 @@ func (t *Team) RemoveTrap() Trap {
 	return removed
 }
 
+func ColorToID(color string, typeGame TypeGame) int {
+	switch typeGame {
+	case TypeBedWars:
+		switch color {
+		case "red":
+			return 0
+		case "blue":
+			return 2
+		case "green":
+			return 1
+		case "yellow":
+			return 3
+		}
+	case TypeBedFight, TypeBuildFFA:
+		switch color {
+		case "red":
+			return 0
+		case "blue":
+			return 1
+		case "green":
+			return 2
+		case "yellow":
+			return 3
+		}
+	}
+	panic("no id for this color")
+}
+
 type Status int
 
 const (

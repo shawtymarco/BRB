@@ -1,5 +1,5 @@
 # Stage 1: Build with Go
-FROM golang:1.24.2-alpine3.21 AS build
+FROM golang:1.24.5-alpine3.22 AS build
 
 WORKDIR /build
 
@@ -30,6 +30,7 @@ COPY --chown=1000:1000 ./config ./config
 COPY --chown=1000:1000 ./maps ./maps
 COPY --chown=1000:1000 ./resources ./resources
 COPY --chown=1000:1000 ./translations ./translations
+COPY --chown=1000:1000 ./server/worlds ./server/worlds
 
 # Set permissions (optional if already owned)
 RUN chown -R server:server /server

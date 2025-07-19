@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"server/server/database"
+	"server/server/game"
 	"server/server/games/lobby"
 	"server/server/language"
 	"server/server/listener"
@@ -34,7 +35,7 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
-var blocksPlaced = make(map[string]time.Time)
+var blocksPlaced = make(map[string]*blockPlaced)
 
 type Handler struct {
 	player.NopHandler
@@ -50,7 +51,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 
 	u := user.GetUser(pl)
 	u.Game = Game.Game
-	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BUILDFFA</yellow></bold>"))
+	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BUILD FFA</yellow></bold>"))
 
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 
@@ -61,7 +62,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
 		}, tx)
 	})
-	Game.AddPlayerToTeam(pl, 1)
+	Game.AddPlayerToTeam(pl, 1, game.TypeBuildFFA)
 
 	pl.Teleport(Game.MapConfig().SpawnPoint)
 }
@@ -165,10 +166,11 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 
 	if Game.MapConfig().HeightLimit <= pos.Y() {
 		ctx.Cancel()
+		return
 	}
 
 	if w, ok := b.(block.Wool); ok {
-		blocksPlaced[vec3ToString(pos.Vec3())] = time.Now()
+		blocksPlaced[vec3ToString(pos.Vec3())] = &blockPlaced{block: pl.Tx().Block(pos), placedAt: time.Now()}
 		time.AfterFunc(4*time.Second, func() {
 			h.ExecWorld(func(tx *world.Tx, e world.Entity) {
 				utils.Panics(e.(*player.Player).Inventory().AddItem(item.NewStack(w, 1)))
@@ -176,9 +178,9 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 		})
 
 		time.AfterFunc(10*time.Second, func() {
-			if !blocksPlaced[vec3ToString(pos.Vec3())].IsZero() && time.Now().Sub(blocksPlaced[vec3ToString(pos.Vec3())]) >= 10*time.Second {
+			if bp := blocksPlaced[vec3ToString(pos.Vec3())]; bp != nil && time.Now().Sub(bp.placedAt) >= 10*time.Second {
 				h.ExecWorld(func(tx *world.Tx, e world.Entity) {
-					tx.SetBlock(pos, block.Air{}, nil)
+					tx.SetBlock(pos, bp.block, nil)
 				})
 			}
 		})
@@ -187,7 +189,7 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 
 func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
 	pl := ctx.Val()
-	if blocksPlaced[vec3ToString(pos.Vec3())].IsZero() {
+	if blocksPlaced[vec3ToString(pos.Vec3())] == nil {
 		*drops = []item.Stack{}
 		b := pl.Tx().Block(pos)
 		time.AfterFunc(10*time.Second, func() {
@@ -197,7 +199,7 @@ func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item
 		})
 	} else {
 		*drops = []item.Stack{}
-		blocksPlaced[vec3ToString(pos.Vec3())] = time.Time{}
+		blocksPlaced[vec3ToString(pos.Vec3())] = nil
 	}
 }
 
@@ -226,8 +228,8 @@ func (Handler) HandleItemUse(ctx *player.Context) {
 func giveKit(pl *player.Player) {
 	u := user.GetUser(pl)
 	utils.Panics(u.AddItemWithHBConfig(0, item.NewStack(item.Sword{Tier: item.ToolTierStone}, 1).AsUnbreakable()))
-	utils.Panics(u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable()))
-	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).AsUnbreakable()))
+	utils.Panics(u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable()))
+	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable()))
 
 	utils.Panics(u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: item.ColourGreen()}, 64)))
 	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Knockback, 2)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
@@ -242,4 +244,9 @@ func giveKit(pl *player.Player) {
 
 func vec3ToString(v mgl64.Vec3) string {
 	return fmt.Sprintf("(%d, %d, %d)", int(v.X()), int(v.Y()), int(v.Z()))
+}
+
+type blockPlaced struct {
+	block    world.Block
+	placedAt time.Time
 }
