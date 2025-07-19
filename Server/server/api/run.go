@@ -51,7 +51,7 @@ func init() {
 			TLSConfig: tlsConfig,
 		}
 
-		log.Println("Starting secure server with API on https://localhost:8080")
+		log.Println(`Starting secure server with API on ${baseUrl}`)
 		if err := srv.ListenAndServeTLS("../certs/server.pem", "../certs/server.key"); err != nil {
 			log.Fatal(err)
 		}
