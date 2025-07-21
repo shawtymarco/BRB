@@ -59,6 +59,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		for _, g := range Games {
 			if g.Type() == typeGame && g.Stage() == game.Waiting {
 				fmt.Println(50.2)
+				fmt.Println(g.ID())
 				bwGame = g
 				break
 			}
