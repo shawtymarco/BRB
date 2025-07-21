@@ -118,6 +118,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		}
 		ticker := time.NewTicker(100 * time.Millisecond)
 		for range ticker.C {
+			fmt.Println(g.Stage())
 			switch g.Stage() {
 			case game.Waiting:
 				if len(g.OriginalPlayers()) == teamSize*teamCount {
@@ -303,7 +304,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						}, tx)
 					})
 
-					fmt.Println(1)
 					g.SetStage(game.Ending)
 				} else {
 					currentStage := stages[0]
@@ -393,47 +393,33 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 				}
 			case game.Ending:
-				fmt.Println(2)
 				time.AfterFunc(5*time.Second, func() {
-					fmt.Println(3)
 					g.SetStage(game.Terminated)
 				})
 			case game.Terminated:
-				fmt.Println(4)
 				ticker.Stop()
 
-				fmt.Println(5)
 				<-g.World().Exec(func(tx *world.Tx) {
-					fmt.Println(10)
 					g.ForEachOriginalPlayer(func(pl *player.Player) {
 						u := user.GetUser(pl)
 						u.GameInfo = user.GameRuntimeData{}
 					}, tx)
 
-					fmt.Println(11)
 					for e := range tx.Players() {
 						pl := e.(*player.Player)
-						fmt.Println(12)
 						pl.Handler().HandleQuit(pl)
 						tx.RemoveEntity(pl)
-						fmt.Println(13)
 						server.MCServer.World().Exec(func(tx *world.Tx) {
 							tx.AddEntity(pl.H())
 						})
-						fmt.Println(14)
 					}
-					fmt.Println(15)
 				})
 
-				fmt.Println(6)
 				gd.Duration = tick.Seconds()
 				GamesToTerminate[g.ID()] = gd
 
-				fmt.Println(7)
 				utils.Panic(g.World().Close())
-				fmt.Println(8)
 				delete(Games, g.ID())
-				fmt.Println(9)
 			default:
 				panic("unknown stage")
 			}
