@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: CommandInteraction) {
     const member = interaction.member as GuildMember;
     const code = interaction.options.get("code");
-    const res = await Request.post(APIEndpoints.VERIFY, { userId: member.user.id, code: code });
+    const res = await Request.post(APIEndpoints.VERIFY, { userId: member.user.id, code: code?.value });
 
     if (res.success) {
         member.roles.add(CacheUtils.getRole(member.guild, dconfig.roles.registered));

@@ -17,6 +17,8 @@ export var client = new Client({
     ],
 });
 
+console.log("Staring bot...");
+
 (async () => {
     // Load SLASH commands
     const slashPath = 'src/commands/slash';
@@ -31,16 +33,16 @@ export var client = new Client({
     }
 
     // Load MESSAGE commands
-    const msgPath = 'src/commands/message';
-    const msgFiles = fs.readdirSync(msgPath).filter(file => file.endsWith('.ts'));
+    // const msgPath = 'src/commands/message';
+    // const msgFiles = fs.readdirSync(msgPath).filter(file => file.endsWith('.ts'));
 
-    for (const file of msgFiles) {
-        const filePath = path.join(msgPath, file);
-        const command = await import(pathToFileURL(filePath).href);
-        if ('name' in command && 'execute' in command) {
-            messageCommands.set(command.name, command);
-        }
-    }
+    // for (const file of msgFiles) {
+    //     const filePath = path.join(msgPath, file);
+    //     const command = await import(pathToFileURL(filePath).href);
+    //     if ('name' in command && 'execute' in command) {
+    //         messageCommands.set(command.name, command);
+    //     }
+    // }
 
     // Load EVENTS
     const eventsPath = 'src/events';

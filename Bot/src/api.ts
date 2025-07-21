@@ -1,7 +1,7 @@
 import fs from "fs";
 import https from "https";
 import axios from "axios";
-import {baseUrl, jwtSecret} from "./config";
+import {dconfig, jwtSecret} from "./config";
 
 const httpsAgent = new https.Agent({
     cert: fs.readFileSync('../certs/client.crt'),
@@ -22,7 +22,7 @@ export enum APIEndpoints {
 
 export class Request {
     static async get(endpoint: string) {
-        const res = await axios.get(`${baseUrl}/${endpoint}`, {
+        const res = await axios.get(`${dconfig.api}/${endpoint}`, {
             headers: {
                 'Authorization': `Bearer ${jwtSecret}`,
             },
@@ -34,7 +34,7 @@ export class Request {
 
     static async post(endpoint: string, data: object) {
         const res = await axios.post(
-            `${baseUrl}/${endpoint}`,
+            `${dconfig.api}/${endpoint}`,
             data,
             {
                 httpsAgent,
