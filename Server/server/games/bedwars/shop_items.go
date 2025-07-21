@@ -174,7 +174,7 @@ func (s *ItemShop) Utility() []item.Stack {
 	}
 	items[25] = editName(shopify(s.Player, item.NewStack(NewMagicMilk(s.game), 1), Gold, 3, false, false), text.Colourf("<green>Magic Milk</green>"))
 	items[28] = shopify(s.Player, item.NewStack(block.Sponge{}, 4), Gold, 3, false, false)
-	items[29] = shopify(s.Player, item.NewStack(BedCompass{BedWars: s.game}, 1), Iron, 2, false, false)
+	items[29] = shopify(s.Player, item.NewStack(BedCompass{BedWars: s.game}, 1), Emerald, 2, false, false)
 	return items
 }
 

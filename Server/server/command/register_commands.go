@@ -19,7 +19,7 @@ func RegisterCommands() {
 
 	// Perk Commands
 	cmd.Register(cmd.New("fly", "To fly in the lobby", nil, FlyCommand{}))
-	cmd.Register(cmd.New("spectate", "To spectate a specific player", nil, WhisperCommand{}))
+	cmd.Register(cmd.New("spectate", "To spectate a specific player", nil, SpectateCommand{}))
 	cmd.Register(cmd.New("nick", "To change your nickname", nil, NickCommand{}))
 	cmd.Register(cmd.New("claimelo", "To claim your seasonal 250 ELO", nil, ClaimELOCommand{}))
 

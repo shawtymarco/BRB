@@ -221,15 +221,19 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						g.ForEachOriginalPlayer(func(pl *player.Player) {
 							u := user.GetUser(pl)
 							if g.WinningTeam().Contains(pl) {
-								before, after, mvp := g.Reward(pl, tx)
-								gd.WinningTeam[u.Data.UserId] = []int{before, after}
-								if mvp {
-									gd.MVPs = append(gd.MVPs, u.Data.UserId)
+								if g.typeGame == game.TypeBedWars {
+									before, after, mvp := g.Reward(pl, tx)
+									gd.WinningTeam[u.Data.UserId] = []int{before, after}
+									if mvp {
+										gd.MVPs = append(gd.MVPs, u.Data.UserId)
+									}
 								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
 							} else {
-								before, after := g.Punish(pl, tx)
-								gd.LosingTeam[u.Data.UserId] = []int{before, after}
+								if g.typeGame == game.TypeBedWars {
+									before, after := g.Punish(pl, tx)
+									gd.LosingTeam[u.Data.UserId] = []int{before, after}
+								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
 							}
 
@@ -287,18 +291,19 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 %v%v
 
 <green>============================================================</green>`,
-								strings.Repeat(" ", 110-len(l1)),
+								strings.Repeat(" ", lo.If(70-len(l1) > 0, 110-len(l1)).Else(0)),
 								l1,
-								strings.Repeat(" ", 120-len(l2)),
+								strings.Repeat(" ", lo.If(80-len(l2) > 0, 110-len(l2)).Else(0)),
 								l2,
-								strings.Repeat(" ", 120-len(l3)),
+								strings.Repeat(" ", lo.If(80-len(l3) > 0, 110-len(l3)).Else(0)),
 								l3,
-								strings.Repeat(" ", 120-len(l4)),
+								strings.Repeat(" ", lo.If(80-len(l4) > 0, 110-len(l4)).Else(0)),
 								l4,
 							))
 						}, tx)
 					})
 
+					fmt.Println(1)
 					g.SetStage(game.Ending)
 				} else {
 					currentStage := stages[0]
@@ -388,33 +393,47 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 				}
 			case game.Ending:
+				fmt.Println(2)
 				time.AfterFunc(5*time.Second, func() {
+					fmt.Println(3)
 					g.SetStage(game.Terminated)
 				})
 			case game.Terminated:
+				fmt.Println(4)
 				ticker.Stop()
 
+				fmt.Println(5)
 				<-g.World().Exec(func(tx *world.Tx) {
+					fmt.Println(10)
 					g.ForEachOriginalPlayer(func(pl *player.Player) {
 						u := user.GetUser(pl)
 						u.GameInfo = user.GameRuntimeData{}
 					}, tx)
 
+					fmt.Println(11)
 					for e := range tx.Players() {
 						pl := e.(*player.Player)
+						fmt.Println(12)
 						pl.Handler().HandleQuit(pl)
 						tx.RemoveEntity(pl)
+						fmt.Println(13)
 						server.MCServer.World().Exec(func(tx *world.Tx) {
 							tx.AddEntity(pl.H())
 						})
+						fmt.Println(14)
 					}
+					fmt.Println(15)
 				})
 
+				fmt.Println(6)
 				gd.Duration = tick.Seconds()
 				GamesToTerminate[g.ID()] = gd
 
+				fmt.Println(7)
 				utils.Panic(g.World().Close())
+				fmt.Println(8)
 				delete(Games, g.ID())
+				fmt.Println(9)
 			default:
 				panic("unknown stage")
 			}
