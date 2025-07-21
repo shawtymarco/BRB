@@ -2,6 +2,7 @@ import { Events, Client } from "discord.js";
 import { deploy } from "../deploy";
 import { APIEndpoints, Request } from "../api";
 import { Game, gamesDB } from "../core/GameCore";
+import { dconfig } from "../config";
 
 module.exports = {
     name: Events.ClientReady,
@@ -33,7 +34,7 @@ function detectServerRestart() {
                 initialTime = currentTime;
             }
         } catch (err) {
-            console.error("Failed to connect to server");
+            console.error(`Failed to connect to ${dconfig.api}`);
         }
     }, 1000);
 }

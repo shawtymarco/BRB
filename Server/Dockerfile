@@ -38,6 +38,9 @@ RUN chown -R server:server /server
 # Expose the port
 EXPOSE 19132/udp
 
+# Expose API port (if used)
+EXPOSE 8080
+
 # Switch to the non-root user
 USER server
 

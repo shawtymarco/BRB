@@ -50,7 +50,7 @@ export class Game {
                     await this.terminateGame(gameData);
                 }
             } catch (err) {
-                console.error("Failed to connect to server");
+                console.error(`Failed to connect to ${dconfig.api}`);
             }
         }, 5000);
     }

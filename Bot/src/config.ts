@@ -8,18 +8,11 @@ if (!DISCORD_TOKEN) {
     throw new Error("Missing environment variables");
 }
 
-const isLocal = process.env.LOCAL === 'true';
-const baseUrl = isLocal ? 'https://localhost:8080' : 'https://mc:8080';
-
-if (isLocal) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
-export {baseUrl, isLocal};
 export const token = DISCORD_TOKEN;
 export const jwtSecret = JWT_SECRET;
 export const dconfig = {
     prefix: "=",
+    api: "https://localhost:8080",
     clientId: "1268295659820159118",
     guildId: "1373222394046578731",
 

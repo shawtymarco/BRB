@@ -4,32 +4,18 @@ services:
     environment:
       - DATABASE_URI=mongodb://mongo:27017
       - TEBEX_SECRET=ZfGR4j0CWqDrKmvpgEU7UkGErS5i8ck5
+      - JWT_SECRET=boobs
     volumes:
-      - ./Server:/Server
+      - .:/Production
       - ./certs:/certs:ro
     restart: unless-stopped
     tty: true
     stdin_open: true
     ports:
       - "19132:19132/udp"
+      - "8080:8080"
     depends_on:
       - mongo
-
-  bot:
-    build: ./Bot
-    container_name: discord-bot
-    restart: unless-stopped
-    env_file: ./Bot/.env
-    environment:
-      - LOCAL=false
-    volumes:
-      - ./Bot:/app
-      - ./certs:/certs:ro
-    ports:
-      - "8080:8080"
-    command: tsx src/index.ts
-    depends_on:
-      - mc
 
   mongo:
     container_name: mongodb-brb
