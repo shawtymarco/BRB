@@ -57,11 +57,14 @@ func Join(pl *player.Player, tx *world.Tx) {
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 
 	tx.RemoveEntity(pl)
+
 	Game.World().Exec(func(tx *world.Tx) {
-		tx.AddEntity(pl.H())
-		Game.ForEachActivePlayer(func(pl *player.Player) {
-			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
-		}, tx)
+		Game.World().Exec(func(tx *world.Tx) {
+			tx.AddEntity(pl.H())
+			Game.ForEachActivePlayer(func(pl *player.Player) {
+				pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
+			}, tx)
+		})
 	})
 	Game.AddPlayerToTeam(pl, 1, game.TypeBuildFFA)
 

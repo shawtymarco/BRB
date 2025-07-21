@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path"
 	"reflect"
@@ -37,6 +38,7 @@ import (
 
 	"github.com/df-mc/dragonfly/server/player/chat"
 
+	_ "net/http/pprof"
 	_ "server/server/api"
 	_ "server/server/item_behavior"
 )
@@ -46,6 +48,11 @@ func main() {
 	chat.Global.Subscribe(chat.StdoutSubscriber{})
 
 	log := slog.Default()
+
+	go func() {
+		log.Info("Starting pprof on :6060")
+		utils.Panic(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	serverConf := utils.Panics(utils.ReadConfig[core.Server](path.Join(".", "config", "server.json")))
 	core.Config = serverConf

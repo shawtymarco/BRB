@@ -53,36 +53,27 @@ type PlayerHandler struct {
 }
 
 func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame game.TypeGame, isCustom bool, bwGame *BedWars) {
-	fmt.Println(50)
 	if bwGame == nil {
-		fmt.Println(50.1)
 		for _, g := range Games {
 			if g.Type() == typeGame && g.Stage() == game.Waiting {
-				fmt.Println(50.2)
-				fmt.Println(g.ID())
 				bwGame = g
 				break
 			}
 		}
-		fmt.Println(50.3)
 	}
 
-	fmt.Println(51)
 	if bwGame == nil {
 		bwGame = NewBedWars(typeGame, teamSize, teamCount, isCustom)
 	}
 
-	fmt.Println(52)
 	pl.Handle(PlayerHandler{game: bwGame})
 
 	tx.RemoveEntity(pl)
 
-	fmt.Println(53)
 	bwGame.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
 	})
 
-	fmt.Println(54)
 	pl.SetGameMode(world.GameModeSurvival)
 	go func() {
 		pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
@@ -91,10 +82,8 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		})
 	}()
 
-	fmt.Println(55)
 	u := user.GetUser(pl)
 	u.Game = bwGame.Game
-	fmt.Println(56)
 	switch typeGame {
 	case game.TypeBedWars:
 		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDWARS</yellow></bold>"))
@@ -104,22 +93,16 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		panic("Unhandled game type")
 	}
 
-	fmt.Println(57)
 	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
 
-	fmt.Println(58)
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	fmt.Println(59)
 	if bwGame.Stage() == game.Running {
 		pl.Hurt(20, entity.VoidDamageSource{})
-		fmt.Println(60)
 	} else {
-		fmt.Println(61)
 		bwGame.ForEachActivePlayer(func(pl *player.Player) {
 			pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
 		}, tx)
-		fmt.Println(62)
 	}
 }
 
