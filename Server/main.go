@@ -51,7 +51,7 @@ func main() {
 
 	go func() {
 		log.Info("Starting pprof on :6060")
-		utils.Panic(http.ListenAndServe("localhost:6060", nil))
+		utils.Panic(http.ListenAndServe(":6060", nil))
 	}()
 
 	serverConf := utils.Panics(utils.ReadConfig[core.Server](path.Join(".", "config", "server.json")))

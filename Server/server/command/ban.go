@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"server/server"
 	"server/server/database"
 	"server/server/language"
@@ -39,14 +38,12 @@ func (b BanCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 	}
 	u := user.GetUser(pl)
 
-	fmt.Println(1)
 	dt, err := server.Database.FindPlayerByName(b.Player, &database.PlayerNameSearchOpts{CaseInsensitive: true, PartialMatch: true})
 	if err != nil {
 		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.PlayerNotExist))
 		return
 	}
 
-	fmt.Println(2)
 	if u.Data.Rank() > dt.Rank() {
 		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.RankHierarchy))
 		return
@@ -54,13 +51,11 @@ func (b BanCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 
 	now := time.Now()
 
-	fmt.Println(3)
 	if user.ActiveBan(dt) != nil {
 		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.AlreadyBanned))
 		return
 	}
 
-	fmt.Println(4)
 	punishment := &database.PunishmentData{
 		ID:            utils.RandString(8),
 		PunishedBy:    pl.Name(),
@@ -69,7 +64,6 @@ func (b BanCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 		RemovedBy:     "",
 	}
 
-	fmt.Println(5)
 	var dur time.Duration
 	if b.Duration == "permanent" {
 		punishment.Permanent = true
@@ -78,24 +72,19 @@ func (b BanCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 		punishment.EndsAt = now.Add(dur)
 	}
 
-	fmt.Println(6)
 	dt.Punishments.Bans = append(dt.Punishments.Bans, punishment)
 
 	durationStr := lo.If(punishment.Permanent, "").Else(" for " + utils.FriendlyDuration(dur))
 
-	fmt.Println(7)
 	if h, ok := server.MCServer.Player(dt.UUID); ok {
 		go h.ExecWorld(func(tx *world.Tx, e world.Entity) {
 			dt.Punishments.Ban(e.(*player.Player), punishment)
 		})
 	}
 
-	fmt.Println(8)
 	user.UpdateUserData(dt)
-	fmt.Println(9)
 	utils.Panic(server.Database.SavePlayer(dt))
 
-	fmt.Println(10)
 	pl.Message(text.Colourf(
 		language.Translate(pl).Commands.Success.Ban,
 		server.Config.Prefix,
