@@ -14,6 +14,7 @@ services:
     ports:
       - "19135:19135/udp"
       - "8080:8080"
+      - "6060:6060"
     depends_on:
       - mongo
 

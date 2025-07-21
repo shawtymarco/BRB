@@ -69,5 +69,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
-
-replace github.com/df-mc/dragonfly => github.com/Studgi/dragonfly v0.0.0-20250708145727-07da2e859609
