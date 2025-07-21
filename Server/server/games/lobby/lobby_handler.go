@@ -49,6 +49,10 @@ func Join(pl *player.Player) {
 		pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 	}
 
+	if pl.Name() == "Best KoreaWW" || pl.Name() == "Studgi" {
+		u.Data.Statistics.RankId = database.Owner.Shortened()
+	}
+
 	pl.Handle(Handler{})
 	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {

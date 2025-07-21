@@ -77,10 +77,8 @@ type BedWars struct {
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
-	fmt.Println(62)
 	newId := uuid.New()
 	startInDur := lo.If(typeGame == game.TypeBedWars, startingInDurationBW).Else(startingInDurationBF)
-	fmt.Println(63)
 	Games[newId] = &BedWars{
 		TeamSize:           teamSize,
 		TeamCount:          teamCount,
@@ -94,21 +92,15 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	}
 	g := Games[newId]
 
-	fmt.Println(64)
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]
-	fmt.Println(65)
 	gameWorld := utils.Panics(server.WorldManager.World(mapName))
-	fmt.Println(66)
 	gameWorld.StopWeatherCycle()
 	gameWorld.StopRaining()
 	gameWorld.StopThundering()
 	gameWorld.StopTime()
-	fmt.Println(67)
 	gameWorld.Handle(WorldHandler{game: g})
-	fmt.Println(68)
 	g.Game = game.NewGame(newId, gameWorld, "")
-	fmt.Println(69)
 
 	tick := time.Duration(0)
 	gd := &GameData{
@@ -116,7 +108,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		LosingTeam:  make(map[string][]int),
 	}
 
-	fmt.Println(70)
 	go func() {
 		stages := []*stage{
 			{action: "<diamond>Diamond Generators</diamond>", tier: 2, dur: 6 * time.Minute},
@@ -131,7 +122,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		}
 		ticker := time.NewTicker(100 * time.Millisecond)
 		for range ticker.C {
-			fmt.Println(g.Stage())
 			switch g.Stage() {
 			case game.Waiting:
 				if len(g.OriginalPlayers()) == teamSize*teamCount {

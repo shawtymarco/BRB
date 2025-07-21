@@ -231,8 +231,8 @@ func giveKit(pl *player.Player) {
 	utils.Panics(u.AddItemWithHBConfig(1, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable()))
 	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable()))
 
-	utils.Panics(u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: item.ColourGreen()}, 64)))
-	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Knockback, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
+	utils.Panics(u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: item.ColourLime()}, 64)))
+	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
 
 	pl.Armour().Set(
 		item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: color.RGBA{G: 255}}}, 1).AsUnbreakable(),

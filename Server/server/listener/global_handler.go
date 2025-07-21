@@ -3,6 +3,7 @@ package listener
 import (
 	"server/server"
 	"server/server/database"
+	"server/server/games/buildffa"
 	"server/server/items"
 	"server/server/language"
 	"server/server/user"
@@ -18,8 +19,13 @@ import (
 )
 
 func HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
+	pl := ctx.Val()
+	main, _ := pl.HeldItems()
 	*force = server.Config.Pvp.Force
 	*height = server.Config.Pvp.Height
+	if _, ok := main.Enchantment(buildffa.CustomKnockBack{}); ok {
+		*force += server.Config.Pvp.Force / 2
+	}
 }
 
 func HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
