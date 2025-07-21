@@ -287,7 +287,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 							pl.Message(text.Colourf(
 								`<green>============================================================</green>
-                                    <bold>Bed Wars</bold>
+                                    <bold>%v</bold>
 
 %v%v
 
@@ -296,13 +296,14 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 %v%v
 
 <green>============================================================</green>`,
-								strings.Repeat(" ", lo.If(70-len(l1) > 0, 110-len(l1)).Else(0)),
+								lo.If(g.typeGame == game.TypeBedWars, "Bed Wars").Else("Bed Fight"),
+								strings.Repeat(" ", lo.If(40-len(l1) > 0, 110-len(l1)).Else(0)),
 								l1,
-								strings.Repeat(" ", lo.If(80-len(l2) > 0, 110-len(l2)).Else(0)),
+								strings.Repeat(" ", lo.If(50-len(l2) > 0, 110-len(l2)).Else(0)),
 								l2,
-								strings.Repeat(" ", lo.If(80-len(l3) > 0, 110-len(l3)).Else(0)),
+								strings.Repeat(" ", lo.If(50-len(l3) > 0, 110-len(l3)).Else(0)),
 								l3,
-								strings.Repeat(" ", lo.If(80-len(l4) > 0, 110-len(l4)).Else(0)),
+								strings.Repeat(" ", lo.If(50-len(l4) > 0, 110-len(l4)).Else(0)),
 								l4,
 							))
 						}, tx)
