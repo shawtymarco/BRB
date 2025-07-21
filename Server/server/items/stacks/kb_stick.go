@@ -1,4 +1,4 @@
-package buildffa
+package stacks
 
 import (
 	"github.com/df-mc/dragonfly/server/item"

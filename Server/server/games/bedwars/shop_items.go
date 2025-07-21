@@ -2,7 +2,7 @@ package bedwars
 
 import (
 	"server/server/game"
-	"server/server/games/buildffa"
+	"server/server/items/stacks"
 	"server/server/user"
 	"strings"
 
@@ -100,7 +100,7 @@ func (s *ItemShop) Melee() []item.Stack {
 	items[20] = i20
 	items[21] = i21
 
-	items[22] = shopify(s.Player, item.NewStack(buildffa.KnockBackStick{}, 1), Gold, 5, false, false)
+	items[22] = shopify(s.Player, item.NewStack(stacks.KnockBackStick{}, 1), Gold, 5, false, false)
 	return items
 }
 
