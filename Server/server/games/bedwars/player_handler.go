@@ -84,8 +84,12 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	fmt.Println(54)
 	pl.SetGameMode(world.GameModeSurvival)
-	pl.Inventory().Clear()
-	pl.Armour().Clear()
+	go func() {
+		pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+			e.(*player.Player).Inventory().Clear()
+			e.(*player.Player).Armour().Clear()
+		})
+	}()
 
 	fmt.Println(55)
 	u := user.GetUser(pl)
