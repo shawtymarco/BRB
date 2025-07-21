@@ -25,7 +25,7 @@ type BuildFFA struct {
 }
 
 func NewBuildFFA() {
-	gameWorld := utils.Panics(server.WorldManager.World("BFFA"))
+	gameWorld := utils.Panics(server.WorldManager.World("BFFA", false))
 	gameWorld.StopWeatherCycle()
 	gameWorld.StopRaining()
 	gameWorld.StopThundering()

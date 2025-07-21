@@ -94,7 +94,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]
-	gameWorld := utils.Panics(server.WorldManager.World(mapName))
+	gameWorld := utils.Panics(server.WorldManager.World(mapName, true))
 	gameWorld.StopWeatherCycle()
 	gameWorld.StopRaining()
 	gameWorld.StopThundering()
