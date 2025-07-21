@@ -55,12 +55,15 @@ type PlayerHandler struct {
 func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame game.TypeGame, isCustom bool, bwGame *BedWars) {
 	fmt.Println(50)
 	if bwGame == nil {
+		fmt.Println(50.1)
 		for _, g := range Games {
 			if g.Type() == typeGame && g.Stage() == game.Waiting {
+				fmt.Println(50.2)
 				bwGame = g
 				break
 			}
 		}
+		fmt.Println(50.3)
 	}
 
 	fmt.Println(51)
