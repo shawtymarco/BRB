@@ -25,7 +25,13 @@ type BuildFFA struct {
 }
 
 func NewBuildFFA() {
-	Game = &BuildFFA{Game: game.NewGame(uuid.New(), utils.Panics(server.WorldManager.World("BFFA")), "grey")}
+	gameWorld := utils.Panics(server.WorldManager.World("BFFA"))
+	gameWorld.StopWeatherCycle()
+	gameWorld.StopRaining()
+	gameWorld.StopThundering()
+	gameWorld.StopTime()
+	Game = &BuildFFA{Game: game.NewGame(uuid.New(), gameWorld, "grey")}
+
 	go func() {
 		for range time.NewTicker(250 * time.Millisecond).C {
 			Game.World().Exec(func(tx *world.Tx) {
