@@ -19,7 +19,7 @@ func NewGamesForm() GameSelectorForm {
 	return GameSelectorForm{}
 }
 
-func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _ *world.Tx) {
+func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, tx *world.Tx) {
 	pl := submitter.(*player.Player)
 	gt := Load[game.TypeGame](pl, button.Text)
 	pl.Handler().HandleQuit(pl)
@@ -28,7 +28,7 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 	case game.TypeBuildFFA:
 		buildffa.Join(pl, pl.Tx())
 	case game.TypeBedFight:
-		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false, nil)
+		bedwars.Join(pl, tx, 1, 2, game.TypeBedFight, false, nil)
 	}
 }
 
