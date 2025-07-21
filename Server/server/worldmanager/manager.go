@@ -72,8 +72,8 @@ func (m *Manager) LoadedWorlds() []string {
 	return maps.Keys(m.loaded)
 }
 
-func (m *Manager) World(worldName string) (*world.World, error) {
-	if w, ok := m.loaded[worldName]; ok {
+func (m *Manager) World(worldName string, new bool) (*world.World, error) {
+	if w, ok := m.loaded[worldName]; ok && new {
 		return w, nil
 	}
 	worldEntry, ok := m.possibleWorlds[worldName]
