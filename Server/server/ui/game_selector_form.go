@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"server/server"
 	"server/server/game"
 	"server/server/games/bedwars"
 	"server/server/games/buildffa"
@@ -30,12 +29,6 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, _
 		buildffa.Join(pl, pl.Tx())
 	case game.TypeBedFight:
 		bedwars.Join(pl, pl.Tx(), 1, 2, game.TypeBedFight, false, nil)
-		go func() {
-			server.BotMark.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-				mark := e.(*player.Player)
-				bedwars.Join(mark, tx, 1, 2, game.TypeBedFight, false, nil)
-			})
-		}()
 	}
 }
 

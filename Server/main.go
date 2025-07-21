@@ -85,9 +85,9 @@ func main() {
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 
-	srv.World().Exec(func(tx *world.Tx) {
-		initBots(tx)
-	})
+	//srv.World().Exec(func(tx *world.Tx) {
+	//	initBots(tx)
+	//})
 
 	core.WorldManager = utils.Panics(worldmanager.ManagerSettings{
 		Folder:   path.Join(".", "maps"),
