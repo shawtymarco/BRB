@@ -3,6 +3,7 @@ package user
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"server/server"
 	"server/server/cooldown"
@@ -380,9 +381,11 @@ func (u *User) RefreshCape() {
 	}
 
 	go func() {
+		fmt.Println(1)
 		u.h.ExecWorld(func(tx *world.Tx, e world.Entity) {
 			e.(*player.Player).SetSkin(skin)
 		})
+		fmt.Println(2)
 	}()
 }
 
