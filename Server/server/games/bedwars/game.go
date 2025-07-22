@@ -8,6 +8,7 @@ import (
 	"server/server/database"
 	"server/server/font"
 	"server/server/game"
+	"server/server/games/lobby"
 	"server/server/language"
 	"server/server/user"
 	"server/server/utils"
@@ -419,6 +420,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						server.MCServer.World().Exec(func(tx *world.Tx) {
 							tx.AddEntity(pl.H())
 						})
+						lobby.Join(pl)
 					}
 				})
 

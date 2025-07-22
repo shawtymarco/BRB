@@ -106,9 +106,10 @@ func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGam
 }
 
 func (g *Game) RemovePlayerFromTeam(pl *player.Player) {
-	t := g.PlayerTeam(pl)
-	t.RemovePlayerFromOriginal(pl)
-	t.RemovePlayerFromActive(pl)
+	if t := g.PlayerTeam(pl); t != nil {
+		t.RemovePlayerFromOriginal(pl)
+		t.RemovePlayerFromActive(pl)
+	}
 }
 
 func (g *Game) IsSpectator(pl *player.Player) bool {
