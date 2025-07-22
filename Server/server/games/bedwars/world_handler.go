@@ -1,6 +1,7 @@
 package bedwars
 
 import (
+	"fmt"
 	"github.com/df-mc/dragonfly/server/world/sound"
 	"server/server/blocks/bed"
 
@@ -16,7 +17,9 @@ type WorldHandler struct {
 }
 
 func (h WorldHandler) HandleSound(ctx *world.Context, s world.Sound, pos mgl64.Vec3) {
+	fmt.Println(10)
 	if a, ok := s.(sound.Attack); ok && !a.Damage {
+		fmt.Println(20)
 		ctx.Cancel()
 	}
 }
