@@ -88,9 +88,11 @@ func (ArgumentPlayer) Type() string {
 
 func (ArgumentPlayer) Options(src cmd.Source) []string {
 	var players []string
+	fmt.Println(1)
 	for pl := range server.MCServer.Players(src.(*player.Player).Tx()) {
 		players = append(players, pl.Name())
 	}
+	fmt.Println(2)
 	return players
 }
 
