@@ -298,13 +298,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 <green>============================================================</green>`,
 								lo.If(g.typeGame == game.TypeBedWars, "Bed Wars").Else("Bed Fight"),
-								strings.Repeat(" ", lo.If(40-len(l1) > 0, 110-len(l1)).Else(0)),
+								strings.Repeat(" ", lo.If(60-len(l1) > 0, 110-len(l1)).Else(0)),
 								l1,
-								strings.Repeat(" ", lo.If(50-len(l2) > 0, 110-len(l2)).Else(0)),
+								strings.Repeat(" ", lo.If(70-len(l2) > 0, 110-len(l2)).Else(0)),
 								l2,
-								strings.Repeat(" ", lo.If(50-len(l3) > 0, 110-len(l3)).Else(0)),
+								strings.Repeat(" ", lo.If(70-len(l3) > 0, 110-len(l3)).Else(0)),
 								l3,
-								strings.Repeat(" ", lo.If(50-len(l4) > 0, 110-len(l4)).Else(0)),
+								strings.Repeat(" ", lo.If(70-len(l4) > 0, 110-len(l4)).Else(0)),
 								l4,
 							))
 						}, tx)
@@ -314,13 +314,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
-					fmt.Println(1)
 					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							sendRunningScoreboard(pl, g, currentStage)
 						}, tx)
 					})
-					fmt.Println(2)
 
 					if g.typeGame == game.TypeBedWars {
 						currentStage.dur -= 100 * time.Millisecond

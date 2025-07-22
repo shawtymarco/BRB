@@ -329,19 +329,20 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			g.axeTierPlayers[pl.UUID()]--
 		}
 
-		h := pl.H()
 		go func() {
-			i := 5
+			i := 3
 			ticker := time.NewTicker(time.Second)
 			for range ticker.C {
 				if team := g.PlayerTeam(pl); team != nil {
 					if i == 0 {
-						h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+						fmt.Println(3)
+						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 							pl := e.(*player.Player)
 							pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
 							pl.SetGameMode(world.GameModeSurvival)
 							giveKit(pl, g)
 						})
+						fmt.Println(4)
 						break
 					} else {
 						pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.YouDiedTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.YouDiedSubTitle, i)))
