@@ -43,6 +43,8 @@ func Join(pl *player.Player) {
 		return
 	}
 
+	core.Players[pl.UUID()] = pl.Name()
+
 	if u.Data.Rank() == database.Prime && !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
 		u.Data.Statistics.RankEndsIn = time.Time{}
 		u.Data.Statistics.RankId = database.Player.Shortened()
@@ -95,6 +97,8 @@ func Join(pl *player.Player) {
 }
 
 func (Handler) HandleQuit(pl *player.Player) {
+	delete(core.Players, pl.UUID())
+
 	pl.Inventory().Handle(inventory.NopHandler{})
 	user.Save(pl)
 }

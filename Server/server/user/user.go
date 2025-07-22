@@ -235,7 +235,7 @@ func (u *User) H() *world.EntityHandle {
 
 // IsCooldownActive sets a cooldown for the given type if it doesn't already exist or renews it if specified.
 // It returns true if the cooldown is initially active (to be used for conditional command execution).
-func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Duration, renew, sendMessage bool) bool {
+func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Duration, renew, createIfInactive, sendMessage bool) bool {
 	coolDown := u.cooldownMap[cooldownType]
 
 	if coolDown == nil {
@@ -243,7 +243,7 @@ func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Dura
 		u.cooldownMap[cooldownType] = coolDown
 	}
 	exists := coolDown.Active()
-	if renew || !coolDown.Active() {
+	if renew || createIfInactive && !coolDown.Active() {
 		coolDown.Set(duration)
 	}
 

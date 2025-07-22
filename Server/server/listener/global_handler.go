@@ -55,7 +55,7 @@ func HandlePunchAir(ctx *player.Context) {
 func HandleItemUse(ctx *player.Context) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	if u.IsCooldownActive(user.Interact, 50*time.Millisecond, false, false) {
+	if u.IsCooldownActive(user.Interact, 50*time.Millisecond, false, true, false) {
 		return
 	}
 
@@ -69,7 +69,7 @@ func HandleItemUse(ctx *player.Context) {
 
 func CheckChatCoolDown(pl *player.Player) bool {
 	u := user.GetUser(pl)
-	ok1 := u.Data.Rank() > database.Partner && u.IsCooldownActive(user.Chat, 1*time.Second, false, true)
+	ok1 := u.Data.Rank() > database.Partner && u.IsCooldownActive(user.Chat, 1*time.Second, false, true, true)
 	var ok2 bool
 
 	if m := user.ActiveMute(u.Data); m != nil {

@@ -86,13 +86,11 @@ func (ArgumentPlayer) Type() string {
 	return "player"
 }
 
-func (ArgumentPlayer) Options(src cmd.Source) []string {
+func (ArgumentPlayer) Options(_ cmd.Source) []string {
 	var players []string
-	fmt.Println(1)
-	for pl := range server.MCServer.Players(src.(*player.Player).Tx()) {
-		players = append(players, pl.Name())
+	for _, name := range server.Players {
+		players = append(players, name)
 	}
-	fmt.Println(2)
 	return players
 }
 

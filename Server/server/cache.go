@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/google/uuid"
 	"server/server/database"
 	"server/server/worldmanager"
 
@@ -12,6 +13,7 @@ import (
 var (
 	Database     database.Database
 	MCServer     *server.Server
+	Players      = make(map[uuid.UUID]string)
 	Config       Server
 	WorldManager *worldmanager.Manager
 )

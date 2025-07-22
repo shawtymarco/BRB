@@ -3,6 +3,7 @@ package buildffa
 import (
 	"fmt"
 	"image/color"
+	core "server/server"
 	"server/server/database"
 	"server/server/game"
 	"server/server/games/lobby"
@@ -70,6 +71,8 @@ func Join(pl *player.Player, tx *world.Tx) {
 }
 
 func (Handler) HandleQuit(pl *player.Player) {
+	delete(core.Players, pl.UUID())
+
 	u := user.GetUser(pl)
 	u.Game = nil
 	user.Save(pl)
@@ -105,6 +108,10 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 	if _, ok := src.(entity.FallDamageSource); ok {
 		ctx.Cancel()
 		return
+	}
+
+	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
+		ctx.Cancel()
 	}
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
@@ -159,6 +166,12 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 		ua.Player().Heal(20, effect.InstantHealingSource{})
 		ua.Player().PlaySound(sound.Experience{})
 	}
+}
+
+func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+	u.IsCooldownActive(user.Switching, 500*time.Millisecond, true, true, false)
 }
 
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {

@@ -1,6 +1,7 @@
 package bedwars
 
 import (
+	"github.com/df-mc/dragonfly/server/world/sound"
 	"server/server/blocks/bed"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
@@ -12,6 +13,12 @@ type WorldHandler struct {
 	world.NopHandler
 
 	game *BedWars
+}
+
+func (h WorldHandler) HandleSound(ctx *world.Context, s world.Sound, pos mgl64.Vec3) {
+	if a, ok := s.(sound.Attack); ok && !a.Damage {
+		ctx.Cancel()
+	}
 }
 
 func (h WorldHandler) HandleExplosion(ctx *world.Context, position mgl64.Vec3, entities *[]world.Entity, blocks *[]cube.Pos, itemDropChance *float64, spawnFire *bool) {

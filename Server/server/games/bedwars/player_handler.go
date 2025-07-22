@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"fmt"
+	core "server/server"
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
@@ -105,6 +106,8 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 }
 
 func (h PlayerHandler) HandleQuit(pl *player.Player) {
+	delete(core.Players, pl.UUID())
+
 	u := user.GetUser(pl)
 	u.Game = nil
 	user.Save(pl)
@@ -393,6 +396,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	} else {
 		u.Data.Games.BedFight.Deaths++
 	}
+}
+
+func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+	u.IsCooldownActive(user.Switching, 500*time.Millisecond, true, true, false)
 }
 
 func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
