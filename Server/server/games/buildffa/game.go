@@ -4,6 +4,7 @@ import (
 	"server/server"
 	"server/server/font"
 	"server/server/game"
+	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
 	"slices"
@@ -31,6 +32,7 @@ func NewBuildFFA() {
 	gameWorld.StopRaining()
 	gameWorld.StopThundering()
 	gameWorld.StopTime()
+	gameWorld.Handle(listener.WorldHandler{})
 	Game = &BuildFFA{Game: game.NewGame(uuid.New(), gameWorld, "grey")}
 
 	go func() {

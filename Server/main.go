@@ -16,6 +16,7 @@ import (
 	"server/server/games/buildffa"
 	"server/server/games/lobby"
 	"server/server/language"
+	"server/server/listener"
 	"server/server/living/npc"
 	"server/server/user"
 	"server/server/utils"
@@ -89,6 +90,7 @@ func main() {
 	srv.World().StopRaining()
 	srv.World().StopThundering()
 	srv.World().StopTime()
+	srv.World().Handle(listener.WorldHandler{})
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 

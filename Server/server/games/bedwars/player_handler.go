@@ -340,10 +340,14 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 					if i == 0 {
 						fmt.Println(3)
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-							pl := e.(*player.Player)
-							pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
-							pl.SetGameMode(world.GameModeSurvival)
-							giveKit(pl, g)
+							fmt.Println(3.1)
+							p := e.(*player.Player)
+							p.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
+							fmt.Println(3.2)
+							p.SetGameMode(world.GameModeSurvival)
+							fmt.Println(3.3)
+							giveKit(p, g)
+							fmt.Println(3.4)
 						})
 						fmt.Println(4)
 						break
