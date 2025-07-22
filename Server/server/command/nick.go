@@ -30,24 +30,24 @@ func (n NickCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 		u := user.GetUser(pl)
 
 		if len(n.Nickname) < 3 || len(n.Nickname) > 12 {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameLength, server.Config.Prefix))
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameLength))
 			return
 		}
 
 		if strings.HasPrefix(n.Nickname, " ") || strings.HasSuffix(n.Nickname, " ") {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameSpace, server.Config.Prefix))
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameSpace))
 			return
 		}
 
 		for _, r := range n.Nickname {
 			if !(unicode.IsLetter(r) || unicode.IsDigit(r) || r == ' ') {
-				pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameSpecialChars, server.Config.Prefix))
+				pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameSpecialChars))
 				return
 			}
 		}
 
 		if strings.Contains(n.Nickname, "  ") {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameMultipleSpaces, server.Config.Prefix))
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameMultipleSpaces))
 			return
 		}
 
