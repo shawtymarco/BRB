@@ -38,7 +38,6 @@ import (
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/player"
-	"github.com/df-mc/dragonfly/server/player/chat"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
@@ -125,25 +124,36 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
 	*msg = strings.ReplaceAll(*msg, "§r", "")
-	var newMsg string
+	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
 	if h.game.Stage() == game.Running {
-		if strings.HasPrefix(*msg, "!") {
-			*msg = strings.Replace(*msg, "!", "", 1)
-			newMsg = fmt.Sprintf("<gold>[SHOUT]</gold> %v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
+		if h.game.typeGame == game.TypeBedFight {
+			for e := range pl.Tx().Players() {
+				p, _ := e.(*player.Player)
+				p.Message(*msg)
+			}
 		} else {
-			ctx.Cancel()
-			newMsg = fmt.Sprintf("%v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
-			h.game.PlayerTeam(pl).ForEachPlayer(pl.Tx(), func(pl *player.Player) {
-				pl.Message(text.Colourf(newMsg))
-			})
-			return
+			if strings.HasPrefix(*msg, "!") {
+				*msg = strings.Replace(*msg, "!", "", 1)
+				*msg = text.Colourf("<gold>[SHOUT]</gold> %v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
+				for e := range pl.Tx().Players() {
+					p, _ := e.(*player.Player)
+					p.Message(*msg)
+				}
+			} else {
+				ctx.Cancel()
+				h.game.PlayerTeam(pl).ForEachPlayer(pl.Tx(), func(pl *player.Player) {
+					pl.Message(text.Colourf(*msg))
+				})
+				return
+			}
 		}
 	} else {
-		newMsg = fmt.Sprintf("%v<grey>:</grey> <%v>%v<%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
+		*msg = text.Colourf("%v<grey>:</grey> <%v>%v<%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
+		for e := range pl.Tx().Players() {
+			p, _ := e.(*player.Player)
+			p.Message(*msg)
+		}
 	}
-	*msg = text.Colourf(newMsg)
-
-	_, _ = fmt.Fprintf(chat.Global, *msg)
 }
 
 func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
@@ -236,13 +246,17 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
-	if h.game.Stage() < game.Running {
+	if h.game.Stage() != game.Running {
 		ctx.Cancel()
 		return
 	}
 
 	if _, ok := src.(entity.ExplosionDamageSource); ok {
 		*damage *= 0.2
+	}
+
+	if _, ok := src.(entity.FallDamageSource); ok && h.game.typeGame == game.TypeBedFight {
+		ctx.Cancel()
 	}
 
 	if s, ok := src.(entity.AttackDamageSource); ok {

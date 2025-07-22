@@ -313,11 +313,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
+					fmt.Println(1)
 					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							sendRunningScoreboard(pl, g, currentStage)
 						}, tx)
 					})
+					fmt.Println(2)
 
 					if g.typeGame == game.TypeBedWars {
 						currentStage.dur -= 100 * time.Millisecond
