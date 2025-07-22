@@ -124,8 +124,8 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
 	*msg = strings.ReplaceAll(*msg, "§r", "")
-	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
 	if h.game.Stage() == game.Running {
+		*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
 		if h.game.typeGame == game.TypeBedFight {
 			for e := range pl.Tx().Players() {
 				p, _ := e.(*player.Player)
