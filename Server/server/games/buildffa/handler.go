@@ -74,7 +74,6 @@ func (Handler) HandleQuit(pl *player.Player) {
 	u.Game = nil
 	user.Save(pl)
 	Game.RemovePlayerFromTeam(pl)
-	lobby.Join(pl)
 }
 
 func (Handler) HandleChat(ctx *player.Context, msg *string) {

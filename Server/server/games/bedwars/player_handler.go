@@ -5,7 +5,6 @@ import (
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
-	"server/server/games/lobby"
 	"server/server/inv"
 	"server/server/language"
 	"server/server/listener"
@@ -111,7 +110,6 @@ func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u.Game = nil
 	user.Save(pl)
 	h.game.RemovePlayerFromTeam(pl)
-	lobby.Join(pl)
 }
 
 func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
