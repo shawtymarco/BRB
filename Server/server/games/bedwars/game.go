@@ -416,11 +416,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					for e := range tx.Players() {
 						pl := e.(*player.Player)
 						pl.Handler().HandleQuit(pl)
+						lobby.Join(pl)
 						tx.RemoveEntity(pl)
 						server.MCServer.World().Exec(func(tx *world.Tx) {
 							tx.AddEntity(pl.H())
 						})
-						lobby.Join(pl)
 					}
 				})
 
