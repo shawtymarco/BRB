@@ -1,5 +1,7 @@
 github.com/Studgi/dragonfly v0.0.0-20250708145727-07da2e859609 h1:ZfRq+GCFpottzy2YOHC00/nJgfSXNWrWPJ/EAMZSdBQ=
 github.com/Studgi/dragonfly v0.0.0-20250708145727-07da2e859609/go.mod h1:v3u0LqIbIgVCkM76yUUalW3ZqB05LI9llXcSiBkSwOQ=
+github.com/bedrock-gophers/intercept v0.2.4 h1:uLuUdT/1XEQoozExbvgUt8DwYkYkljdFh+XIFC1Fzb4=
+github.com/bedrock-gophers/intercept v0.2.4/go.mod h1:UlhMbzIqx/jQyeSBF9QQwROUCcp5Vhvs0QhK959a87I=
 github.com/bedrock-gophers/unsafe v0.1.0 h1:vBq9KBD2rYAGrKQJtQNRpx2VhUiV2KAQFuxSzNGZZN8=
 github.com/bedrock-gophers/unsafe v0.1.0/go.mod h1:PBvWHoSHnYJhwS+hqmYQJMzmnBzRyPcAPJ6l47DJdow=
 github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 h1:/G0ghZwrhou0Wq21qc1vXXMm/t/aKWkALWwITptKbE0=
@@ -92,6 +94,8 @@ github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+W
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.37.0 h1:CdEG8g0S133B4OswTDC/5XPSzE1OeP29QOioj2PID2Y=
 github.com/onsi/gomega v1.37.0/go.mod h1:8D9+Txp43QWKhM24yyOBEdpkzN8FvJyAwecBgsU4KU0=
+github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
+github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=

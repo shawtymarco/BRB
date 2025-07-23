@@ -1,8 +1,9 @@
 package bedwars
 
 import (
-	"github.com/df-mc/dragonfly/server/world/sound"
 	"server/server/blocks/bed"
+
+	"github.com/df-mc/dragonfly/server/world/sound"
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/world"

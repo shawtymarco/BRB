@@ -26,6 +26,8 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/bedrock-gophers/intercept/intercept"
+
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/entity"
 	"github.com/go-gl/mathgl/mgl64"
@@ -83,6 +85,7 @@ func main() {
 	//	v486.New(true),
 	//})
 
+	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
 	utils.SetServer(srv)
 	srv.Listen()
@@ -113,7 +116,7 @@ func main() {
 	})
 
 	for pl := range srv.Accept() {
-		_ = pl
+		intercept.Intercept(pl)
 		u := user.GetUser(pl)
 
 		allData := utils.Panics(core.Database.FindAllPlayers())

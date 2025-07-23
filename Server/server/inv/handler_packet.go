@@ -3,7 +3,7 @@ package inv
 import (
 	"sync/atomic"
 
-	"server/server/intercept"
+	"github.com/bedrock-gophers/intercept/intercept"
 
 	"github.com/bedrock-gophers/unsafe/unsafe"
 	"github.com/df-mc/dragonfly/server/player"
@@ -23,18 +23,16 @@ func (h PacketHandlerInv) HandleClientPacket(ctx *intercept.Context, pk packet.P
 	}
 
 	ha := ctx.Val()
-	if he, ok := ha.Handle(); ok {
-		he.ExecWorld(func(tx *world.Tx, e world.Entity) {
-			p := e.(*player.Player)
-			s := unsafe.Session(p)
-			switch pkt := pk.(type) {
-			case *packet.ItemStackRequest:
-				handleItemStackRequest(s, pkt.Requests)
-			case *packet.ContainerClose:
-				handleContainerClose(ctx, p, s, pkt.WindowID)
-			}
-		})
-	}
+	ha.ExecWorld(func(tx *world.Tx, e world.Entity) {
+		p := e.(*player.Player)
+		s := unsafe.Session(p)
+		switch pkt := pk.(type) {
+		case *packet.ItemStackRequest:
+			handleItemStackRequest(s, pkt.Requests)
+		case *packet.ContainerClose:
+			handleContainerClose(ctx, p, s, pkt.WindowID)
+		}
+	})
 }
 
 func (h PacketHandlerInv) HandleServerPacket(_ *intercept.Context, pk packet.Packet) {}

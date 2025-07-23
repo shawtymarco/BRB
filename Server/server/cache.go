@@ -1,9 +1,10 @@
 package server
 
 import (
-	"github.com/google/uuid"
 	"server/server/database"
 	"server/server/worldmanager"
+
+	"github.com/google/uuid"
 
 	"github.com/df-mc/dragonfly/server/player"
 
