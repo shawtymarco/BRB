@@ -189,20 +189,19 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 	if w, ok := b.(block.Wool); ok {
 		blocksPlaced[vec3ToString(pos.Vec3())] = &blockPlaced{block: pl.Tx().Block(pos), placedAt: time.Now()}
 		time.AfterFunc(4*time.Second, func() {
-			fmt.Println(12)
 			h.ExecWorld(func(tx *world.Tx, e world.Entity) {
 				utils.Panics(e.(*player.Player).Inventory().AddItem(item.NewStack(w, 1)))
 			})
-			fmt.Println(13)
 		})
 
 		time.AfterFunc(10*time.Second, func() {
 			if bp := blocksPlaced[vec3ToString(pos.Vec3())]; bp != nil && time.Now().Sub(bp.placedAt) >= 10*time.Second {
-				fmt.Println(14)
+				fmt.Println(13)
 				h.ExecWorld(func(tx *world.Tx, e world.Entity) {
+					fmt.Println(14)
 					tx.SetBlock(pos, bp.block, nil)
+					fmt.Println(15)
 				})
-				fmt.Println(15)
 			}
 		})
 	}
