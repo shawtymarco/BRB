@@ -175,6 +175,13 @@ func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 
 func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
 	listener.HandleAttackEntity(ctx, e, force, height, critical)
+
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+
+	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
+		ctx.Cancel()
+	}
 }
 
 func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {

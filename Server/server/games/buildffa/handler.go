@@ -85,6 +85,13 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
 	listener.HandleAttackEntity(ctx, e, force, height, critical)
+
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+
+	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
+		ctx.Cancel()
+	}
 }
 
 func (h Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
@@ -108,10 +115,6 @@ func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, att
 	if _, ok := src.(entity.FallDamageSource); ok {
 		ctx.Cancel()
 		return
-	}
-
-	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
-		ctx.Cancel()
 	}
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
