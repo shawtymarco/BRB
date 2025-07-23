@@ -28,7 +28,7 @@ func (g GameSelectorForm) Submit(submitter form.Submitter, button form.Button, t
 	case game.TypeBuildFFA:
 		buildffa.Join(pl, tx)
 	case game.TypeBedFight:
-		bedwars.Join(pl, tx, 1, 2, game.TypeBedFight, false, nil)
+		bedwars.Join(pl, tx, 1, 1, game.TypeBedFight, false, nil)
 	}
 }
 

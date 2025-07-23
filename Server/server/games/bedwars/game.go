@@ -2,8 +2,11 @@ package bedwars
 
 import (
 	"fmt"
+	"log/slog"
 	"math"
 	"math/rand"
+	"os"
+	"path"
 	"server/server"
 	"server/server/database"
 	"server/server/font"
@@ -12,6 +15,7 @@ import (
 	"server/server/language"
 	"server/server/user"
 	"server/server/utils"
+	"server/server/worldmanager"
 	"slices"
 	"strconv"
 	"strings"
@@ -95,7 +99,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]
-	gameWorld := utils.Panics(server.WorldManager.World(mapName))
+	worldName := fmt.Sprintf("%v-%v", mapName, newId.String())
+	utils.Panic(worldmanager.CopyAndRenameFolder(path.Join(".", "maps", mapName), path.Join(".", "server", "worlds"), worldName))
+	gameWorld := utils.Panics(worldmanager.World(path.Join(".", "server", "worlds", worldName), false, slog.Default()))
 	gameWorld.SetDifficulty(world.DifficultyNormal)
 	gameWorld.StopWeatherCycle()
 	gameWorld.StopRaining()
@@ -298,7 +304,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 <green>============================================================</green>`,
 								lo.If(g.typeGame == game.TypeBedWars, "Bed Wars").Else("Bed Fight"),
-								strings.Repeat(" ", lo.If(70-len(l1) > 0, 110-len(l1)).Else(15)),
+								strings.Repeat(" ", lo.If(85-len(l1) > 0, 110-len(l1)).Else(25)),
 								l1,
 								strings.Repeat(" ", lo.If(80-len(l2) > 0, 110-len(l2)).Else(20)),
 								l2,
@@ -425,7 +431,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				gd.Duration = tick.Seconds()
 				GamesToTerminate[g.ID()] = gd
 
-				//utils.Panic(g.World().Close())
+				fmt.Println("20")
+				utils.Panic(g.World().Close())
+				utils.Panic(os.RemoveAll(path.Join(".", "server", "worlds", worldName)))
+				fmt.Println("21")
 				delete(Games, g.ID())
 			default:
 				panic("unknown stage")
