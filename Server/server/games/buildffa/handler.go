@@ -179,7 +179,6 @@ func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
 	pl := ctx.Val()
-	h := pl.H()
 
 	if Game.MapConfig().HeightLimit <= pos.Y() {
 		ctx.Cancel()
@@ -189,18 +188,17 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 	if w, ok := b.(block.Wool); ok {
 		blocksPlaced[vec3ToString(pos.Vec3())] = &blockPlaced{block: pl.Tx().Block(pos), placedAt: time.Now()}
 		time.AfterFunc(4*time.Second, func() {
-			h.ExecWorld(func(tx *world.Tx, e world.Entity) {
-				utils.Panics(e.(*player.Player).Inventory().AddItem(item.NewStack(w, 1)))
+			Game.World().Exec(func(tx *world.Tx) {
+				if e, ok := pl.H().Entity(tx); ok {
+					utils.Panics(e.(*player.Player).Inventory().AddItem(item.NewStack(w, 1)))
+				}
 			})
 		})
 
 		time.AfterFunc(10*time.Second, func() {
 			if bp := blocksPlaced[vec3ToString(pos.Vec3())]; bp != nil && time.Now().Sub(bp.placedAt) >= 10*time.Second {
-				fmt.Println(13)
-				h.ExecWorld(func(tx *world.Tx, e world.Entity) {
-					fmt.Println(14)
+				Game.World().Exec(func(tx *world.Tx) {
 					tx.SetBlock(pos, bp.block, nil)
-					fmt.Println(15)
 				})
 			}
 		})
