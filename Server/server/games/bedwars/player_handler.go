@@ -75,10 +75,12 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	pl.SetGameMode(world.GameModeSurvival)
 	go func() {
+		fmt.Println(1)
 		pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 			e.(*player.Player).Inventory().Clear()
 			e.(*player.Player).Armour().Clear()
 		})
+		fmt.Println(2)
 	}()
 
 	u := user.GetUser(pl)
@@ -345,18 +347,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			for range ticker.C {
 				if team := g.PlayerTeam(pl); team != nil {
 					if i == 0 {
-						fmt.Println(3)
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-							fmt.Println(3.1)
 							p := e.(*player.Player)
 							p.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
-							fmt.Println(3.2)
 							p.SetGameMode(world.GameModeSurvival)
-							fmt.Println(3.3)
 							giveKit(p, g)
-							fmt.Println(3.4)
 						})
-						fmt.Println(4)
 						break
 					} else {
 						pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.YouDiedTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.YouDiedSubTitle, i)))

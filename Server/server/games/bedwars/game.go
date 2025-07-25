@@ -431,10 +431,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				gd.Duration = tick.Seconds()
 				GamesToTerminate[g.ID()] = gd
 
-				fmt.Println("20")
+				fmt.Println(20)
 				utils.Panic(g.World().Close())
 				utils.Panic(os.RemoveAll(path.Join(".", "server", "worlds", worldName)))
-				fmt.Println("21")
+				fmt.Println(21)
 				delete(Games, g.ID())
 			default:
 				panic("unknown stage")

@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"server/server/language"
 	"server/server/utils"
 	"time"
@@ -170,7 +169,6 @@ type Punishments struct {
 }
 
 func (p Punishments) Ban(pl *player.Player, punishment *PunishmentData) {
-	fmt.Println(5)
 	pl.Disconnect(text.Colourf(
 		language.Translate(pl).Commands.Success.BanDisconnect,
 		lo.If(punishment.Permanent, "permanently").Else("temporarily"),
@@ -178,7 +176,6 @@ func (p Punishments) Ban(pl *player.Player, punishment *PunishmentData) {
 		punishment.Reason,
 		punishment.PunishedSince.Format("Mon, Jan 2, 2006 at 3:04 PM"),
 	))
-	fmt.Println(6)
 }
 
 type PunishmentData struct {
