@@ -35,7 +35,7 @@ func init() {
 		}
 
 		// Gin setup for API
-		gin.SetMode(gin.DebugMode)
+		gin.SetMode(gin.ReleaseMode)
 		router := gin.Default()
 		router.Use(gin.Logger())
 
