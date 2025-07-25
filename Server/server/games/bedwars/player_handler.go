@@ -318,6 +318,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
+	pl.Tx().Viewers(pl.Position())
 	inv.CloseContainer(pl)
 
 	finalKill := ""
@@ -395,6 +396,8 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			rewardResources(attacker.(*player.Player), pl)
 		}
 	}
+
+	pl.Tx().Viewers(pl.Position())
 	pl.Inventory().Clear()
 	pl.Armour().Clear()
 
