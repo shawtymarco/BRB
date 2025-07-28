@@ -91,6 +91,7 @@
     "SuddenDeath": "<red>%v has started</red>",
     "MagicMilkEffectGive": "<green>You will not trigger any enemy traps for 30 seconds!</green>",
     "MagicMilkEffectRemove": "<red>The magic milk effect is gone now. You will trigger enemy traps now!</red>",
+    "Purchase": "<green>You purchased <gold>%v</gold></green>",
     "Error": {
       "CannotBreakBed": "<red>You can't destroy your own bed!</red>",
       "CannotBreakMap": "<red>You can only break the blocks players placed!</red>"

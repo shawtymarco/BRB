@@ -35,7 +35,7 @@ func (s *upgradesShop) Main() []item.Stack {
 		"Armour Protection",
 		"Increases the armor's protection",
 		upgrades.Protection,
-		[]int{4, 8, 12, 16},
+		[]int{5, 10, 15, 20},
 		false,
 	)
 	items[12] = s.uShopify(
@@ -77,7 +77,7 @@ func (s *upgradesShop) Main() []item.Stack {
 		"Forge Upgrade",
 		"Increases the speed and cap of resources generated",
 		upgrades.GeneratorTier,
-		[]int{4, 8, 12, 16},
+		[]int{5, 10, 15, 20},
 		false,
 	)
 	items[20] = s.uShopify(

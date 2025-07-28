@@ -183,9 +183,7 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 						}()
 					}
 				} else if qbMode.Equal(blazePowder) {
-					shop.IsQuickBuy = false
-
-					var itemId int
+					itemId := -1
 					for i, s2 := range shop.All() {
 						if s2.Equal(stack) {
 							itemId = i
@@ -193,12 +191,15 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 						}
 					}
 
-					u.Data.Settings.QuickBuyConfig[qbSlot] = &itemId
-					go func() {
-						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
-						menuInv.Clear()
-						menu.WithStacks(shop.itemShopDashboard(true)...)
-					}()
+					if itemId != -1 {
+						shop.IsQuickBuy = false
+						u.Data.Settings.QuickBuyConfig[qbSlot] = &itemId
+						go func() {
+							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+							menuInv.Clear()
+							menu.WithStacks(shop.itemShopDashboard(true)...)
+						}()
+					}
 				} else if qbMode.Equal(redDye) {
 					u.Data.Settings.QuickBuyConfig[slot] = nil
 					go func() {

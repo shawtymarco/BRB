@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 20 * time.Second
+const startingInDurationBW = 1 * time.Second //20 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 5 * time.Minute
 
@@ -135,7 +135,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				if len(g.OriginalPlayers()) == teamSize*teamCount {
 					g.SetStage(game.Starting)
 				} else {
-					g.World().Exec(func(tx *world.Tx) {
+					<-g.World().Exec(func(tx *world.Tx) {
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							sendWaitingScoreboard(pl, g)
 						}, tx)
@@ -244,7 +244,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							} else {
 								if g.typeGame == game.TypeBedWars {
 									before, after := g.Punish(pl, tx)
-									gd.LosingTeam[u.Data.UserId] = []int{before, after}
+									gd.LosingTeam[u.Data.UserId] = []int{before, max(after, 0)}
 								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
 							}
@@ -431,10 +431,8 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				gd.Duration = tick.Seconds()
 				GamesToTerminate[g.ID()] = gd
 
-				fmt.Println(20)
 				utils.Panic(g.World().Close())
 				utils.Panic(os.RemoveAll(path.Join(".", "server", "worlds", worldName)))
-				fmt.Println(21)
 				delete(Games, g.ID())
 			default:
 				panic("unknown stage")
@@ -682,12 +680,13 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
 
 		addItem := func() bool {
-			if n, err := u.AddItemWithHBConfig(-1, s.WithLore()); err != nil {
+			if n, err := u.AddItemWithHBConfig(-1, s.WithLore().WithValue("resource", nil).WithValue("cost", nil)); err != nil {
 				_ = pl.Inventory().RemoveItem(item.NewStack(s.Item(), n))
 				_, _ = pl.Inventory().AddItem(item.NewStack(resource.Item(), cost))
 				return false
 			}
 
+			pl.Message(text.Colourf(language.Translate(pl).BedWars.Purchase, lo.If(s.CustomName() == "", utils.ItemDisplay(s)).Else(s.CustomName())))
 			return true
 		}
 
@@ -783,7 +782,7 @@ func sendStartingScoreboard(pl *player.Player, g *BedWars) {
 	u.Scoreboard.Set(2, text.Colourf("<white>Map:</white> <green>%v</green>", g.MapConfig().Name))
 	u.Scoreboard.Set(3, text.Colourf("<white>Players:</white> <green>%v/%v</green>", len(g.ActivePlayers()), g.TeamCount*g.TeamSize))
 	u.Scoreboard.Set(4, "§1")
-	u.Scoreboard.Set(5, text.Colourf("<grey>Phase:</grey> <emerald>Starting in <yellow>%.1f</yellow> seconds</emerald>", g.startingIn.Seconds()))
+	u.Scoreboard.Set(5, text.Colourf("<white>Phase:</white> <emerald>Starting in <yellow>%.1f</yellow> seconds</emerald>", g.startingIn.Seconds()))
 	u.Scoreboard.Set(6, "§2")
 	i := 7
 	if g.typeGame == game.TypeBedWars {

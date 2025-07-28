@@ -125,6 +125,7 @@ type LangConfig struct {
 		SuddenDeath           string
 		MagicMilkEffectGive   string
 		MagicMilkEffectRemove string
+		Purchase              string
 		Error                 struct {
 			CannotBreakBed string
 			CannotBreakMap string

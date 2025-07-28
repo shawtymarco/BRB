@@ -3,6 +3,8 @@ package bedwars
 import (
 	"server/server/blocks/bed"
 
+	"github.com/df-mc/dragonfly/server/block"
+
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/go-gl/mathgl/mgl64"
@@ -21,7 +23,9 @@ func (h WorldHandler) HandleExplosion(ctx *world.Context, position mgl64.Vec3, e
 		filtered := (*blocks)[:0]
 		for _, pos := range *blocks {
 			b := ctx.Val().Block(pos)
-			if _, ok := b.(*bed.Bed); !ok && blocksPlaced[vec3ToString(pos.Vec3())] != nil {
+			_, ok1 := b.(*bed.Bed)
+			_, ok2 := b.(*block.Glass)
+			if !ok1 && !ok2 && blocksPlaced[vec3ToString(pos.Vec3())] != nil {
 				filtered = append(filtered, pos)
 			}
 		}

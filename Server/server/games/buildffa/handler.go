@@ -44,6 +44,8 @@ type Handler struct {
 }
 
 func Join(pl *player.Player, tx *world.Tx) {
+	core.Players[pl.UUID()] = pl.Name()
+
 	pl.Handle(Handler{})
 
 	pl.SetGameMode(world.GameModeSurvival)

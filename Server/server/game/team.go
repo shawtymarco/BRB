@@ -152,9 +152,9 @@ func ColorToID(color string, typeGame TypeGame) int {
 		case "red":
 			return 0
 		case "blue":
-			return 2
-		case "green":
 			return 1
+		case "green":
+			return 2
 		case "yellow":
 			return 3
 		}
@@ -163,9 +163,9 @@ func ColorToID(color string, typeGame TypeGame) int {
 		case "red":
 			return 0
 		case "blue":
-			return 1
-		case "green":
 			return 2
+		case "green":
+			return 1
 		case "yellow":
 			return 3
 		}

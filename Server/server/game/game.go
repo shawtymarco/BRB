@@ -96,7 +96,7 @@ func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGam
 
 	var newTeam *Team
 	if g.teamColor == "" {
-		teamColor := lo.If(typeGame == TypeBedWars, []string{"red", "green", "blue", "yellow"}).Else([]string{"red", "blue", "green", "yellow"})[len(g.teams)]
+		teamColor := lo.If(typeGame == TypeBedWars, []string{"red", "blue", "green", "yellow"}).Else([]string{"red", "green", "blue", "yellow"})[len(g.teams)]
 		newTeam = &Team{id: ColorToID(teamColor, typeGame), color: teamColor}
 	} else {
 		newTeam = &Team{color: g.teamColor}
