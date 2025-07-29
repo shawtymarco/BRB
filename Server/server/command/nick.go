@@ -29,7 +29,12 @@ func (n NickCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.GetUser(pl)
 
-		if len(n.Nickname) < 3 || len(n.Nickname) > 12 {
+		if u.Game != nil {
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.LobbyOnly))
+			return
+		}
+
+		if len(n.Nickname) < 2 || len(n.Nickname) > 20 {
 			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameLength))
 			return
 		}

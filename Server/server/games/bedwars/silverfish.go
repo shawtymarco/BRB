@@ -43,7 +43,7 @@ func NewSilverfish(pos mgl64.Vec3, game *BedWars, team *game.Team, owner *world.
 	conf := living.Config{
 		EntityType: t,
 		MaxHealth:  5,
-		Speed:      0.3,
+		Speed:      0.15,
 		MovementComputer: &entity.MovementComputer{
 			Gravity:           0.5,
 			Drag:              0,

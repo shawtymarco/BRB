@@ -46,7 +46,7 @@
       "MustBeInGame": "<red>The player must be in a game for this command to work.</red>",
       "AlreadyHaveDuelRequest": "<red>You already sent a duel request to a player. Do '/duel cancel' to cancel that request, so that you can send a duel request to another player!</red>",
       "CannotSpectateOneSelf": "<red>You cannot spectate yourself, dummy!</red>",
-      "NicknameLength": "<red>Nickname must be between 3 and 12 characters long.</red>",
+      "NicknameLength": "<red>Nickname must be between 2 and 20 characters long.</red>",
       "NicknameSpace": "<red>Nickname cannot start or end with a space.</red>",
       "NicknameSpecialChars": "<red>Nickname can only contain letters, numbers, and spaces.</red>",
       "NicknameMultipleSpaces": "<red>Nickname cannot contain multiple spaces in a row.</red>",

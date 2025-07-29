@@ -166,11 +166,11 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 								if !owned && shop.game.buyItem(pl, stack) {
 									if _, ok := stack.Item().(item.Boots); ok {
 										menu.WithStacks(lo.If(inArmoury, shop.Armour()).Else(shop.itemShopDashboard(true))...)
-									} else if tool, ok := stack.Item().(item.Tool); ok {
+									} else if tool, ok := stack.Item().(item.Tool); ok && (slot == 20 || slot == 21) {
 										if tool.ToolType() == item.TypePickaxe {
-											utils.Panic(menuInv.SetItem(slot, pickaxeTier(pl, shop.game.pickaxeTierPlayers[pl.UUID()])))
+											utils.Panic(menuInv.SetItem(slot, pickaxeTier(pl, 1)))
 										} else {
-											utils.Panic(menuInv.SetItem(slot, axeTier(pl, shop.game.axeTierPlayers[pl.UUID()])))
+											utils.Panic(menuInv.SetItem(slot, axeTier(pl, 1)))
 										}
 									}
 									pl.PlaySound(sound.Experience{})

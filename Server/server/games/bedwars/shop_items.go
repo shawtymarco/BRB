@@ -100,7 +100,7 @@ func (s *ItemShop) Melee() []item.Stack {
 	items[20] = i20
 	items[21] = i21
 
-	items[22] = shopify(s.Player, item.NewStack(stacks.KnockBackStick{}, 1), Gold, 5, false, false)
+	items[22] = shopify(s.Player, item.NewStack(stacks.KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(stacks.CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>")), Gold, 5, false, false)
 	return items
 }
 
@@ -132,10 +132,14 @@ func (s *ItemShop) Armour() []item.Stack {
 
 func (s *ItemShop) Tools() []item.Stack {
 	items := s.itemShopDashboard(false)
-	items[19] = shopify(s.Player, item.NewStack(item.Shears{}, 1), Iron, 10, false, false)
+	items[19] = shopify(s.Player, item.NewStack(item.Shears{}, 1), Iron, 10, s.Player.Inventory().ContainsItemFunc(1, func(stack item.Stack) bool {
+		_, isShears := stack.Item().(item.Shears)
+		return isShears
+	}), false)
+
 	if s.game != nil {
-		items[20] = pickaxeTier(s.Player, s.game.pickaxeTierPlayers[s.Player.UUID()])
-		items[21] = axeTier(s.Player, s.game.axeTierPlayers[s.Player.UUID()])
+		items[20] = pickaxeTier(s.Player, 1)
+		items[21] = axeTier(s.Player, 1)
 	} else {
 		items[20] = pickaxeTier(s.Player, 1)
 		items[21] = axeTier(s.Player, 1)
@@ -252,70 +256,103 @@ func editName(s item.Stack, customName string) item.Stack {
 	return s.WithCustomName(strings.Join(lines, "\n"))
 }
 
-func pickaxeTier(pl *player.Player, tier int) item.Stack {
-	var t1Owned, t2Owned, t3Owned, t4Owned bool
-
-	for _, stack := range pl.Inventory().Items() {
-		if tool, ok := stack.Item().(item.Pickaxe); ok {
-			switch tool.Tier {
-			case item.ToolTierDiamond:
-				t4Owned = true
-				fallthrough
-			case item.ToolTierGold:
-				t3Owned = true
-				fallthrough
-			case item.ToolTierIron:
-				t2Owned = true
-				fallthrough
-			case item.ToolTierWood:
-				t1Owned = true
-			}
-		}
+func pickaxeTier(pl *player.Player, mode int) item.Stack {
+	tiers := []struct {
+		tier       item.ToolTier
+		name       string
+		efficiency int
+		cost       int
+		resource   Resource
+	}{
+		{item.ToolTierWood, "wooden", 1, 10, Iron},
+		{item.ToolTierIron, "iron", 2, 10, Iron},
+		{item.ToolTierGold, "golden", 3, 3, Gold},
+		{item.ToolTierDiamond, "diamond", 3, 6, Gold},
 	}
-
-	switch tier {
-	case 0:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierWood}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, t1Owned, false)
-	case 1:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierIron}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, t2Owned, false)
-	case 2:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierGold}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 3, t3Owned, false)
-	default:
-		return shopify(pl, item.NewStack(item.Pickaxe{Tier: item.ToolTierDiamond}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, t4Owned, false)
-	}
+	return tieredTool(pl, mode, true, tiers)
 }
 
-func axeTier(pl *player.Player, tier int) item.Stack {
-	var t1Owned, t2Owned, t3Owned, t4Owned bool
+func axeTier(pl *player.Player, mode int) item.Stack {
+	tiers := []struct {
+		tier       item.ToolTier
+		name       string
+		efficiency int
+		cost       int
+		resource   Resource
+	}{
+		{item.ToolTierWood, "wooden", 1, 10, Iron},
+		{item.ToolTierStone, "stone", 2, 10, Iron},
+		{item.ToolTierIron, "iron", 2, 3, Gold},
+		{item.ToolTierDiamond, "diamond", 3, 6, Gold},
+	}
+	return tieredTool(pl, mode, false, tiers)
+}
+
+func tieredTool(
+	pl *player.Player,
+	mode int,
+	isPickaxe bool,
+	tiers []struct {
+	tier       item.ToolTier
+	name       string
+	efficiency int
+	cost       int
+	resource   Resource
+},
+) item.Stack {
+	maxTier := -1
 
 	for _, stack := range pl.Inventory().Items() {
-		if tool, ok := stack.Item().(item.Axe); ok {
-			switch tool.Tier {
-			case item.ToolTierDiamond:
-				t4Owned = true
-				fallthrough
-			case item.ToolTierIron:
-				t3Owned = true
-				fallthrough
-			case item.ToolTierStone:
-				t2Owned = true
-				fallthrough
-			case item.ToolTierWood:
-				t1Owned = true
+		var tier item.ToolTier
+		var found bool
+
+		if isPickaxe {
+			if tool, ok := stack.Item().(item.Pickaxe); ok {
+				tier = tool.Tier
+				found = true
+			}
+		} else {
+			if tool, ok := stack.Item().(item.Axe); ok {
+				tier = tool.Tier
+				found = true
+			}
+		}
+
+		if found {
+			for i, t := range tiers {
+				if t.tier.Name == tier.Name && i > maxTier {
+					maxTier = i
+				}
 			}
 		}
 	}
 
-	switch tier {
-	case 0:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierWood}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)), Iron, 10, t1Owned, false)
-	case 1:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierStone}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Iron, 10, t2Owned, false)
-	case 2:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierIron}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 2)), Gold, 3, t3Owned, false)
-	default:
-		return shopify(pl, item.NewStack(item.Axe{Tier: item.ToolTierDiamond}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 3)), Gold, 6, t4Owned, false)
+	targetTier := maxTier + mode
+
+	if maxTier == -1 && mode < 0 {
+		return item.Stack{}
 	}
+
+	if targetTier < 0 {
+		targetTier = 0
+	} else if targetTier >= len(tiers) {
+		targetTier = len(tiers) - 1
+	}
+
+	ti := tiers[targetTier]
+	owned := targetTier <= maxTier
+
+	var stack item.Stack
+	if isPickaxe {
+		stack = item.NewStack(item.Pickaxe{Tier: ti.tier}, 1)
+	} else {
+		stack = item.NewStack(item.Axe{Tier: ti.tier}, 1)
+	}
+
+	return shopify(pl,
+		stack.AsUnbreakable().
+			WithEnchantments(item.NewEnchantment(enchantment.Efficiency, ti.efficiency)),
+		ti.resource, ti.cost, owned, false)
 }
 
 func getCost(s item.Stack) (resource Resource, cost int) {

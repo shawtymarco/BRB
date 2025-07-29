@@ -56,7 +56,7 @@ func Join(pl *player.Player) {
 	}
 
 	pl.Handle(Handler{})
-	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	invHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			ctx.Cancel()
 		},
@@ -66,7 +66,10 @@ func Join(pl *player.Player) {
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			ctx.Cancel()
 		},
-	}})
+	}}
+	pl.Inventory().Handle(invHandler)
+	pl.Armour().Handle(invHandler)
+
 	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
 	pl.Teleport(core.Config.Hub.SpawnPoint)
 	pl.SetGameMode(world.GameModeSurvival)
@@ -99,7 +102,7 @@ func Join(pl *player.Player) {
 func (Handler) HandleQuit(pl *player.Player) {
 	delete(core.Players, pl.UUID())
 
-	pl.Inventory().Handle(inventory.NopHandler{})
+	pl.Inventory().Handle(nil)
 	user.Save(pl)
 }
 

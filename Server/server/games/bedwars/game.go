@@ -75,9 +75,6 @@ type BedWars struct {
 	emeraldGeneratorSettings *GeneratorSettings
 	generators               []*GeneratorBlockType
 
-	pickaxeTierPlayers map[uuid.UUID]int
-	axeTierPlayers     map[uuid.UUID]int
-
 	trapIgnore map[uuid.UUID]bool
 }
 
@@ -85,15 +82,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 	newId := uuid.New()
 	startInDur := lo.If(typeGame == game.TypeBedWars, startingInDurationBW).Else(startingInDurationBF)
 	Games[newId] = &BedWars{
-		TeamSize:           teamSize,
-		TeamCount:          teamCount,
-		typeGame:           typeGame,
-		isCustom:           isCustom,
-		startingIn:         startInDur,
-		waitingDur:         maxWaitingDuration,
-		pickaxeTierPlayers: make(map[uuid.UUID]int),
-		axeTierPlayers:     make(map[uuid.UUID]int),
-		trapIgnore:         make(map[uuid.UUID]bool),
+		TeamSize:   teamSize,
+		TeamCount:  teamCount,
+		typeGame:   typeGame,
+		isCustom:   isCustom,
+		startingIn: startInDur,
+		waitingDur: maxWaitingDuration,
+		trapIgnore: make(map[uuid.UUID]bool),
 	}
 	g := Games[newId]
 
@@ -135,7 +130,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				if len(g.OriginalPlayers()) == teamSize*teamCount {
 					g.SetStage(game.Starting)
 				} else {
-					<-g.World().Exec(func(tx *world.Tx) {
+					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							sendWaitingScoreboard(pl, g)
 						}, tx)
@@ -232,7 +227,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachOriginalPlayer(func(pl *player.Player) {
 							u := user.GetUser(pl)
+							fmt.Println(u.Data.UserId)
 							if g.WinningTeam().Contains(pl) {
+								fmt.Println(1)
 								if g.typeGame == game.TypeBedWars {
 									before, after, mvp := g.Reward(pl, tx)
 									gd.WinningTeam[u.Data.UserId] = []int{before, after}
@@ -242,6 +239,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
 							} else {
+								fmt.Println(2)
 								if g.typeGame == game.TypeBedWars {
 									before, after := g.Punish(pl, tx)
 									gd.LosingTeam[u.Data.UserId] = []int{before, max(after, 0)}
@@ -693,8 +691,8 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 		if boots, ok := s.Item().(item.Boots); ok {
 			t := b.PlayerTeam(pl)
 			pl.Armour().Set(
-				item.NewStack(item.Helmet{Tier: boots.Tier}, 1).AsUnbreakable(),
-				item.NewStack(item.Chestplate{Tier: boots.Tier}, 1).AsUnbreakable(),
+				pl.Armour().Helmet(),
+				pl.Armour().Chestplate(),
 				item.NewStack(item.Leggings{Tier: boots.Tier}, 1).AsUnbreakable(),
 				item.NewStack(item.Boots{Tier: boots.Tier}, 1).AsUnbreakable(),
 			)
@@ -705,12 +703,10 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 				}
 			}
 		} else if _, ok := s.Item().(item.Pickaxe); ok {
-			b.pickaxeTierPlayers[pl.UUID()]++
-
 			var flag bool
 			for slot, stack := range pl.Inventory().Items() {
 				if _, ok := stack.Item().(item.Pickaxe); ok {
-					utils.Panic(pl.Inventory().SetItem(slot, s))
+					utils.Panic(pl.Inventory().SetItem(slot, pickaxeTier(pl, 1).WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true
 				}
 			}
@@ -719,12 +715,10 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 				return addItem()
 			}
 		} else if _, ok := s.Item().(item.Axe); ok {
-			b.axeTierPlayers[pl.UUID()]++
-
 			var flag bool
 			for slot, stack := range pl.Inventory().Items() {
 				if _, ok := stack.Item().(item.Axe); ok {
-					utils.Panic(pl.Inventory().SetItem(slot, s))
+					utils.Panic(pl.Inventory().SetItem(slot, axeTier(pl, 1).WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true
 				}
 			}
