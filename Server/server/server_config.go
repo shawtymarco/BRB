@@ -26,7 +26,7 @@ type Server struct {
 
 func DefaultConfig() server.UserConfig {
 	c := server.DefaultConfig()
-	c.Network.Address = ":19135"
+	c.Network.Address = ":19132"
 
 	c.Server.Name = text.Colourf("<dark-red>BRB</dark-red>")
 	c.Server.DisableJoinQuitMessages = true

@@ -12,7 +12,7 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "19135:19135/udp"
+      - "19132:19132/udp"
       - "8080:8080"
       - "6060:6060"
     depends_on:
