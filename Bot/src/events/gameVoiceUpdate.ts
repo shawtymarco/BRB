@@ -7,92 +7,139 @@ import {
     OverwriteResolvable,
     OverwriteType,
     PermissionFlagsBits,
-    TextChannel
+    TextChannel,
+    VoiceChannel
 } from "discord.js";
-import {dconfig} from "../config";
-import {APIEndpoints, Request} from "../api";
-import {EmbedUtil} from "../core/EmbedUtil";
-import {CacheUtils} from "../core/CacheUtil";
-import {Game, gamesDB} from "../core/GameCore";
+import { dconfig } from "../config";
+import { APIEndpoints, Request } from "../api";
+import { EmbedUtil } from "../core/EmbedUtil";
+import { CacheUtils } from "../core/CacheUtil";
+import { Game, gamesDB } from "../core/GameCore";
 
-const recentlyStarted = new Set();
+const activeCountdowns = new Map<string, NodeJS.Timeout>();
 
 module.exports = {
     name: Events.VoiceStateUpdate,
     async execute(oldState, newState) {
-        if (newState.channelId === null) return;
+        if (newState.channelId === null && oldState.channelId === null) return;
 
-        if (![
+        const joinedChannelId = newState.channelId;
+        const leftChannelId = oldState.channelId;
+
+        const relevantChannels = [
             dconfig.channels.touch2v2,
             dconfig.channels.touch3v3,
             dconfig.channels.all3v3,
             dconfig.channels.all4v4
-        ].includes(newState.channelId)) return;
+        ];
+
+        // Determine which channel to act on (either joined or left)
+        const chId = joinedChannelId ?? leftChannelId;
+        if (!relevantChannels.includes(chId)) return;
+
+        const channel = newState.guild.channels.cache.get(chId);
+        const currentMembers = channel?.members;
 
         let alertsId = dconfig.channels.allAlerts;
         let isTouch = false;
 
-        if ([dconfig.channels.touch2v2, dconfig.channels.touch3v3].includes(newState.channelId)) {
+        if ([dconfig.channels.touch2v2, dconfig.channels.touch3v3].includes(chId)) {
             alertsId = dconfig.channels.touchAlerts;
             isTouch = true;
         }
 
-        const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${newState.member?.id}`);
-        if (!res.registered) {
-            CacheUtils.getChannel(newState.guild, alertsId).send({
-                content: `<@${newState.member?.id}>`,
-                embeds: [EmbedUtil.create({
-                    type: "no",
-                    description: `You must link your Discord account with your MC account by executing the command \`/link <code>\` at <#${dconfig.channels.register}>.`,
-                })]
-            });
-            newState.member?.voice.setChannel(null);
+        // If user joined, validate them
+        if (joinedChannelId) {
+            const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${newState.member?.id}`);
+            if (!res.registered) {
+                CacheUtils.getChannel(newState.guild, alertsId).send({
+                    content: `<@${newState.member?.id}>`,
+                    embeds: [EmbedUtil.create({
+                        type: "no",
+                        description: `You must link your Discord account with your MC account by executing the command \`/link <code>\` at <#${dconfig.channels.register}>.`,
+                    })]
+                });
+                newState.member?.voice.setChannel(null);
+                return;
+            }
+
+            Game.refreshMemberNickname(newState.member);
+
+            if (isTouch && !res.isTouch) {
+                CacheUtils.getChannel(newState.guild, alertsId).send({
+                    content: `<@${newState.member?.id}>`,
+                    embeds: [EmbedUtil.create({
+                        type: "no",
+                        description: "You cannot queue because you were last logged in as a NON-TOUCH player (PC, PlayStation, XBox or otherwise). If you still want to queue touch-only ranked bedwars, you must first log in with a touch device.",
+                    })]
+                });
+                newState.member?.voice.setChannel(null);
+                return;
+            }
+        }
+
+        const requiredSizes = {
+            [dconfig.channels.touch2v2]: 4,
+            [dconfig.channels.touch3v3]: 6,
+            [dconfig.channels.all3v3]: 6,
+            [dconfig.channels.all4v4]: 8
+        };
+
+        const teamSizes = {
+            [dconfig.channels.touch2v2]: [2, 2],
+            [dconfig.channels.touch3v3]: [3, 2],
+            [dconfig.channels.all3v3]: [3, 2],
+            [dconfig.channels.all4v4]: [4, 2]
+        };
+
+        const requiredSize = requiredSizes[chId];
+        const [teamSize, numTeams] = teamSizes[chId] || [];
+
+        if (!requiredSize || !teamSize || !numTeams || !currentMembers) return;
+
+        const alertsChannel = CacheUtils.getChannel(newState.guild, alertsId);
+
+        if (currentMembers.size < requiredSize) {
+            if (activeCountdowns.has(chId)) {
+                clearTimeout(activeCountdowns.get(chId)!);
+                activeCountdowns.delete(chId);
+                if (alertsChannel) {
+                    alertsChannel.send({
+                        content: (CacheUtils.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
+                        embeds: [EmbedUtil.create({
+                            type: "no",
+                            description: `Game queue cancelled because <@${oldState.member?.id}> left the VC.`,
+                        })]
+                    });
+                }
+            }
             return;
         }
 
-        Game.refreshMemberNickname(newState.member);
+        if (activeCountdowns.has(chId)) return;
 
-        if (isTouch && !res.isTouch) {
-            CacheUtils.getChannel(newState.guild, alertsId).send({
-                content: `<@${newState.member?.id}>`,
+        if (alertsChannel) {
+            alertsChannel.send({
+                content: (CacheUtils.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
                 embeds: [EmbedUtil.create({
-                    type: "no",
-                    description: "You cannot queue because you were last logged in as a NON-TOUCH player (PC, PlayStation, XBox or otherwise). If you still want to queue touch-only ranked bedwars, you must first log in with a touch device.",
+                    type: "yes",
+                    description: `Game is full! Starting in 5 seconds if everyone stays.`,
                 })]
             });
-            newState.member?.voice.setChannel(null);
-            return;
         }
 
-        const chId = newState.channelId;
-        const chMembers = newState.channel?.members;
+        const timeout = setTimeout(async () => {
+            const finalChannel = newState.guild.channels.cache.get(chId);
+            const finalMembers = finalChannel?.members;
 
-        if (recentlyStarted.has(chId)) return;
+            if (finalMembers?.size === requiredSize) {
+                await initGameChannel(newState.guild, finalMembers, teamSize, numTeams);
+            }
 
-        switch (chId) {
-            case dconfig.channels.touch2v2:
-                if (chMembers?.size === 4) {
-                    recentlyStarted.add(chId);
-                    setTimeout(() => recentlyStarted.delete(chId), 5000);
-                    await initGameChannel(newState.guild, chMembers, 2, 2);
-                }
-                break;
-            case dconfig.channels.touch3v3:
-            case dconfig.channels.all3v3:
-                if (chMembers?.size === 6) {
-                    recentlyStarted.add(chId);
-                    setTimeout(() => recentlyStarted.delete(chId), 5000);
-                    await initGameChannel(newState.guild, chMembers, 3, 2);
-                }
-                break;
-            case dconfig.channels.all4v4:
-                if (chMembers?.size === 8) {
-                    recentlyStarted.add(chId);
-                    setTimeout(() => recentlyStarted.delete(chId), 5000);
-                    await initGameChannel(newState.guild, chMembers, 4, 2);
-                }
-                break;
-        }
+            activeCountdowns.delete(chId);
+        }, 5000);
+
+        activeCountdowns.set(chId, timeout);
     },
 };
 
@@ -113,10 +160,10 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
             id: member.id,
             type: OverwriteType.Member,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
-        })
-    })
+        });
+    });
 
-    const gameName = `#${res.id.slice(0, 4).toUpperCase()} | Lobby (${teamSize}v${teamSize})`
+    const gameName = `#${res.id.slice(0, 4).toUpperCase()} | Lobby (${teamSize}v${teamSize})`;
 
     const gameVC = await guild.channels.create({
         name: gameName,
@@ -133,18 +180,18 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
     });
 
     members.forEach(member => {
-        member.voice.setChannel(gameVC)
+        member.voice.setChannel(gameVC);
         gameThread.members.add(member.id);
     });
 
     const captains = pick2Captains(members);
 
     const game = new Game(res.id, gameThread.id, gameVC.id, "", "", teamSize, members.map(m => m.id), captains.map(m => m.id));
-    gamesDB.add(gameThread.id, game)
+    gamesDB.add(gameThread.id, game);
 
-    await game.sendIntroductionMessage()
+    await game.sendIntroductionMessage();
     await game.updateCaptainPickingMessage();
-}
+};
 
 const pick2Captains = (members: Collection<string, GuildMember>) => {
     const membersArray = Array.from(members.values());
@@ -157,4 +204,4 @@ const pick2Captains = (members: Collection<string, GuildMember>) => {
     } while (secondIndex === firstIndex);
 
     return [membersArray[firstIndex], membersArray[secondIndex]];
-}
+};
