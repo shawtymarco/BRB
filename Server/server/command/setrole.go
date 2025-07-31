@@ -39,7 +39,7 @@ func (r SetRoleCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 		rank := database.RankFromName(string(r.Rank))
 
 		dt.Statistics.RankId = rank.Shortened()
-		if dur, ok := r.Duration.Load(); ok {
+		if dur, ok := r.Duration.Load(); ok && dur != "permanent" {
 			dt.Statistics.RankEndsIn = time.Now().Add(dur.Parse())
 		} else {
 			dt.Statistics.RankEndsIn = time.Time{}
