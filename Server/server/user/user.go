@@ -254,6 +254,15 @@ func (u *User) IsCooldownActive(cooldownType PlayerCoolDowns, duration time.Dura
 	return exists
 }
 
+func (u *User) CoolDownTimeRemaining(cooldownType PlayerCoolDowns) time.Duration {
+	coolDown := u.cooldownMap[cooldownType]
+	if coolDown == nil || !coolDown.Active() {
+		return 0
+	}
+
+	return coolDown.Remaining()
+}
+
 func ActiveBan(pd *database.PlayerData) *database.PunishmentData {
 	checkBan := func(data *database.PlayerData) *database.PunishmentData {
 		for _, ban := range slices.Concat(data.Punishments.Bans) {

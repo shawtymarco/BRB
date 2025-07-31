@@ -545,7 +545,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 	_, isPlank := b.(block.Planks)
 	bb, isBed := b.(bed.Bed)
 
-	if !isBed && (h.game.typeGame == game.TypeBedWars || !isEndstone && !isPlank) && (h.game.Stage() < game.Running || blocksPlaced[vec3ToString(pos.Vec3())] == nil) {
+	if h.game.Stage() < game.Running || (!isBed && (h.game.typeGame == game.TypeBedWars || !isEndstone && !isPlank) && blocksPlaced[vec3ToString(pos.Vec3())] == nil) {
 		pl.Message(text.Colourf(language.Translate(pl).BedWars.Error.CannotBreakMap))
 		ctx.Cancel()
 	} else {
@@ -567,7 +567,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			teamIndex = 1
 			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourBlue():
-			teamIndex = 2
+			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 2).Else(1)
 			bedColor = text.Colourf("<blue>Blue Bed</blue>")
 		case item.ColourYellow():
 			teamIndex = 3
@@ -577,6 +577,10 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		if h.game.PlayerTeam(pl).ID() == teamIndex {
 			ctx.Cancel()
 			pl.Message(text.Colourf(language.Translate(pl).BedWars.Error.CannotBreakBed))
+			return
+		}
+
+		if teamIndex >= len(h.game.Teams()) {
 			return
 		}
 

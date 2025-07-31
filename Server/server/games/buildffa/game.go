@@ -48,10 +48,13 @@ func NewBuildFFA() {
 
 				Game.ForEachActivePlayer(func(pl *player.Player) {
 					u := user.GetUser(pl)
-					u.Scoreboard.Set(1, "§0 ")
+					u.Scoreboard.Set(1, "§0")
 					u.Scoreboard.Set(2, text.Colourf("<grey>Game:</grey> <emerald>Build FFA</emerald>"))
-					u.Scoreboard.Set(3, "§1 ")
+					u.Scoreboard.Set(3, "§1")
 					u.Scoreboard.Set(4, text.Colourf("<grey>Leaderboard</grey>"))
+					u.Scoreboard.Set(5, "§2")
+					u.Scoreboard.Set(6, "§3")
+					u.Scoreboard.Set(7, "§4")
 					if len(users) > 0 {
 						u.Scoreboard.Set(5, text.Colourf("<grey>1. %v</grey> <black>-</black> <emerald>%v</emerald>", users[0].Data.Username, users[0].GameInfo.BuildFFA.Kills))
 					}
@@ -61,10 +64,10 @@ func NewBuildFFA() {
 					if len(users) > 2 {
 						u.Scoreboard.Set(7, text.Colourf("<grey>3. %v</grey> <black>-</black> <emerald>%v</emerald>", users[2].Data.Username, users[2].GameInfo.BuildFFA.Kills))
 					}
-					u.Scoreboard.Set(8, "§2 ")
+					u.Scoreboard.Set(8, "§5")
 					u.Scoreboard.Set(9, text.Colourf("<grey>Kills:</grey> <emerald>%v</emerald>", u.GameInfo.BuildFFA.Kills))
 					u.Scoreboard.Set(10, text.Colourf("<grey>Position:</grey> <emerald>#%v</emerald>", slices.Index(users, u)+1))
-					u.Scoreboard.Set(11, "§3 ")
+					u.Scoreboard.Set(11, "§6")
 					u.Scoreboard.Set(12, font.Transform(server.IP))
 					u.SendScoreboard(5)
 				}, tx)

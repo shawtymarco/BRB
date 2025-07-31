@@ -97,9 +97,9 @@ func main() {
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 
-	//srv.World().Exec(func(tx *world.Tx) {
-	//	initBots(tx)
-	//})
+	srv.World().Exec(func(tx *world.Tx) {
+		initBots(tx)
+	})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {
@@ -170,11 +170,11 @@ func registerCapes() {
 
 func initBots(tx *world.Tx) {
 	core.BotMark = createBot("Mark", tx)
-	core.BotSam = createBot("Sam", tx)
-	core.BotSteven = createBot("Steven", tx)
+	//core.BotSam = createBot("Sam", tx)
+	//core.BotSteven = createBot("Steven", tx)
 	lobby.Join(core.BotMark)
-	lobby.Join(core.BotSam)
-	lobby.Join(core.BotSteven)
+	//lobby.Join(core.BotSam)
+	//lobby.Join(core.BotSteven)
 }
 
 func createBot(name string, tx *world.Tx) *player.Player {

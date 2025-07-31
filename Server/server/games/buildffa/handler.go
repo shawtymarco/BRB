@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	core "server/server"
+	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
 	"server/server/games/lobby"
@@ -213,9 +214,15 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 
 func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
 	pl := ctx.Val()
+	b := pl.Tx().Block(pos)
+
+	if _, ok := b.(bed.Bed); ok {
+		ctx.Cancel()
+		return
+	}
+
 	if blocksPlaced[vec3ToString(pos.Vec3())] == nil {
 		*drops = []item.Stack{}
-		b := pl.Tx().Block(pos)
 		time.AfterFunc(10*time.Second, func() {
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 				tx.SetBlock(pos, b, nil)

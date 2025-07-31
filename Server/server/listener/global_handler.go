@@ -1,7 +1,6 @@
 package listener
 
 import (
-	"github.com/df-mc/dragonfly/server/entity/effect"
 	"server/server"
 	"server/server/database"
 	"server/server/items"
@@ -39,14 +38,8 @@ func HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunit
 	*attackImmunity = time.Duration(server.Config.Pvp.HitRegistration) * time.Millisecond
 	if src1, ok := src.(entity.AttackDamageSource); ok {
 		if enemy, ok := src1.Attacker.(*player.Player); ok {
-			var (
-				_, slowFalling = enemy.Effect(effect.SlowFalling)
-				_, blind       = enemy.Effect(effect.Blindness)
-				critical       = !enemy.Sprinting() && !enemy.Flying() && enemy.FallDistance() > 0 && !slowFalling && !blind
-			)
-
 			ue := user.GetUser(enemy)
-			if !critical && ue.IsCooldownActive(user.CriticalExtraHit, 0, false, false, false) {
+			if ue.CoolDownTimeRemaining(user.CriticalExtraHit) != time.Duration(server.Config.Pvp.HitRegistration)*time.Millisecond && ue.CoolDownTimeRemaining(user.CriticalExtraHit) > 0 {
 				ctx.Cancel()
 				return false
 			}
