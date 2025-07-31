@@ -472,7 +472,9 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, false, true, false)
+	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
+		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, false, true, false)
+	}
 }
 
 func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {

@@ -178,7 +178,9 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, true, true, false)
+	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
+		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, true, true, false)
+	}
 }
 
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {

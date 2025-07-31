@@ -77,7 +77,7 @@
     "YouDiedSubTitle": "<gold>You will respawn in <red>%v</red> seconds!</gold>",
     "RespawningIn": "<yellow>You will respawn in <red>%v</red> seconds</yellow>",
     "KilledBy": "%v <grey>was killed by</grey> %v %v",
-    "VoidDeath": "%v <grey>fell into the void.</grey> %v",
+    "VoidDeath": "%v <grey>fell into the void</grey> %v",
     "BedBreak": "<bold><white>BED DESTRUCTION ></white></bold> %v<grey>'s bed was broken by</grey> %v",
     "BedBreakTitle": "<red>BED DESTROYED</red>",
     "BedBreakSubTitle": "<grey>You will no longer respawn!</grey>",
@@ -100,7 +100,7 @@
   "BuildFFA": {
     "JoinMessage": "<dark-grey>[<green>+</green>]</dark-grey> %v",
     "YouDied": "<bold><dark-red>YOU DIED</dark-red></bold>",
-    "KilledBy": "%v <grey>was killed by</grey> %v.",
-    "VoidDeath": "%v <grey>fell into the void.</grey>"
+    "KilledBy": "%v <grey>was killed by</grey> %v",
+    "VoidDeath": "%v <grey>fell into the void</grey>"
   }
 }
