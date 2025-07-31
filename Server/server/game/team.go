@@ -106,7 +106,7 @@ func (t *Team) WoolColour() item.Colour {
 	case "blue":
 		return item.ColourBlue()
 	case "green":
-		return item.ColourGreen()
+		return item.ColourLime()
 	case "yellow":
 		return item.ColourYellow()
 	}
@@ -145,31 +145,18 @@ func (t *Team) RemoveTrap() Trap {
 	return removed
 }
 
-func ColorToID(color string, typeGame TypeGame) int {
-	switch typeGame {
-	case TypeBedWars:
-		switch color {
-		case "red":
-			return 0
-		case "blue":
-			return 1
-		case "green":
-			return 2
-		case "yellow":
-			return 3
-		}
-	case TypeBedFight, TypeBuildFFA:
-		switch color {
-		case "red":
-			return 0
-		case "blue":
-			return 2
-		case "green":
-			return 1
-		case "yellow":
-			return 3
-		}
+func ColorToID(color string) int {
+	switch color {
+	case "red":
+		return 0
+	case "blue":
+		return 1
+	case "green":
+		return 2
+	case "yellow":
+		return 3
 	}
+
 	panic("no id for this color")
 }
 

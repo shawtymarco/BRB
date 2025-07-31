@@ -97,9 +97,9 @@ func main() {
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 
-	//srv.World().Exec(func(tx *world.Tx) {
-	//	initBots(tx)
-	//})
+	srv.World().Exec(func(tx *world.Tx) {
+		initBots(tx)
+	})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {
@@ -116,8 +116,8 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	//bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
-	//bw.UsersToJoin = []string{"1381057370033229855", "436765918169792524"}
+	bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
+	bw.UsersToJoin = []string{"1381057370033229855", "436765918169792524"} //1381057370033229855 479990305404485643
 
 	srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}
@@ -151,14 +151,17 @@ func main() {
 	}
 }
 
-func joinRankedBedWars(pl *player.Player) {
+func joinRankedBedWars(pl *player.Player) bool {
 	u := user.GetUser(pl)
 	for _, g := range bedwars.Games {
 		if slices.Contains(g.UsersToJoin, u.Data.UserId) {
+			pl.Handler().HandleQuit(pl)
 			bedwars.Join(pl, pl.Tx(), g.TeamSize, g.TeamCount, g.Type(), false, g)
-			break
+			return true
 		}
 	}
+
+	return false
 }
 
 func registerCapes() {
@@ -167,11 +170,11 @@ func registerCapes() {
 
 func initBots(tx *world.Tx) {
 	core.BotMark = createBot("Mark", tx)
-	core.BotSam = createBot("Sam", tx)
-	core.BotSteven = createBot("Steven", tx)
+	//core.BotSam = createBot("Sam", tx)
+	//core.BotSteven = createBot("Steven", tx)
 	lobby.Join(core.BotMark)
-	lobby.Join(core.BotSam)
-	lobby.Join(core.BotSteven)
+	//lobby.Join(core.BotSam)
+	//lobby.Join(core.BotSteven)
 }
 
 func createBot(name string, tx *world.Tx) *player.Player {

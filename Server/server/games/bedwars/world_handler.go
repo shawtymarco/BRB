@@ -16,6 +16,14 @@ type WorldHandler struct {
 	game *BedWars
 }
 
+func (h WorldHandler) HandleFireSpread(ctx *world.Context, from, to cube.Pos) {
+	ctx.Cancel()
+}
+
+func (h WorldHandler) HandleLeavesDecay(ctx *world.Context, pos cube.Pos) {
+	ctx.Cancel()
+}
+
 func (h WorldHandler) HandleExplosion(ctx *world.Context, position mgl64.Vec3, entities *[]world.Entity, blocks *[]cube.Pos, itemDropChance *float64, spawnFire *bool) {
 	if *itemDropChance == 1 { // Bed TNT explosion
 		*itemDropChance = 0.8

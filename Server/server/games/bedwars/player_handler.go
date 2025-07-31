@@ -9,10 +9,12 @@ import (
 	"server/server/inv"
 	"server/server/language"
 	"server/server/listener"
+	"server/server/living"
 	"server/server/user"
 	"server/server/utils"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/df-mc/dragonfly/server/event"
@@ -54,7 +56,6 @@ type PlayerHandler struct {
 }
 
 func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame game.TypeGame, isCustom bool, bwGame *BedWars) {
-	fmt.Println(1)
 	if bwGame == nil {
 		for _, g := range Games {
 			if g.Type() == typeGame && g.Stage() == game.Waiting {
@@ -64,45 +65,22 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		}
 	}
 
-	fmt.Println(2)
 	if bwGame == nil {
 		bwGame = NewBedWars(typeGame, teamSize, teamCount, isCustom)
 	}
 
 	core.Players[pl.UUID()] = pl.Name()
 
-	fmt.Println(3)
-	pl.Handle(PlayerHandler{game: bwGame})
-	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			fmt.Println(100)
-			//p := ctx.Val().(*player.Player)
-			//openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
-			//fmt.Println(openedPos.Load())
-		},
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			fmt.Println(101)
-		},
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			fmt.Println(102)
-		},
-	}})
-
-	fmt.Println(4)
 	tx.RemoveEntity(pl)
 
-	fmt.Println(5)
 	bwGame.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
 	})
 
 	pl.SetGameMode(world.GameModeSurvival)
-	//pl.Tx().Viewers(pl.Position())
-	fmt.Println(7)
 	pl.Inventory().Clear()
 	pl.Armour().Clear()
 
-	fmt.Println(8)
 	u := user.GetUser(pl)
 	u.Game = bwGame.Game
 	switch typeGame {
@@ -114,24 +92,59 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		panic("Unhandled game type")
 	}
 
-	fmt.Println(9)
 	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
 
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	fmt.Println(10)
+	pl.Handle(PlayerHandler{game: bwGame})
+	updateMenu := func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+		if shop := activeItemShops[pl.UUID()]; shop != nil {
+			openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
+			if _, ok := ctx.Val().(*player.Player).Tx().Block(*openedPos.Load()).(block.Air); ok {
+				isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
+					_, ok := stack.Item().(item.Shears)
+					return ok
+				})
+				it43, _ := shop.inv.Item(43)
+				isQuickBuy := !it43.Empty()
+
+				go func() {
+					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+					if isTools {
+						shop.inv.Clear()
+						for i, it := range shop.Tools() {
+							_ = shop.inv.SetItem(i, it)
+						}
+					} else if isQuickBuy {
+						shop.inv.Clear()
+						for i, it := range shop.itemShopDashboard(true) {
+							_ = shop.inv.SetItem(i, it)
+						}
+					}
+				}()
+			}
+		}
+	}
+	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+		updateMenu,
+		updateMenu,
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			updateMenu(ctx, slot, stack, inv)
+			_, ok := stack.Item().(item.Tool)
+			if ok {
+				ctx.Cancel()
+				return
+			}
+		},
+	}})
+
 	if bwGame.Stage() == game.Running {
 		pl.Hurt(20, entity.VoidDamageSource{})
-		fmt.Println(11)
 	} else {
-		fmt.Println(12)
 		bwGame.ForEachActivePlayer(func(pl *player.Player) {
 			pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
 		}, tx)
-		fmt.Println(13)
 	}
-
-	fmt.Println(14)
 }
 
 func (h PlayerHandler) HandleQuit(pl *player.Player) {
@@ -214,7 +227,7 @@ func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, for
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
-	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
+	if u.IsCooldownActive(user.Switching, 0, false, false, false) {
 		ctx.Cancel()
 	}
 }
@@ -286,7 +299,9 @@ func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot
 }
 
 func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
-	listener.HandleHurt(ctx, damage, immune, attackImmunity, src)
+	if !listener.HandleHurt(ctx, damage, immune, attackImmunity, src) {
+		return
+	}
 
 	pl := ctx.Val()
 	u := user.GetUser(pl)
@@ -379,13 +394,19 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 							p := e.(*player.Player)
 							p.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
+							if g.typeGame == game.TypeBedFight {
+								yaw, _ := living.LookAtExtended(pl.Position(), g.MapConfig().TeamSpawnPoints[1-team.ID()])
+								pl.Move(mgl64.Vec3{}, yaw-pl.Rotation().Yaw(), pl.Rotation().Pitch())
+							}
 
 							giveKit(p, g)
-							if hadShears {
-								_, _ = u.AddItemWithHBConfig(-1, item.NewStack(item.Shears{}, 1))
+							if g.typeGame == game.TypeBedWars {
+								if hadShears {
+									_, _ = u.AddItemWithHBConfig(-1, item.NewStack(item.Shears{}, 1))
+								}
+								_, _ = u.AddItemWithHBConfig(-1, newPickaxeTier)
+								_, _ = u.AddItemWithHBConfig(-1, newAxeTier)
 							}
-							_, _ = u.AddItemWithHBConfig(-1, newPickaxeTier)
-							_, _ = u.AddItemWithHBConfig(-1, newAxeTier)
 
 							time.AfterFunc(50*time.Millisecond, func() {
 								pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
@@ -448,7 +469,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	u.IsCooldownActive(user.Switching, 500*time.Millisecond, true, true, false)
+	u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*50*time.Millisecond, false, true, false)
 }
 
 func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
@@ -519,7 +540,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 	_, isPlank := b.(block.Planks)
 	bb, isBed := b.(bed.Bed)
 
-	if !isBed && (h.game.Stage() < game.Running || blocksPlaced[vec3ToString(pos.Vec3())] == nil) {
+	if !isBed && (h.game.typeGame == game.TypeBedWars || !isEndstone && !isPlank) && (h.game.Stage() < game.Running || blocksPlaced[vec3ToString(pos.Vec3())] == nil) {
 		pl.Message(text.Colourf(language.Translate(pl).BedWars.Error.CannotBreakMap))
 		ctx.Cancel()
 	} else {
@@ -537,12 +558,12 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		case item.ColourRed():
 			teamIndex = 0
 			bedColor = text.Colourf("<red>Red Bed</red>")
-		case item.ColourBlue():
+		case item.ColourGreen(), item.ColourLime():
 			teamIndex = 1
-			bedColor = text.Colourf("<blue>Blue Bed</blue>")
-		case item.ColourGreen():
-			teamIndex = 2
 			bedColor = text.Colourf("<green>Green Bed</green>")
+		case item.ColourBlue():
+			teamIndex = 2
+			bedColor = text.Colourf("<blue>Blue Bed</blue>")
 		case item.ColourYellow():
 			teamIndex = 3
 			bedColor = text.Colourf("<yellow>Yellow Bed</yello>")

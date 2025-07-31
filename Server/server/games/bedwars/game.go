@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 1 * time.Second //20 * time.Second
+const startingInDurationBW = 20 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 5 * time.Minute
 
@@ -227,9 +227,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachOriginalPlayer(func(pl *player.Player) {
 							u := user.GetUser(pl)
-							fmt.Println(u.Data.UserId)
 							if g.WinningTeam().Contains(pl) {
-								fmt.Println(1)
 								if g.typeGame == game.TypeBedWars {
 									before, after, mvp := g.Reward(pl, tx)
 									gd.WinningTeam[u.Data.UserId] = []int{before, after}
@@ -239,7 +237,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
 							} else {
-								fmt.Println(2)
 								if g.typeGame == game.TypeBedWars {
 									before, after := g.Punish(pl, tx)
 									gd.LosingTeam[u.Data.UserId] = []int{before, max(after, 0)}

@@ -6,6 +6,9 @@ import (
 	"server/server/user"
 	"strings"
 
+	"github.com/df-mc/dragonfly/server/item/inventory"
+	"github.com/google/uuid"
+
 	"github.com/df-mc/dragonfly/server/item/potion"
 
 	"github.com/df-mc/dragonfly/server/block"
@@ -16,6 +19,8 @@ import (
 
 	"github.com/df-mc/dragonfly/server/item"
 )
+
+var activeItemShops = make(map[uuid.UUID]*ItemShop)
 
 var quickBuySlots = []int{
 	19, 20, 21, 22, 23, 24, 25,
@@ -30,6 +35,7 @@ var glassPane = item.NewStack(block.StainedGlassPane{Colour: item.ColourGrey()},
 var netherStar = item.NewStack(item.NetherStar{}, 1).WithCustomName(text.Colourf("<aqua>View QuickBuy</aqua>"))
 
 type ItemShop struct {
+	inv    *inventory.Inventory
 	game   *BedWars
 	team   *game.Team
 	Player *player.Player
@@ -293,12 +299,12 @@ func tieredTool(
 	mode int,
 	isPickaxe bool,
 	tiers []struct {
-		tier       item.ToolTier
-		name       string
-		efficiency int
-		cost       int
-		resource   Resource
-	},
+	tier       item.ToolTier
+	name       string
+	efficiency int
+	cost       int
+	resource   Resource
+},
 ) item.Stack {
 	maxTier := -1
 

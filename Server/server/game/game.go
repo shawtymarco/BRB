@@ -96,8 +96,8 @@ func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGam
 
 	var newTeam *Team
 	if g.teamColor == "" {
-		teamColor := lo.If(typeGame == TypeBedWars, []string{"red", "blue", "green", "yellow"}).Else([]string{"red", "green", "blue", "yellow"})[len(g.teams)]
-		newTeam = &Team{id: ColorToID(teamColor, typeGame), color: teamColor}
+		teamColor := lo.If(typeGame == TypeBedWars, []string{"red", "green", "blue", "yellow"}).Else([]string{"red", "blue", "green", "yellow"})[len(g.teams)]
+		newTeam = &Team{id: ColorToID(teamColor), color: teamColor}
 	} else {
 		newTeam = &Team{color: g.teamColor}
 	}
@@ -107,8 +107,10 @@ func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGam
 
 func (g *Game) RemovePlayerFromTeam(pl *player.Player) {
 	if t := g.PlayerTeam(pl); t != nil {
-		t.RemovePlayerFromOriginal(pl)
 		t.RemovePlayerFromActive(pl)
+		if g.Stage() < Running {
+			t.RemovePlayerFromOriginal(pl)
+		}
 	}
 }
 

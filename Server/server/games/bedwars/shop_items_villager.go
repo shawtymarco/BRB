@@ -80,6 +80,8 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 	menuInv := inventory.New(54, func(slot int, before, after item.Stack) {
 		utils.Session(pl).ViewSlotChange(slot, after)
 	})
+	shop.inv = menuInv
+	activeItemShops[pl.UUID()] = shop
 	menu := inv.NewCustomMenu(text.Colourf("<emerald>Item Shop</emerald>"), inv.ContainerChest{DoubleChest: true}, menuInv, nil)
 	menu.WithStacks(shop.itemShopDashboard(true)...)
 

@@ -6,7 +6,7 @@
   "Commands": {
     "Success": {
       "Hub": "%v <green>You have been teleported to the HUB.</green>",
-      "Ping": "%v %v <ping is <green>%v ms</green>",
+      "Ping": "%v %v ping is <green>%v ms</green>",
       "PingSelf": "%v <yellow>Your ping is</yellow> <green>%v ms</green>",
       "Link": "%v <green>Your code is %v. It will expire after 5 minutes!</green>",
       "Warp": "%v <green>You have warped all the players to your game</green>",

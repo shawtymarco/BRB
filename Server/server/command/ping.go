@@ -36,9 +36,9 @@ func (p PingCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 		pl := target.(*player.Player)
 		if src != target {
 			targetStr := text.Colourf("<yellow>%v's</yellow>", pl.Name())
-			o.Print(text.Colourf(language.Translate(pl).Commands.Success.Ping, server.Config.Prefix, targetStr, pl.Latency().Round(time.Millisecond).Milliseconds()))
+			o.Print(text.Colourf(language.Translate(pl).Commands.Success.Ping, server.Config.Prefix, targetStr, (pl.Latency() * 2).Round(time.Millisecond).Milliseconds()))
 		} else {
-			o.Print(text.Colourf(language.Translate(pl).Commands.Success.PingSelf, server.Config.Prefix, pl.Latency().Round(time.Millisecond).Milliseconds()))
+			o.Print(text.Colourf(language.Translate(pl).Commands.Success.PingSelf, server.Config.Prefix, (pl.Latency() * 2).Round(time.Millisecond).Milliseconds()))
 		}
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))

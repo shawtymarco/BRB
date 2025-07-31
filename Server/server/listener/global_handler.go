@@ -10,6 +10,8 @@ import (
 	"server/server/utils"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/entity"
+
 	"github.com/samber/lo"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 
@@ -20,16 +22,30 @@ import (
 
 func HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
 	pl := ctx.Val()
+	u := user.GetUser(pl)
 	main, _ := pl.HeldItems()
 	*force = server.Config.Pvp.Force
 	*height = server.Config.Pvp.Height
+	if *critical {
+		u.IsCooldownActive(user.CriticalExtraHit, time.Duration(server.Config.Pvp.HitRegistration)*time.Millisecond, false, true, false)
+	}
 	if _, ok := main.Enchantment(stacks.CustomKnockBack{}); ok {
 		*force += server.Config.Pvp.Force / 2
 	}
 }
 
-func HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
+func HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) bool {
 	*attackImmunity = time.Duration(server.Config.Pvp.HitRegistration) * time.Millisecond
+	if src1, ok := src.(entity.AttackDamageSource); ok {
+		if enemy, ok := src1.Attacker.(*player.Player); ok {
+			ue := user.GetUser(enemy)
+			if ue.IsCooldownActive(user.CriticalExtraHit, 0, false, false, false) {
+				ctx.Cancel()
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func HandleStartBreak(ctx *player.Context, pos cube.Pos) {

@@ -61,7 +61,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 
 	tx.RemoveEntity(pl)
 
-	Game.World().Exec(func(tx *world.Tx) {
+	go Game.World().Exec(func(tx *world.Tx) {
 		tx.AddEntity(pl.H())
 		Game.ForEachActivePlayer(func(pl *player.Player) {
 			pl.Message(text.Colourf(language.Translate(pl).BuildFFA.JoinMessage, database.LobbyNameDisplay.Name(u.Data)))
@@ -91,7 +91,7 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
-	if u.IsCooldownActive(user.Switching, 500*time.Millisecond, false, false, false) {
+	if u.IsCooldownActive(user.Switching, 0, false, false, false) {
 		ctx.Cancel()
 	}
 }
@@ -109,12 +109,14 @@ func (h Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.
 }
 
 func (Handler) HandleHurt(ctx *player.Context, damage *float64, immune bool, attackImmunity *time.Duration, src world.DamageSource) {
-	listener.HandleHurt(ctx, damage, immune, attackImmunity, src)
+	if !listener.HandleHurt(ctx, damage, immune, attackImmunity, src) {
+		return
+	}
 
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
-	if _, ok := src.(entity.FallDamageSource); ok {
+	if _, ok := src.(entity.FallDamageSource); ok || pl.Position().Y() > 140 {
 		ctx.Cancel()
 		return
 	}
@@ -176,7 +178,7 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	u.IsCooldownActive(user.Switching, 500*time.Millisecond, true, true, false)
+	u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*50*time.Millisecond, true, true, false)
 }
 
 func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block) {
@@ -213,11 +215,9 @@ func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item
 		*drops = []item.Stack{}
 		b := pl.Tx().Block(pos)
 		time.AfterFunc(10*time.Second, func() {
-			fmt.Println(10)
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 				tx.SetBlock(pos, b, nil)
 			})
-			fmt.Println(11)
 		})
 	} else {
 		*drops = []item.Stack{}
