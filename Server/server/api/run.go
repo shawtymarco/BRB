@@ -37,7 +37,7 @@ func init() {
 		// Gin setup for API
 		gin.SetMode(gin.ReleaseMode)
 		router := gin.Default()
-		router.Use(gin.Logger())
+		router.Use(gin.Recovery())
 
 		// Apply JWT middleware to your API routes
 		apiGroup := router.Group("/api")
