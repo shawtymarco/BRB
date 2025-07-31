@@ -17,7 +17,7 @@ export const dconfig = {
     guildId: "1373222394046578731",
 
     roles: {
-        registered: "1375112083103813652"
+        registered: "1400435527039062087"
     },
 
     categories: {

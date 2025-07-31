@@ -18,8 +18,8 @@
     ]
   },
   "Pvp": {
-    "Force": 0.4,
-    "Height": 0.4,
+    "Force": 0.45,
+    "Height": 0.3608,
     "HitRegistration": 400
   },
   "Hub": {
