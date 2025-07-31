@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,12 +35,32 @@ func init() {
 			MinVersion: tls.VersionTLS12,
 		}
 
-		// Gin setup for API
 		gin.SetMode(gin.ReleaseMode)
-		router := gin.Default()
+		router := gin.New()
 		router.Use(gin.Recovery())
 
-		// Apply JWT middleware to your API routes
+		// custom logger that skips /api/connect
+		router.Use(func(c *gin.Context) {
+			if c.Request.URL.Path == "/api/connect" {
+				c.Next()
+				return
+			}
+
+			start := time.Now()
+			c.Next()
+			latency := time.Since(start)
+			status := c.Writer.Status()
+			log.Printf("[GIN] %v | %3d | %13v | %15s | %-7s  %s\n",
+				start.Format("2006/01/02 - 15:04:05"),
+				status,
+				latency,
+				c.ClientIP(),
+				c.Request.Method,
+				c.Request.URL.Path,
+			)
+		})
+
+		// Apply JWT middleware
 		apiGroup := router.Group("/api")
 		apiGroup.Use(jwtAuthMiddleware())
 		initGetRequests(apiGroup)

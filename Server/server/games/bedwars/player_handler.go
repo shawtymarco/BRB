@@ -396,7 +396,10 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 							p.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
 							if g.typeGame == game.TypeBedFight {
 								yaw, _ := living.LookAtExtended(pl.Position(), g.MapConfig().TeamSpawnPoints[1-team.ID()])
-								pl.Move(mgl64.Vec3{}, yaw-pl.Rotation().Yaw(), pl.Rotation().Pitch())
+								p.Move(mgl64.Vec3{}, yaw-p.Rotation().Yaw(), 0)
+								for _, v := range tx.Viewers(p.Position()) {
+									v.ViewEntityTeleport(p, p.Position())
+								}
 							}
 
 							giveKit(p, g)
