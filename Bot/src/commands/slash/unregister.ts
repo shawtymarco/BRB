@@ -23,6 +23,10 @@ export async function execute(interaction: CommandInteraction) {
         return;
     }
 
+    res.data.userid = "";
+
+    await Request.post(APIEndpoints.UPDATE_PLAYER, res.data);
+
     member.roles.remove(CacheUtil.getRole(member.guild, dconfig.roles.registered));
     member.setNickname(null).catch(() => { });
     await interaction.reply({
