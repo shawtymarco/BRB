@@ -168,7 +168,7 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
-	*msg = strings.ReplaceAll(*msg, "§r", "")
+	*msg = strings.ReplaceAll(strings.ReplaceAll(*msg, "§", ""), "%", "")
 	if h.game.Stage() == game.Running {
 		oldMsg := *msg
 		*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)

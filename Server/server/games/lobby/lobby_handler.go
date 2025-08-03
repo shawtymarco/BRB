@@ -118,7 +118,7 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
-	*msg = strings.ReplaceAll(*msg, "§r", "")
+	*msg = strings.ReplaceAll(strings.ReplaceAll(*msg, "§", ""), "%", "")
 	newMsg := fmt.Sprintf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
 	*msg = text.Colourf(newMsg)
 
