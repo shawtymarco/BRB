@@ -1,6 +1,6 @@
 import { CategoryChannel, Guild, GuildTextBasedChannel, Role } from "discord.js";
 
-export class CacheUtils {
+export class CacheUtil {
     static getCategory(guild: Guild, categoryId: string): CategoryChannel {
         return guild.channels.cache.get(categoryId) as CategoryChannel;
     }

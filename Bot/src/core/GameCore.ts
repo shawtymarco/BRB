@@ -17,7 +17,7 @@ import path from "path";
 import {client} from "..";
 import {APIEndpoints, Request} from "../api";
 import {dconfig} from "../config";
-import {CacheUtils} from "./CacheUtil";
+import {CacheUtil} from "./CacheUtil";
 import {DB} from "./DB";
 
 export var gamesDB: DB<Game> = new DB(path.join(".", "db", "games.json"));
@@ -343,7 +343,7 @@ export class Game {
     }
 
     async terminateGame(data: any) {
-        const waitingRoom = CacheUtils.getChannel(this.guild, dconfig.channels.waitingRoom);
+        const waitingRoom = CacheUtil.getChannel(this.guild, dconfig.channels.waitingRoom);
 
         if (this.thread()) {
             this.thread().setLocked(true);
@@ -399,7 +399,7 @@ export class Game {
                 );
         }
 
-        CacheUtils.getChannel(this.guild, dconfig.channels.scoring).send({
+        CacheUtil.getChannel(this.guild, dconfig.channels.scoring).send({
             content: this.memberIds.map(id => `<@${id}>`).join(""),
             embeds: [embed],
         });

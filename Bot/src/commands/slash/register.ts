@@ -2,7 +2,7 @@ import { CommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder } fr
 import { APIEndpoints, Request } from "../../api";
 import { dconfig } from "../../config";
 import { EmbedUtil } from "../../core/EmbedUtil";
-import { CacheUtils } from "../../core/CacheUtil";
+import { CacheUtil } from "../../core/CacheUtil";
 
 export const data = new SlashCommandBuilder()
     .setName("register")
@@ -15,7 +15,7 @@ export async function execute(interaction: CommandInteraction) {
     const res = await Request.post(APIEndpoints.VERIFY, { userId: member.user.id, code: code?.value });
 
     if (res.success) {
-        member.roles.add(CacheUtils.getRole(member.guild, dconfig.roles.registered));
+        member.roles.add(CacheUtil.getRole(member.guild, dconfig.roles.registered));
         member.setNickname(`${res.elo} 〣 ${res.username}`).catch(() => { });
     }
 

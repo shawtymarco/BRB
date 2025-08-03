@@ -13,7 +13,7 @@ import {
 import { dconfig } from "../config";
 import { APIEndpoints, Request } from "../api";
 import { EmbedUtil } from "../core/EmbedUtil";
-import { CacheUtils } from "../core/CacheUtil";
+import { CacheUtil } from "../core/CacheUtil";
 import { Game, gamesDB } from "../core/GameCore";
 
 const activeCountdowns = new Map<string, NodeJS.Timeout>();
@@ -52,7 +52,7 @@ module.exports = {
         if (joinedChannelId) {
             const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${newState.member?.id}`);
             if (!res.registered) {
-                CacheUtils.getChannel(newState.guild, alertsId).send({
+                CacheUtil.getChannel(newState.guild, alertsId).send({
                     content: `<@${newState.member?.id}>`,
                     embeds: [EmbedUtil.create({
                         type: "no",
@@ -66,7 +66,7 @@ module.exports = {
             Game.refreshMemberNickname(newState.member);
 
             if (isTouch && !res.isTouch) {
-                CacheUtils.getChannel(newState.guild, alertsId).send({
+                CacheUtil.getChannel(newState.guild, alertsId).send({
                     content: `<@${newState.member?.id}>`,
                     embeds: [EmbedUtil.create({
                         type: "no",
@@ -97,7 +97,7 @@ module.exports = {
 
         if (!requiredSize || !teamSize || !numTeams || !currentMembers) return;
 
-        const alertsChannel = CacheUtils.getChannel(newState.guild, alertsId);
+        const alertsChannel = CacheUtil.getChannel(newState.guild, alertsId);
 
         if (currentMembers.size < requiredSize) {
             if (activeCountdowns.has(chId)) {
@@ -105,7 +105,7 @@ module.exports = {
                 activeCountdowns.delete(chId);
                 if (alertsChannel) {
                     alertsChannel.send({
-                        content: (CacheUtils.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
+                        content: (CacheUtil.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
                         embeds: [EmbedUtil.create({
                             type: "no",
                             description: `Game queue cancelled because <@${oldState.member?.id}> left the VC.`,
@@ -120,7 +120,7 @@ module.exports = {
 
         if (alertsChannel) {
             alertsChannel.send({
-                content: (CacheUtils.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
+                content: (CacheUtil.getChannel(newState.guild, chId) as VoiceChannel).members.map(member => `<@${member.id}>`).join(" "),
                 embeds: [EmbedUtil.create({
                     type: "yes",
                     description: `Game is full! Starting in 5 seconds if everyone stays.`,
@@ -172,7 +172,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
         permissionOverwrites: permissionOverwrites
     });
 
-    const gameThread = await (CacheUtils.getChannel(guild, dconfig.channels.gameChat) as TextChannel).threads.create({
+    const gameThread = await (CacheUtil.getChannel(guild, dconfig.channels.gameChat) as TextChannel).threads.create({
         name: `Game #${res.id.slice(0, 4).toUpperCase()}`,
         autoArchiveDuration: 60,
         type: ChannelType.PrivateThread,
