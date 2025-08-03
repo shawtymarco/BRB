@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: CommandInteraction) {
     const member = interaction.options.get("member")?.member as GuildMember;
     const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${member.user.id}`);
-    if (!res.success) {
+    if (!res.registered) {
         await interaction.reply({
             embeds: [EmbedUtil.create({
                 type: "no",
