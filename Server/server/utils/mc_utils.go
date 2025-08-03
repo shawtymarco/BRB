@@ -6,10 +6,7 @@ import (
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/item"
-	"github.com/df-mc/dragonfly/server/item/creative"
-	"github.com/df-mc/dragonfly/server/world"
 	"github.com/go-gl/mathgl/mgl64"
-	"github.com/sandertv/gophertunnel/minecraft/text"
 	"golang.org/x/text/cases"
 	language2 "golang.org/x/text/language"
 )
@@ -56,38 +53,8 @@ func ItemDisplay(it item.Stack) string {
 	return name
 }
 
-func ColorDisplay(color string) string {
-	return text.Colourf("<%v>%v</%v>", color, cases.Title(language2.English, cases.NoLower).String(strings.Replace(color, "-", " ", -1)), color)
-}
-
-func ColorSlice(slice []string) []string {
-	var coloredSlice []string
-	for _, s := range slice {
-		coloredSlice = append(coloredSlice, text.Colourf(s))
-	}
-	return coloredSlice
-}
-
 func VecSetY(v mgl64.Vec3, y float64) mgl64.Vec3 {
 	return mgl64.Vec3{v.X(), y, v.Z()}
-}
-
-func VecNoY(v mgl64.Vec3) mgl64.Vec3 {
-	return mgl64.Vec3{v.X(), 0, v.Z()}
-}
-
-func RegisterItem(i world.Item) {
-	world.RegisterItem(i)
-
-	group := "Custom Blocks"
-
-	if customItem, ok := i.(interface {
-		Group() string
-	}); ok {
-		group = customItem.Group()
-	}
-
-	creative.RegisterItem(creative.Item{Stack: item.NewStack(i, 1), Group: group})
 }
 
 var ZeroBox = cube.Box(-0.001, 0, -0.001, 0.001, 0.001, 0.001)

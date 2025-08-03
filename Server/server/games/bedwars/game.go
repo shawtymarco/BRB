@@ -350,7 +350,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 										tx.SetBlock(cube.PosFromVec3(g.MapConfig().BedPositions[team.ID()*2]), block.Air{}, nil)
 										tx.SetBlock(cube.PosFromVec3(g.MapConfig().BedPositions[team.ID()*2+1]), block.Air{}, nil)
 
-										g.Teams()[team.ID()].Status = game.BedBroken
+										team.Status = game.BedBroken
 									}
 
 									g.playBedBrokenSound(tx)
@@ -420,6 +420,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						server.MCServer.World().Exec(func(tx *world.Tx) {
 							tx.AddEntity(pl.H())
 						})
+					}
+
+					for e := range tx.Entities() {
+						_ = e.Close()
 					}
 				})
 
@@ -511,11 +515,11 @@ func (b *BedWars) Maps() []string {
 		return []string{
 			"BW-Aquarium",
 			"BW-Archway",
-			"BW-Boletum",
-			"BW-Invasion",
-			"BW-Katsu",
-			"BW-Lectus",
-			"BW-Planet98",
+			//"BW-Boletum",
+			//"BW-Invasion",
+			//"BW-Katsu",
+			//"BW-Lectus",
+			//"BW-Planet98",
 		}
 	}
 	return []string{
@@ -716,6 +720,18 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 			for slot, stack := range pl.Inventory().Items() {
 				if _, ok := stack.Item().(item.Axe); ok {
 					utils.Panic(pl.Inventory().SetItem(slot, axeTier(pl, 1).WithLore().WithValue("resource", nil).WithValue("cost", nil)))
+					flag = true
+				}
+			}
+
+			if !flag {
+				return addItem()
+			}
+		} else if _, ok := s.Item().(item.Sword); ok {
+			var flag bool
+			for slot, stack := range pl.Inventory().Items() {
+				if _, ok := stack.Item().(item.Sword); ok {
+					utils.Panic(pl.Inventory().SetItem(slot, s.WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true
 				}
 			}

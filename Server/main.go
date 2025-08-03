@@ -116,8 +116,8 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	//bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
-	//bw.UsersToJoin = []string{"1163341419189112892", "479990305404485643"}
+	bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
+	bw.UsersToJoin = []string{"1163341419189112892", "479990305404485643"}
 
 	srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}

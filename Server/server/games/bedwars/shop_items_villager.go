@@ -66,7 +66,7 @@ func (v *ItemsShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, data 
 func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
 		if pl, ok := src.Attacker.(*player.Player); ok {
-			SendItemShopUI(&ItemShop{game: v.Game, team: v.Team, Player: pl}, false)
+			SendItemShopUI(&ItemShop{game: v.Game, Player: pl}, false)
 		}
 	}
 

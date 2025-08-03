@@ -88,6 +88,15 @@ func (g *Game) PlayerTeam(pl *player.Player) *Team {
 
 func (g *Game) AddPlayerToTeam(pl *player.Player, teamSize int, typeGame TypeGame) {
 	for _, team := range g.teams {
+		for _, h := range team.originalHandles {
+			if h.UUID() == pl.UUID() {
+				team.AddPlayer(pl)
+				return
+			}
+		}
+	}
+
+	for _, team := range g.teams {
 		if len(team.originalHandles) < teamSize {
 			team.AddPlayer(pl)
 			return

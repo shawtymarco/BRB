@@ -17,6 +17,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/session"
+	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
+
 	"github.com/df-mc/dragonfly/server/event"
 
 	"github.com/samber/lo"
@@ -96,11 +99,22 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	pl.Handle(PlayerHandler{game: bwGame})
-	updateMenu := func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+	chestHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+		nil,
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			if s, ok := stack.Item().(item.Sword); ok && s.Tier == item.ToolTierWood {
+				ctx.Cancel()
+			}
+		},
+		nil,
+	}}
+	pl.EnderChestInventory().Handle(chestHandler)
+	updateMenu := func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
+		tx2 := ctx.Val().(*player.Player).Tx()
+		openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
+		b := tx2.Block(*openedPos.Load())
 		if shop := activeItemShops[pl.UUID()]; shop != nil {
-			openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
-			if _, ok := ctx.Val().(*player.Player).Tx().Block(*openedPos.Load()).(block.Air); ok {
+			if _, ok := b.(block.Air); ok {
 				isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
 					_, ok := stack.Item().(item.Shears)
 					return ok
@@ -124,10 +138,43 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 				}()
 			}
 		}
+		if c, ok := b.(block.Chest); ok {
+			chestInv := c.Inventory(tx2, *openedPos.Load())
+			chestInv.Handle(chestHandler)
+		}
 	}
+
 	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		updateMenu,
-		updateMenu,
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			updateMenu(ctx, slot, stack, inv)
+
+			p := ctx.Val().(*player.Player)
+			if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
+				go func() {
+					p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+						_, _ = e.(*player.Player).Inventory().AddItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
+					})
+				}()
+			}
+		},
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			updateMenu(ctx, slot, stack, inv)
+
+			p := ctx.Val().(*player.Player)
+			if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
+				oldStack := utils.Panics(inv.Item(slot))
+				if oldS, ok := oldStack.Item().(item.Sword); ok && oldS.Tier == item.ToolTierWood {
+					ctx.Cancel()
+					return
+				}
+
+				go func() {
+					p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+						_ = e.(*player.Player).Inventory().RemoveItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
+					})
+				}()
+			}
+		},
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			updateMenu(ctx, slot, stack, inv)
 			_, ok := stack.Item().(item.Tool)
@@ -137,6 +184,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 			}
 		},
 	}})
+	pl.Handle(PlayerHandler{game: bwGame})
 
 	if bwGame.Stage() == game.Running {
 		pl.Hurt(20, entity.VoidDamageSource{})
@@ -180,7 +228,7 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 		} else {
 			if strings.HasPrefix(oldMsg, "!") {
 				*msg = strings.Replace(*msg, "!", "", 1)
-				*msg = text.Colourf("<gold>[SHOUT]</gold> %v<grey>:</grey> <%v>%v</%v>", database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data), msgColor, *msg, msgColor)
+				*msg = text.Colourf("<gold>[SHOUT]</gold> %v", *msg)
 				for e := range pl.Tx().Players() {
 					p, _ := e.(*player.Player)
 					p.Message(*msg)
@@ -203,10 +251,12 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 }
 
 func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+
 	if s, ok := s.Item().(item.Potion); ok {
 		ctx.Cancel()
 
-		pl := ctx.Val()
 		switch s.Type {
 		case potion.StrongLeaping():
 			pl.AddEffect(effect.New(effect.JumpBoost, 5, 45*time.Second))
@@ -214,6 +264,13 @@ func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
 		case potion.LongInvisibility():
 			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
+			u.ShowArmor(pl.Tx(), false)
+
+			time.AfterFunc(30*time.Second, func() {
+				pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+					u.ShowArmor(tx, true)
+				})
+			})
 		}
 
 		main, off := pl.HeldItems()
@@ -366,6 +423,11 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
 	pl.SetGameMode(world.GameModeSpectator)
+	for _, v := range pl.Tx().Viewers(pl.Position()) {
+		s := v.(*session.Session)
+		utils.WritePacket(s, &packet.MobArmourEquipment{EntityRuntimeID: utils.EntityRuntimeID(s, pl)})
+	}
+	pl.Armour().Clear()
 	hadShears := pl.Inventory().ContainsItem(item.NewStack(item.Shears{}, 1))
 	newPickaxeTier := pickaxeTier(pl, -1)
 	newAxeTier := axeTier(pl, -1)
@@ -411,9 +473,13 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 								_, _ = u.AddItemWithHBConfig(-1, newAxeTier)
 							}
 
-							time.AfterFunc(50*time.Millisecond, func() {
+							time.AfterFunc(50*time.Millisecond, func() { // needed because without it, you can somehow hit your enemy when you change to survival mode BUT you still didn't teleport to your island yet
 								pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-									e.(*player.Player).SetGameMode(world.GameModeSurvival)
+									p2 := e.(*player.Player)
+									p2.SetGameMode(world.GameModeSurvival)
+									for _, v := range tx.Viewers(p2.Position()) {
+										v.ViewEntityArmour(p2)
+									}
 								})
 							})
 						})
@@ -564,10 +630,10 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			teamIndex = 0
 			bedColor = text.Colourf("<red>Red Bed</red>")
 		case item.ColourGreen(), item.ColourLime():
-			teamIndex = 1
+			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 2).Else(1)
 			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourBlue():
-			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 2).Else(1)
+			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 1).Else(2)
 			bedColor = text.Colourf("<blue>Blue Bed</blue>")
 		case item.ColourYellow():
 			teamIndex = 3
@@ -631,6 +697,14 @@ func (PlayerHandler) HandlePunchAir(ctx *player.Context) {
 	listener.HandlePunchAir(ctx)
 }
 
+func (h PlayerHandler) HandleItemDrop(ctx *player.Context, s item.Stack) {
+	sword, isSword := s.Item().(item.Sword)
+	_, isTool := s.Item().(item.Tool)
+	if isTool && (!isSword || sword.Tier == item.ToolTierWood) {
+		ctx.Cancel()
+	}
+}
+
 func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	pl := ctx.Val()
 
@@ -654,16 +728,10 @@ func split(pl *player.Player, genPlayers []*player.Player, h PlayerHandler) {
 		gen.UpdateQueue(pl.Tx())
 		for _, ent := range gen.ResourcesWithin(pl.Tx()) {
 			if be, ok := ent.Behaviour().(*entity.ItemBehaviour); ok {
-				if be.Item().Count() > 1 {
-					n := be.Item().Count() / len(genPlayers)
-					for _, p := range genPlayers {
-						pickUp(p, ent, item.NewStack(be.Item().Item(), n), false, pl.Tx())
-					}
-					utils.Panic(ent.Close())
-				} else {
-					pickUp(gen.Next(), ent, be.Item(), true, pl.Tx())
+				for _, p := range genPlayers {
+					pickUp(p, ent, item.NewStack(be.Item().Item(), be.Item().Count()), false, pl.Tx())
 				}
-				break
+				utils.Panic(ent.Close())
 			}
 		}
 	}
