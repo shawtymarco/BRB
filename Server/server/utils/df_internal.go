@@ -50,3 +50,6 @@ func Place(tx *world.Tx, pos cube.Pos, b world.Block, user item.User, ctx *item.
 
 //go:linkname ParseEntityMetadata github.com/df-mc/dragonfly/server/session.(*Session).parseEntityMetadata
 func ParseEntityMetadata(s *session.Session, e world.Entity) protocol.EntityMetadata
+
+//go:linkname InstanceFromItem github.com/df-mc/dragonfly/server/session.instanceFromItem
+func InstanceFromItem(*session.Session, item.Stack) protocol.ItemInstance
