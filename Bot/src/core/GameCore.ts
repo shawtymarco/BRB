@@ -369,9 +369,13 @@ export class Game {
         }
 
         setTimeout(async () => {
-            await this.lobbyVC()?.delete();
-            await this.team1VC()?.delete();
-            await this.team2VC()?.delete();
+            const lobbyVC = this.lobbyVC && this.lobbyVC();
+            const team1VC = this.team1VC && this.team1VC();
+            const team2VC = this.team2VC && this.team2VC();
+
+            if (lobbyVC) await lobbyVC.delete();
+            if (team1VC) await team1VC.delete();
+            if (team2VC) await team2VC.delete();
         }, 3000);
 
         let embed;
