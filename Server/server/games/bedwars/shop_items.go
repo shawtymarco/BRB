@@ -174,7 +174,7 @@ func (s *ItemShop) Potions() []item.Stack {
 	items := s.itemShopDashboard(false)
 	items[19] = shopify(s.Player, item.NewStack(item.Potion{Type: potion.StrongLeaping()}, 1), Emerald, 1, false, false)
 	items[20] = shopify(s.Player, item.NewStack(item.Potion{Type: potion.StrongSwiftness()}, 1), Emerald, 1, false, false)
-	items[21] = shopify(s.Player, item.NewStack(item.Potion{Type: potion.LongInvisibility()}, 1), Emerald, 2, false, false)
+	items[21] = shopify(s.Player, item.NewStack(item.Potion{Type: potion.LongInvisibility()}, 1), Iron, 2, false, false)
 	return items
 }
 
@@ -187,8 +187,10 @@ func (s *ItemShop) Utility() []item.Stack {
 	items[23] = shopify(s.Player, item.NewStack(item.Bucket{Content: item.LiquidBucketContent(block.Water{})}, 1), Gold, 3, false, false)
 
 	colour := item.ColourWhite()
-	if team := s.game.PlayerTeam(s.Player); team != nil {
-		colour = team.WoolColour()
+	if s.game != nil {
+		if team := s.game.PlayerTeam(s.Player); team != nil {
+			colour = team.WoolColour()
+		}
 	}
 
 	items[24] = editName(
@@ -313,12 +315,12 @@ func tieredTool(
 	mode int,
 	isPickaxe bool,
 	tiers []struct {
-	tier       item.ToolTier
-	name       string
-	efficiency int
-	cost       int
-	resource   Resource
-},
+		tier       item.ToolTier
+		name       string
+		efficiency int
+		cost       int
+		resource   Resource
+	},
 ) item.Stack {
 	maxTier := -1
 

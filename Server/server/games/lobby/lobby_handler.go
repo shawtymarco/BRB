@@ -132,6 +132,10 @@ func (Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Ro
 	if jumpBox.Vec3Within(newPos) && !pl.Flying() {
 		pl.SetVelocity(middle.Sub(newPos).Mul(0.1))
 	}
+
+	if newPos.Y() <= 0 {
+		pl.Teleport(core.Config.Hub.SpawnPoint)
+	}
 }
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {

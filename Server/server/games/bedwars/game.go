@@ -315,16 +315,15 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
-					fmt.Println(1)
+					fmt.Println(11)
 					go func() {
-						fmt.Println(g.World())
 						<-g.World().Exec(func(tx *world.Tx) {
-							fmt.Println(2)
+							fmt.Println(22)
 							g.ForEachActivePlayer(func(pl *player.Player) {
 								sendRunningScoreboard(pl, g, currentStage)
 							}, tx)
 						})
-						fmt.Println(3)
+						fmt.Println(33)
 					}()
 
 					if g.typeGame == game.TypeBedWars {

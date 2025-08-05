@@ -252,6 +252,7 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 
 func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 	pl := ctx.Val()
+	u := user.GetUser(pl)
 	if s, ok := s.Item().(item.Potion); ok {
 		ctx.Cancel()
 
@@ -262,17 +263,18 @@ func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
 		case potion.LongInvisibility():
 			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
-			for _, v := range pl.Tx().Viewers(pl.Position()) {
-				sess := v.(*session.Session)
-				utils.WritePacket(sess, &packet.MobArmourEquipment{EntityRuntimeID: utils.EntityRuntimeID(sess, pl)})
+			u.OldArmour = user.OldArmour{
+				Helmet:     pl.Armour().Helmet(),
+				ChestPlate: pl.Armour().Chestplate(),
+				Leggings:   pl.Armour().Leggings(),
+				Boots:      pl.Armour().Boots(),
 			}
+			pl.Armour().Clear()
 
 			time.AfterFunc(30*time.Second, func() {
 				pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 					p2 := e.(*player.Player)
-					for _, v := range tx.Viewers(p2.Position()) {
-						v.ViewEntityArmour(p2)
-					}
+					p2.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
 				})
 			})
 		}
@@ -295,6 +297,7 @@ func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, for
 
 func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
 	pl := ctx.Val()
+	u := user.GetUser(pl)
 	if pl.GameMode() != world.GameModeSpectator && newPos.Y() <= float64(h.game.MapConfig().Void) {
 		if h.game.Stage() < game.Running {
 			pl.Teleport(h.game.MapConfig().SpawnPoint)
@@ -347,6 +350,7 @@ func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot
 					})
 				case game.Alarm:
 					pl.RemoveEffect(effect.Invisibility)
+					pl.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
 				case game.MinerFatigue:
 					if _, ok := pl.Effect(effect.MiningFatigue); !ok {
 						pl.AddEffect(effect.New(effect.MiningFatigue, 1, 10*time.Second))
@@ -393,7 +397,11 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 			u.LastHitAt = time.Now()
 			ua.LastHitAt = time.Now()
 
-			pl.RemoveEffect(effect.Invisibility)
+			if _, isInvis := pl.Effect(effect.Invisibility); isInvis {
+				*damage = 2
+				pl.RemoveEffect(effect.Invisibility)
+				pl.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
+			}
 
 			if pl.Health() <= *damage {
 				onDeath(h.game, pl, u, ua)
@@ -633,12 +641,12 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		case item.ColourRed():
 			teamIndex = 0
 			bedColor = text.Colourf("<red>Red Bed</red>")
-		case item.ColourGreen(), item.ColourLime():
-			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 2).Else(1)
-			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourBlue():
-			teamIndex = lo.If(h.game.typeGame == game.TypeBedWars, 1).Else(2)
+			teamIndex = 1
 			bedColor = text.Colourf("<blue>Blue Bed</blue>")
+		case item.ColourGreen(), item.ColourLime():
+			teamIndex = 2
+			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourYellow():
 			teamIndex = 3
 			bedColor = text.Colourf("<yellow>Yellow Bed</yello>")
@@ -650,7 +658,8 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			return
 		}
 
-		if teamIndex >= len(h.game.Teams()) {
+		if teamIndex == 1 || teamIndex == 3 {
+			ctx.Cancel()
 			return
 		}
 

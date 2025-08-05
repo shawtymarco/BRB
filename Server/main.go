@@ -97,9 +97,9 @@ func main() {
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 
-	//srv.World().Exec(func(tx *world.Tx) {
-	//	initBots(tx)
-	//})
+	srv.World().Exec(func(tx *world.Tx) {
+		initBots(tx)
+	})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {

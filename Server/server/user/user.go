@@ -60,6 +60,8 @@ type User struct {
 	LastMessenger *world.EntityHandle
 
 	PendingDuelRequestTo *world.EntityHandle
+
+	OldArmour OldArmour
 }
 
 func newUser(pl *player.Player, isBot bool) (*User, error) {
@@ -193,16 +195,13 @@ func ResetUser(pl *player.Player) {
 		DeviceOS:              ut.Data.DeviceOS,
 		ProtocolId:            ut.Data.ProtocolId,
 		Statistics: database.Statistics{
-			RankId: database.Player.Shortened(),
+			RankId: ut.Data.Statistics.RankId,
 			Level:  1,
 		},
 		Cosmetics: database.Cosmetics{
 			SelectedWoodType: block.OakWood(),
 		},
-		Settings: database.Settings{
-			HotBarConfig:   [9]database.HotBarCategory(make([]database.HotBarCategory, 9)),
-			QuickBuyConfig: make(map[int]*int),
-		},
+		Settings: ut.Data.Settings,
 	}
 
 	if isBot {
@@ -408,4 +407,8 @@ type GameRuntimeData struct {
 
 func (d GameRuntimeData) TotalBWKills() int {
 	return d.BedWars.Kills + d.BedWars.FinalKills
+}
+
+type OldArmour struct {
+	Helmet, ChestPlate, Leggings, Boots item.Stack
 }
