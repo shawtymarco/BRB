@@ -491,9 +491,9 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 							// To disable spawn hitting
 							u.IsCooldownActive(user.NoPVP, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, true, true, false)
 
-							pl.SetGameMode(world.GameModeSurvival)
-							for _, v := range tx.Viewers(pl.Position()) {
-								v.ViewEntityArmour(pl)
+							p.SetGameMode(world.GameModeSurvival)
+							for _, v := range tx.Viewers(p.Position()) {
+								v.ViewEntityArmour(p)
 							}
 						})
 						break
