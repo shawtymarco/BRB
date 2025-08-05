@@ -4,7 +4,7 @@ type PlayerCoolDowns int
 
 const (
 	Interact PlayerCoolDowns = iota
-	Switching
+	NoPVP
 	Chat
 	CommandPing
 	CommandHub

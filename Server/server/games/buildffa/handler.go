@@ -95,7 +95,7 @@ func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, he
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
-	if u.IsCooldownActive(user.Switching, 0, false, false, false) {
+	if u.IsCooldownActive(user.NoPVP, 0, false, false, false) {
 		ctx.Cancel()
 	}
 }
@@ -183,7 +183,7 @@ func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
-		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration/2)*time.Millisecond, true, true, false)
+		u.IsCooldownActive(user.NoPVP, time.Duration(core.Config.Pvp.HitRegistration/2)*time.Millisecond, true, true, false)
 	}
 }
 
