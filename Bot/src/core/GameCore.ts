@@ -14,11 +14,11 @@ import {
     VoiceChannel
 } from "discord.js";
 import path from "path";
-import {client} from "..";
-import {APIEndpoints, Request} from "../api";
-import {dconfig} from "../config";
-import {CacheUtil} from "./CacheUtil";
-import {DB} from "./DB";
+import { client } from "..";
+import { APIEndpoints, Request } from "../api";
+import { dconfig } from "../config";
+import { CacheUtil } from "./CacheUtil";
+import { DB } from "./DB";
 
 export var gamesDB: DB<Game> = new DB(path.join(".", "db", "games.json"));
 
@@ -369,11 +369,9 @@ export class Game {
         }
 
         setTimeout(async () => {
-            if (this.lobbyVC()) await this.lobbyVC().delete();
-            if (this.team1VCId) {
-                await this.team1VC().delete();
-                await this.team2VC().delete();
-            }
+            await this.lobbyVC()?.delete();
+            await this.team1VC()?.delete();
+            await this.team2VC()?.delete();
         }, 3000);
 
         let embed;
@@ -420,7 +418,7 @@ export class Game {
 
         return parts.join(' ');
     }
-    
+
 
     static formatTeam(team: Record<string, number[]>): string {
         return Object.entries(team).map(([id, [oldElo, newElo]]) => {
