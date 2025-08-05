@@ -439,7 +439,9 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		s := v.(*session.Session)
 		utils.WritePacket(s, &packet.MobArmourEquipment{EntityRuntimeID: utils.EntityRuntimeID(s, pl)})
 	}
-	pl.Armour().Clear()
+	if g.typeGame == game.TypeBedFight {
+		pl.Armour().Clear()
+	}
 	hadShears := pl.Inventory().ContainsItem(item.NewStack(item.Shears{}, 1))
 	newPickaxeTier := pickaxeTier(pl, -1)
 	newAxeTier := axeTier(pl, -1)
