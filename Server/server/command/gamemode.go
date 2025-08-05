@@ -16,11 +16,11 @@ type GameModeCommand struct {
 }
 
 func (GameModeCommand) Allow(src cmd.Source) bool {
-	return SetRole.Test(src)
+	return GameMode.Test(src)
 }
 
 func (GameModeCommand) PermissionMessage(src cmd.Source) string {
-	return SetRole.PermissionMessage(src)
+	return GameMode.PermissionMessage(src)
 }
 
 func (c GameModeCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
