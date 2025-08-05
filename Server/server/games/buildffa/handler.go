@@ -204,9 +204,12 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 
 		time.AfterFunc(10*time.Second, func() {
 			if bp := blocksPlaced[vec3ToString(pos.Vec3())]; bp != nil && time.Now().Sub(bp.placedAt) >= 10*time.Second {
-				Game.World().Exec(func(tx *world.Tx) {
+				fmt.Println(4)
+				<-Game.World().Exec(func(tx *world.Tx) {
+					fmt.Println(5)
 					tx.SetBlock(pos, bp.block, nil)
 				})
+				fmt.Println(6)
 			}
 		})
 	}
