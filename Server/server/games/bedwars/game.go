@@ -315,7 +315,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
-					g.World().Exec(func(tx *world.Tx) {
+					fmt.Println(1)
+					go g.World().Exec(func(tx *world.Tx) {
+						fmt.Println(2)
 						g.ForEachActivePlayer(func(pl *player.Player) {
 							sendRunningScoreboard(pl, g, currentStage)
 						}, tx)
