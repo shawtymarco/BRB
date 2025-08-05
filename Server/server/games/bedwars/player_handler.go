@@ -665,6 +665,9 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			return
 		}
 
+		if teamIndex == 2 { // TODO: I know it's a bit hacky. We gotta improve team indexing with colors but bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
+			teamIndex = 1
+		}
 		h.game.Teams()[teamIndex].Status = game.BedBroken
 		h.game.Teams()[teamIndex].ForEachPlayer(pl.Tx(), func(p *player.Player) {
 			p.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.BedBreakTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.BedBreakSubTitle)))
