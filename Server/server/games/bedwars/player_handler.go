@@ -252,8 +252,6 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 
 func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 	pl := ctx.Val()
-	u := user.GetUser(pl)
-
 	if s, ok := s.Item().(item.Potion); ok {
 		ctx.Cancel()
 
@@ -264,11 +262,17 @@ func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
 			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
 		case potion.LongInvisibility():
 			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
-			u.ShowArmor(pl.Tx(), false)
+			for _, v := range pl.Tx().Viewers(pl.Position()) {
+				sess := v.(*session.Session)
+				utils.WritePacket(sess, &packet.MobArmourEquipment{EntityRuntimeID: utils.EntityRuntimeID(sess, pl)})
+			}
 
 			time.AfterFunc(30*time.Second, func() {
 				pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-					u.ShowArmor(tx, true)
+					p2 := e.(*player.Player)
+					for _, v := range tx.Viewers(p2.Position()) {
+						v.ViewEntityArmour(p2)
+					}
 				})
 			})
 		}
@@ -707,6 +711,11 @@ func (h PlayerHandler) HandleItemDrop(ctx *player.Context, s item.Stack) {
 
 func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	pl := ctx.Val()
+
+	if pl.GameMode() == world.GameModeSpectator {
+		ctx.Cancel()
+		return
+	}
 
 	if h.game.typeGame == game.TypeBedWars {
 		gen := h.game.NearestGenerator(pl.Position(), Iron)

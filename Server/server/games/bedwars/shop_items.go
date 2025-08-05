@@ -74,14 +74,16 @@ func (s *ItemShop) itemShopDashboard(showQuickBuy bool) []item.Stack {
 
 func (s *ItemShop) Blocks() []item.Stack {
 	items := s.itemShopDashboard(false)
-	team := s.game.PlayerTeam(s.Player)
-	if team != nil {
-		items[19] = shopify(s.Player, item.NewStack(block.Wool{Colour: team.WoolColour()}, 16), Iron, 4, false, false)
-		items[20] = shopify(s.Player, item.NewStack(block.StainedGlass{Colour: team.WoolColour()}, 4), Iron, 8, false, false)
-	} else {
-		items[19] = shopify(s.Player, item.NewStack(block.Wool{Colour: item.ColourWhite()}, 16), Iron, 4, false, false)
-		items[20] = shopify(s.Player, item.NewStack(block.StainedGlass{Colour: item.ColourWhite()}, 4), Iron, 8, false, false)
+	colour := item.ColourWhite()
+	if s.game != nil {
+		if team := s.game.PlayerTeam(s.Player); team != nil {
+			colour = team.WoolColour()
+		}
 	}
+
+	items[19] = shopify(s.Player, item.NewStack(block.Wool{Colour: colour}, 16), Iron, 4, false, false)
+	items[20] = shopify(s.Player, item.NewStack(block.StainedGlass{Colour: colour}, 4), Iron, 8, false, false)
+
 	items[21] = shopify(s.Player, item.NewStack(block.EndStone{}, 12), Iron, 24, false, false)
 	items[22] = shopify(s.Player, item.NewStack(block.Ladder{}, 16), Iron, 4, false, false)
 	items[23] = shopify(s.Player, item.NewStack(block.Planks{Wood: lo.If(s.Player != nil, user.GetUser(s.Player).Data.Cosmetics.SelectedWoodType).Else(block.OakWood())}, 16), Gold, 4, false, false)
@@ -95,11 +97,13 @@ func (s *ItemShop) Melee() []item.Stack {
 	i20 := shopify(s.Player, item.NewStack(item.Sword{Tier: item.ToolTierIron}, 1), Gold, 7, false, false)
 	i21 := shopify(s.Player, item.NewStack(item.Sword{Tier: item.ToolTierDiamond}, 1), Emerald, 3, false, false)
 
-	team := s.game.PlayerTeam(s.Player)
-	if team != nil && team.Upgrades.Sharpness > 0 {
-		i19 = i19.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
-		i20 = i20.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
-		i21 = i21.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
+	if s.game != nil {
+		team := s.game.PlayerTeam(s.Player)
+		if team != nil && team.Upgrades.Sharpness > 0 {
+			i19 = i19.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
+			i20 = i20.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
+			i21 = i21.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, team.Upgrades.Sharpness))
+		}
 	}
 
 	items[19] = i19
@@ -111,7 +115,6 @@ func (s *ItemShop) Melee() []item.Stack {
 }
 
 func (s *ItemShop) Armour() []item.Stack {
-	team := s.game.PlayerTeam(s.Player)
 
 	var chain, iron, diamond bool
 	if boots, ok := s.Player.Armour().Boots().Item().(item.Boots); ok {
@@ -126,10 +129,13 @@ func (s *ItemShop) Armour() []item.Stack {
 	i20 := shopify(s.Player, item.NewStack(item.Boots{Tier: item.ArmourTierIron{}}, 1), Gold, 12, iron || diamond, false)
 	i21 := shopify(s.Player, item.NewStack(item.Boots{Tier: item.ArmourTierDiamond{}}, 1), Emerald, 6, diamond, false)
 
-	if team != nil && team.Upgrades.Protection != 0 {
-		i19 = i19.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
-		i20 = i20.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
-		i21 = i21.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
+	if s.game != nil {
+		team := s.game.PlayerTeam(s.Player)
+		if team != nil && team.Upgrades.Protection != 0 {
+			i19 = i19.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
+			i20 = i20.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
+			i21 = i21.WithEnchantments(item.NewEnchantment(enchantment.Protection, team.Upgrades.Protection))
+		}
 	}
 
 	items[19] = i19
@@ -173,18 +179,23 @@ func (s *ItemShop) Potions() []item.Stack {
 }
 
 func (s *ItemShop) Utility() []item.Stack {
-	team := s.game.PlayerTeam(s.Player)
 	items := s.itemShopDashboard(false)
 	items[19] = shopify(s.Player, item.NewStack(item.GoldenApple{}, 1), Gold, 3, false, false)
 	items[20] = shopify(s.Player, item.NewStack(SilverfishSnowball{game: s.game}, 1), Iron, 20, false, false)
 	items[21] = editName(shopify(s.Player, item.NewStack(block.TNT{}, 1), Gold, 8, false, false), "TNT")
 	items[22] = shopify(s.Player, item.NewStack(item.EnderPearl{}, 1), Emerald, 4, false, false)
 	items[23] = shopify(s.Player, item.NewStack(item.Bucket{Content: item.LiquidBucketContent(block.Water{})}, 1), Gold, 3, false, false)
-	if team != nil {
-		items[24] = editName(shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: team.WoolColour()}}, 1), Emerald, 1, false, false), text.Colourf("<green>Bridge Egg</green>"))
-	} else {
-		items[24] = editName(shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: item.ColourWhite()}}, 1), Emerald, 1, false, false), text.Colourf("<green>Bridge Egg</green>"))
+
+	colour := item.ColourWhite()
+	if team := s.game.PlayerTeam(s.Player); team != nil {
+		colour = team.WoolColour()
 	}
+
+	items[24] = editName(
+		shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: colour}}, 1), Emerald, 1, false, false),
+		text.Colourf("<green>Bridge Egg</green>"),
+	)
+
 	items[25] = editName(shopify(s.Player, item.NewStack(NewMagicMilk(s.game), 1), Gold, 3, false, false), text.Colourf("<green>Magic Milk</green>"))
 	items[28] = shopify(s.Player, item.NewStack(block.Sponge{}, 4), Gold, 3, false, false)
 	items[29] = shopify(s.Player, item.NewStack(BedCompass{BedWars: s.game}, 1), Emerald, 2, false, false)
@@ -302,12 +313,12 @@ func tieredTool(
 	mode int,
 	isPickaxe bool,
 	tiers []struct {
-		tier       item.ToolTier
-		name       string
-		efficiency int
-		cost       int
-		resource   Resource
-	},
+	tier       item.ToolTier
+	name       string
+	efficiency int
+	cost       int
+	resource   Resource
+},
 ) item.Stack {
 	maxTier := -1
 

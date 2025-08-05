@@ -395,48 +395,6 @@ func (u *User) RefreshCape() {
 	}()
 }
 
-// ShowArmor displays or removes players armor visibility from other players.
-func (u *User) ShowArmor(tx *world.Tx, visible bool) {
-	p := u.pl
-	air := item.NewStack(block.Air{}, 1)
-
-	helmet := item.NewStack(block.Air{}, 1)
-	if !p.Armour().Helmet().Equal(air) && visible {
-		helmet = p.Armour().Helmet()
-	}
-
-	chestplate := item.NewStack(block.Air{}, 1)
-	if !p.Armour().Chestplate().Equal(air) && visible {
-		chestplate = p.Armour().Chestplate()
-	}
-
-	leggings := item.NewStack(block.Air{}, 1)
-	if !p.Armour().Leggings().Equal(air) && visible {
-		leggings = p.Armour().Leggings()
-	}
-
-	boots := item.NewStack(block.Air{}, 1)
-	if !p.Armour().Boots().Equal(air) && visible {
-		boots = p.Armour().Boots()
-	}
-
-	for e := range tx.Players() {
-		t := e.(*player.Player)
-		targetSession := utils.Session(t)
-		if t.UUID() == server.BotMark.UUID() {
-			continue
-		}
-
-		utils.WritePacket(utils.Session(p), &packet.MobArmourEquipment{
-			EntityRuntimeID: utils.EntityRuntimeID(targetSession, p),
-			Helmet:          utils.InstanceFromItem(targetSession, helmet),
-			Chestplate:      utils.InstanceFromItem(targetSession, chestplate),
-			Leggings:        utils.InstanceFromItem(targetSession, leggings),
-			Boots:           utils.InstanceFromItem(targetSession, boots),
-		})
-	}
-}
-
 type GameRuntimeData struct {
 	BedWars struct {
 		Kills      int

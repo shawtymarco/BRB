@@ -51,6 +51,8 @@ func (r SpectateCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 		}
 
 		pl.SetGameMode(world.GameModeSpectator)
+		pl.Inventory().Clear()
+		pl.Armour().Clear()
 		tx.RemoveEntity(pl)
 		tgtTx.AddEntity(pl.H())
 		pl.Teleport(target.Position())
