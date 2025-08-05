@@ -88,7 +88,7 @@ func (b *GeneratorBlockType) Open(tx *world.Tx, handle *world.EntityHandle, data
 func (b *GeneratorBlockType) PlayersWithin(tx *world.Tx) []*player.Player {
 	var res []*player.Player
 	for e := range tx.Entities() {
-		if pl, ok := e.(*player.Player); ok && utils.Distance(b.Position(), e.Position()) <= 4 {
+		if pl, ok := e.(*player.Player); ok && pl.GameMode() != world.GameModeSpectator && utils.Distance(b.Position(), e.Position()) <= 4 {
 			res = append(res, pl)
 		}
 	}

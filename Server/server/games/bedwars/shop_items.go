@@ -315,12 +315,12 @@ func tieredTool(
 	mode int,
 	isPickaxe bool,
 	tiers []struct {
-	tier       item.ToolTier
-	name       string
-	efficiency int
-	cost       int
-	resource   Resource
-},
+		tier       item.ToolTier
+		name       string
+		efficiency int
+		cost       int
+		resource   Resource
+	},
 ) item.Stack {
 	maxTier := -1
 

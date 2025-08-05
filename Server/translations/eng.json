@@ -50,6 +50,7 @@
       "NicknameSpace": "<red>Nickname cannot start or end with a space.</red>",
       "NicknameSpecialChars": "<red>Nickname can only contain letters, numbers, and spaces.</red>",
       "NicknameMultipleSpaces": "<red>Nickname cannot contain multiple spaces in a row.</red>",
+      "NicknameUserNameAlreadyExists": "<red>You cannot use that nickname as a player already has it as their gamertag.</red>",
       "ELOAlreadyClaimed": "<red>You already claimed your 250 ELO this season. Please be patient until next season.</red>",
       "AlreadyBanned": "<red>This player is already banned.</red>",
       "NotBanned": "<red>This player is not banned.</red>",

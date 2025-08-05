@@ -315,15 +315,12 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
-					fmt.Println(11)
 					go func() {
 						<-g.World().Exec(func(tx *world.Tx) {
-							fmt.Println(22)
 							g.ForEachActivePlayer(func(pl *player.Player) {
 								sendRunningScoreboard(pl, g, currentStage)
 							}, tx)
 						})
-						fmt.Println(33)
 					}()
 
 					if g.typeGame == game.TypeBedWars {
@@ -450,6 +447,19 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 }
 
 func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
+	// Remove waiting lobby
+	for x := -15.0; x <= 15.0; x++ {
+		for z := -15.0; z <= 15.0; z++ {
+			for y := -5.0; y <= 15.0; y++ {
+				pos := cube.PosFromVec3(b.MapConfig().SpawnPoint.Add(mgl64.Vec3{x, y, z}))
+				b := tx.Block(pos)
+				if _, ok := b.(block.Air); !ok {
+					tx.SetBlock(pos, block.Air{}, nil)
+				}
+			}
+		}
+	}
+
 	for _, pos := range b.MapConfig().ShopVillagerPositions {
 		t := b.NearestTeam(pos)
 		v := NewItemsVillager(pos, text.Colourf("<aqua>Shop Villager</aqua>\n<bold><yellow>RIGHT CLICK</yellow></bold>"), b, t, tx)

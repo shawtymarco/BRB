@@ -16,7 +16,7 @@ type GameModeCommand struct {
 }
 
 func (GameModeCommand) Allow(src cmd.Source) bool {
-	return SetRole.Test(src) 
+	return SetRole.Test(src)
 }
 
 func (GameModeCommand) PermissionMessage(src cmd.Source) string {

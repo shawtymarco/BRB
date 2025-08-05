@@ -2,6 +2,7 @@ package command
 
 import (
 	"server/server"
+	"server/server/database"
 	"server/server/language"
 	"server/server/user"
 	"strings"
@@ -53,6 +54,11 @@ func (n NickCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 
 		if strings.Contains(n.Nickname, "  ") {
 			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameMultipleSpaces))
+			return
+		}
+
+		if _, err := server.Database.FindPlayerByName(n.Nickname, &database.PlayerNameSearchOpts{CaseInsensitive: false, PartialMatch: false}); err == nil {
+			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.NicknameUserNameAlreadyExists))
 			return
 		}
 

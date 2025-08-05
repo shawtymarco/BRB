@@ -38,7 +38,10 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
-var blocksPlaced = make(map[string]*blockPlaced)
+var (
+	woolPlaced = make(map[string]world.Block)
+	mapBlocks  = make(map[string]world.Block)
+)
 
 type Handler struct {
 	player.NopHandler
@@ -180,7 +183,7 @@ func (Handler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
-		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, true, true, false)
+		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration/2)*time.Millisecond, true, true, false)
 	}
 }
 
@@ -193,7 +196,7 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 	}
 
 	if w, ok := b.(block.Wool); ok {
-		blocksPlaced[vec3ToString(pos.Vec3())] = &blockPlaced{block: pl.Tx().Block(pos), placedAt: time.Now()}
+		woolPlaced[vec3ToString(pos.Vec3())] = b
 		time.AfterFunc(4*time.Second, func() {
 			Game.World().Exec(func(tx *world.Tx) {
 				if e, ok := pl.H().Entity(tx); ok {
@@ -203,13 +206,11 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 		})
 
 		time.AfterFunc(10*time.Second, func() {
-			if bp := blocksPlaced[vec3ToString(pos.Vec3())]; bp != nil && time.Now().Sub(bp.placedAt) >= 10*time.Second {
-				fmt.Println(4)
+			if wp := woolPlaced[vec3ToString(pos.Vec3())]; wp != nil {
 				<-Game.World().Exec(func(tx *world.Tx) {
-					fmt.Println(5)
-					tx.SetBlock(pos, bp.block, nil)
+					tx.SetBlock(pos, lo.If(mapBlocks[vec3ToString(pos.Vec3())] != nil, mapBlocks[vec3ToString(pos.Vec3())]).Else(block.Air{}), nil)
+					woolPlaced[vec3ToString(pos.Vec3())] = nil
 				})
-				fmt.Println(6)
 			}
 		})
 	}
@@ -218,22 +219,20 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item.Stack, xp *int) {
 	pl := ctx.Val()
 	b := pl.Tx().Block(pos)
+	*drops = []item.Stack{}
 
 	if _, ok := b.(bed.Bed); ok {
 		ctx.Cancel()
 		return
 	}
 
-	if blocksPlaced[vec3ToString(pos.Vec3())] == nil {
-		*drops = []item.Stack{}
+	if mapBlocks[vec3ToString(pos.Vec3())] == nil {
+		mapBlocks[vec3ToString(pos.Vec3())] = pl.Tx().Block(pos)
 		time.AfterFunc(10*time.Second, func() {
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 				tx.SetBlock(pos, b, nil)
 			})
 		})
-	} else {
-		*drops = []item.Stack{}
-		blocksPlaced[vec3ToString(pos.Vec3())] = nil
 	}
 }
 

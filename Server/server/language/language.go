@@ -68,27 +68,28 @@ type LangConfig struct {
 			OnlyOneTarget  string
 			PlayerNotExist string
 
-			LinkExpired                 string
-			NoMorePlayersToWarp         string
-			NoGameToJoin                string
-			LobbyOnly                   string
-			TargetLobbyOnly             string
-			MustBeInGame                string
-			AlreadyHaveDuelRequest      string
-			TargetAlreadyHasDuelRequest string
-			CannotSpectateOneSelf       string
-			NicknameLength              string
-			NicknameSpace               string
-			NicknameSpecialChars        string
-			NicknameMultipleSpaces      string
-			ELOAlreadyClaimed           string
-			AlreadyBanned               string
-			NotBanned                   string
-			AlreadyMuted                string
-			NotMuted                    string
-			RankHierarchy               string
-			CapeAlreadyOwned            string
-			CapeNotOwned                string
+			LinkExpired                   string
+			NoMorePlayersToWarp           string
+			NoGameToJoin                  string
+			LobbyOnly                     string
+			TargetLobbyOnly               string
+			MustBeInGame                  string
+			AlreadyHaveDuelRequest        string
+			TargetAlreadyHasDuelRequest   string
+			CannotSpectateOneSelf         string
+			NicknameLength                string
+			NicknameSpace                 string
+			NicknameSpecialChars          string
+			NicknameMultipleSpaces        string
+			NicknameUserNameAlreadyExists string
+			ELOAlreadyClaimed             string
+			AlreadyBanned                 string
+			NotBanned                     string
+			AlreadyMuted                  string
+			NotMuted                      string
+			RankHierarchy                 string
+			CapeAlreadyOwned              string
+			CapeNotOwned                  string
 		}
 	}
 

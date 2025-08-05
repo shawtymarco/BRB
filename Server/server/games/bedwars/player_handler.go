@@ -382,6 +382,7 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 
 	if _, ok := src.(entity.FallDamageSource); ok && h.game.typeGame == game.TypeBedFight {
 		ctx.Cancel()
+		return
 	}
 
 	if s, ok := src.(entity.AttackDamageSource); ok {
@@ -487,7 +488,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 								_, _ = u.AddItemWithHBConfig(-1, newAxeTier)
 							}
 
-							time.AfterFunc(50*time.Millisecond, func() { // needed because without it, you can somehow hit your enemy when you change to survival mode BUT you still didn't teleport to your island yet
+							time.AfterFunc(100*time.Millisecond, func() { // needed because without it, you can somehow hit your enemy when you change to survival mode BUT you still didn't teleport to your island yet
 								pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 									p2 := e.(*player.Player)
 									p2.SetGameMode(world.GameModeSurvival)
@@ -526,8 +527,8 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			c2 := g.PlayerTeam(ua.Player()).Colour()
 			p.Message(text.Colourf(
 				language.Translate(p).BedWars.KilledBy,
-				text.Colourf("<%v>%v</%v>", c1, u.Data.Username, c1),
-				text.Colourf("<%v>%v</%v>", c2, ua.Data.Username, c2),
+				database.BedWarsNameDisplay(c1).Name(u.Data),
+				database.BedWarsNameDisplay(c2).Name(ua.Data),
 				finalKill,
 			))
 		}
@@ -553,7 +554,7 @@ func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
-		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond, false, true, false)
+		u.IsCooldownActive(user.Switching, time.Duration(core.Config.Pvp.HitRegistration/2)*time.Millisecond, false, true, false)
 	}
 }
 
@@ -665,7 +666,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			return
 		}
 
-		if teamIndex == 2 { // TODO: I know it's a bit hacky. We gotta improve team indexing with colors but bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
+		if h.game.typeGame == game.TypeBedWars && teamIndex == 2 { // TODO: I know it's a bit hacky. We gotta improve team indexing with colors but bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
 			teamIndex = 1
 		}
 		h.game.Teams()[teamIndex].Status = game.BedBroken
