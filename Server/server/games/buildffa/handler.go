@@ -226,7 +226,7 @@ func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item
 		return
 	}
 
-	if mapBlocks[vec3ToString(pos.Vec3())] == nil {
+	if woolPlaced[vec3ToString(pos.Vec3())] == nil && mapBlocks[vec3ToString(pos.Vec3())] == nil {
 		mapBlocks[vec3ToString(pos.Vec3())] = pl.Tx().Block(pos)
 		time.AfterFunc(10*time.Second, func() {
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
