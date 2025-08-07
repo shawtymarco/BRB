@@ -90,6 +90,7 @@ type LangConfig struct {
 			RankHierarchy                 string
 			CapeAlreadyOwned              string
 			CapeNotOwned                  string
+			ReplyNoSender                 string
 		}
 	}
 

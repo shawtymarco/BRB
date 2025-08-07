@@ -70,8 +70,6 @@ func (e BridgeEgg) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool 
 	return true
 }
 
-// eyePosition returns the position of the eyes of the entity if the entity implements entity.Eyed, or the
-// actual position if it doesn't.
 func eyePosition(e world.Entity) mgl64.Vec3 {
 	pos := e.Position()
 	if eyed, ok := e.(interface{ EyeHeight() float64 }); ok {

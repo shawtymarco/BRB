@@ -10,6 +10,8 @@ import (
 	"slices"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/df-mc/dragonfly/server/world"
 
 	"github.com/google/uuid"
@@ -56,13 +58,13 @@ func NewBuildFFA() {
 					u.Scoreboard.Set(6, "§3")
 					u.Scoreboard.Set(7, "§4")
 					if len(users) > 0 {
-						u.Scoreboard.Set(5, text.Colourf("<grey>1. %v</grey> <black>-</black> <emerald>%v</emerald>", users[0].Data.Username, users[0].GameInfo.BuildFFA.Kills))
+						u.Scoreboard.Set(5, text.Colourf("<grey>1. %v</grey> <black>-</black> <emerald>%v</emerald>", lo.If(users[0].Data.Cosmetics.Nickname != "", users[0].Data.Cosmetics.Nickname).Else(users[0].Data.Username), users[0].GameInfo.BuildFFA.Kills))
 					}
 					if len(users) > 1 {
-						u.Scoreboard.Set(6, text.Colourf("<grey>2. %v</grey> <black>-</black> <emerald>%v</emerald>", users[1].Data.Username, users[1].GameInfo.BuildFFA.Kills))
+						u.Scoreboard.Set(6, text.Colourf("<grey>2. %v</grey> <black>-</black> <emerald>%v</emerald>", lo.If(users[1].Data.Cosmetics.Nickname != "", users[1].Data.Cosmetics.Nickname).Else(users[1].Data.Username), users[1].GameInfo.BuildFFA.Kills))
 					}
 					if len(users) > 2 {
-						u.Scoreboard.Set(7, text.Colourf("<grey>3. %v</grey> <black>-</black> <emerald>%v</emerald>", users[2].Data.Username, users[2].GameInfo.BuildFFA.Kills))
+						u.Scoreboard.Set(7, text.Colourf("<grey>3. %v</grey> <black>-</black> <emerald>%v</emerald>", lo.If(users[2].Data.Cosmetics.Nickname != "", users[2].Data.Cosmetics.Nickname).Else(users[2].Data.Username), users[2].GameInfo.BuildFFA.Kills))
 					}
 					u.Scoreboard.Set(8, "§5")
 					u.Scoreboard.Set(9, text.Colourf("<grey>Kills:</grey> <emerald>%v</emerald>", u.GameInfo.BuildFFA.Kills))

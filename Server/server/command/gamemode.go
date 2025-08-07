@@ -2,8 +2,6 @@ package command
 
 import (
 	"server/server"
-	"server/server/language"
-	"server/server/user"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
@@ -25,12 +23,6 @@ func (GameModeCommand) PermissionMessage(src cmd.Source) string {
 
 func (c GameModeCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
-		u := user.GetUser(pl)
-		if u.Game != nil {
-			pl.Message(text.Colourf(language.Translate(pl).Commands.Error.LobbyOnly))
-			return
-		}
-
 		var mode world.GameMode
 		var modeName string
 
