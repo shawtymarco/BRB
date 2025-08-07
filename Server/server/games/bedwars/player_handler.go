@@ -17,6 +17,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/item/potion"
+
 	"github.com/df-mc/dragonfly/server/session"
 	"github.com/sandertv/gophertunnel/minecraft/protocol/packet"
 
@@ -27,8 +29,6 @@ import (
 	"github.com/df-mc/dragonfly/server/item/inventory"
 
 	"github.com/df-mc/dragonfly/server/item/enchantment"
-
-	"github.com/df-mc/dragonfly/server/item/potion"
 
 	"github.com/df-mc/dragonfly/server/player/title"
 
@@ -102,7 +102,9 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	chestHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		nil,
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			if s, ok := stack.Item().(item.Sword); ok && s.Tier == item.ToolTierWood {
+			s, isSword := stack.Item().(item.Sword)
+			_, isTool := stack.Item().(item.Tool)
+			if isSword && s.Tier == item.ToolTierWood || !isSword && isTool {
 				ctx.Cancel()
 			}
 		},
@@ -250,40 +252,6 @@ func (h PlayerHandler) HandleChat(ctx *player.Context, msg *string) {
 	}
 }
 
-func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
-	pl := ctx.Val()
-	u := user.GetUser(pl)
-	if s, ok := s.Item().(item.Potion); ok {
-		ctx.Cancel()
-
-		switch s.Type {
-		case potion.StrongLeaping():
-			pl.AddEffect(effect.New(effect.JumpBoost, 5, 45*time.Second))
-		case potion.StrongSwiftness():
-			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
-		case potion.LongInvisibility():
-			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
-			u.OldArmour = user.OldArmour{
-				Helmet:     pl.Armour().Helmet(),
-				ChestPlate: pl.Armour().Chestplate(),
-				Leggings:   pl.Armour().Leggings(),
-				Boots:      pl.Armour().Boots(),
-			}
-			pl.Armour().Clear()
-
-			time.AfterFunc(30*time.Second, func() {
-				pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-					p2 := e.(*player.Player)
-					p2.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
-				})
-			})
-		}
-
-		main, off := pl.HeldItems()
-		pl.SetHeldItems(main.Grow(-1), off)
-	}
-}
-
 func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
 	listener.HandleAttackEntity(ctx, e, force, height, critical)
 
@@ -298,7 +266,11 @@ func (PlayerHandler) HandleAttackEntity(ctx *player.Context, e world.Entity, for
 func (h PlayerHandler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
-	if pl.GameMode() != world.GameModeSpectator && newPos.Y() <= float64(h.game.MapConfig().Void) {
+	if pl.GameMode() == world.GameModeSpectator {
+		return
+	}
+
+	if newPos.Y() <= float64(h.game.MapConfig().Void) {
 		if h.game.Stage() < game.Running {
 			pl.Teleport(h.game.MapConfig().SpawnPoint)
 		} else {
@@ -452,7 +424,8 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	if g.PlayerTeam(pl).Status == game.BedBroken {
 		finalKill = text.Colourf("<bold><aqua>FINAL KILL!</aqua></bold>")
 		g.PlayerTeam(pl).RemovePlayerFromActive(pl)
-
+		pl.Inventory().Clear()
+		pl.Armour().Clear()
 		if ua != nil {
 			ua.GameInfo.BedWars.FinalKills++
 			if g.typeGame == game.TypeBedWars {
@@ -556,6 +529,17 @@ func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	}
 }
 
+func (PlayerHandler) HandleItemUse(ctx *player.Context) {
+	listener.HandleItemUse(ctx)
+
+	pl := ctx.Val()
+	main, _ := pl.HeldItems()
+
+	if c, ok := main.Item().(item.Consumable); ok {
+		c.ConsumeDuration()
+	}
+}
+
 func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
 	pl := ctx.Val()
 	main, _ := pl.HeldItems()
@@ -576,6 +560,40 @@ func (h PlayerHandler) HandleItemUseOnEntity(ctx *player.Context, e world.Entity
 	_, ok2 := e.(*UpgradesShopVillager)
 	if ok1 || ok2 {
 		e.(entity.Living).Hurt(0, entity.AttackDamageSource{Attacker: pl})
+	}
+}
+
+func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
+	ctx.Cancel()
+
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+
+	if s, ok := s.Item().(item.Potion); ok {
+		ctx.Cancel()
+
+		switch s.Type {
+		case potion.StrongLeaping():
+			pl.AddEffect(effect.New(effect.JumpBoost, 5, 45*time.Second))
+		case potion.StrongSwiftness():
+			pl.AddEffect(effect.New(effect.Speed, 2, 45*time.Second))
+		case potion.LongInvisibility():
+			pl.AddEffect(effect.New(effect.Invisibility, 1, 30*time.Second))
+			u.OldArmour = user.OldArmour{
+				Helmet:     pl.Armour().Helmet(),
+				ChestPlate: pl.Armour().Chestplate(),
+				Leggings:   pl.Armour().Leggings(),
+				Boots:      pl.Armour().Boots(),
+			}
+			pl.Armour().Clear()
+
+			time.AfterFunc(30*time.Second, func() {
+				pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+					p2 := e.(*player.Player)
+					p2.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
+				})
+			})
+		}
 	}
 }
 
@@ -664,7 +682,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			return
 		}
 
-		if teamIndex == 2 { // TODO: I know it's a bit hacky. We gotta improve team indexing with colors but bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
+		if teamIndex == 2 { // TODO: I know it could've been done better. We gotta improve team indexing with colors because bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
 			teamIndex = 1
 		}
 		h.game.Teams()[teamIndex].Status = game.BedBroken
@@ -730,7 +748,7 @@ func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 		return
 	}
 
-	if h.game.typeGame == game.TypeBedWars {
+	if _, ok := i.Item().(item.Emerald); !ok && h.game.typeGame == game.TypeBedWars {
 		gen := h.game.NearestGenerator(pl.Position(), Iron)
 		if gen != nil {
 			genPlayers := gen.PlayersWithin(pl.Tx())
@@ -777,10 +795,6 @@ func pickUp(pl *player.Player, ent *entity.Ent, stack item.Stack, closeEnt bool,
 	if closeEnt {
 		utils.Panic(ent.Close())
 	}
-}
-
-func (PlayerHandler) HandleItemUse(ctx *player.Context) {
-	listener.HandleItemUse(ctx)
 }
 
 func vec3ToString(v mgl64.Vec3) string {

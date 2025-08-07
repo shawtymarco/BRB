@@ -13,6 +13,7 @@ import (
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
+	"sync"
 	"time"
 
 	"github.com/samber/lo"
@@ -39,6 +40,7 @@ import (
 )
 
 var (
+	mu         sync.RWMutex
 	woolPlaced = make(map[string]world.Block)
 	mapBlocks  = make(map[string]world.Block)
 )
@@ -196,7 +198,10 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 	}
 
 	if w, ok := b.(block.Wool); ok {
+		mu.Lock()
 		woolPlaced[vec3ToString(pos.Vec3())] = b
+		mu.Unlock()
+
 		time.AfterFunc(4*time.Second, func() {
 			Game.World().Exec(func(tx *world.Tx) {
 				if e, ok := pl.H().Entity(tx); ok {
@@ -206,10 +211,23 @@ func (Handler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b world.Block
 		})
 
 		time.AfterFunc(10*time.Second, func() {
-			if wp := woolPlaced[vec3ToString(pos.Vec3())]; wp != nil {
+			posKey := vec3ToString(pos.Vec3())
+
+			mu.RLock()
+			wp := woolPlaced[posKey]
+			mu.RUnlock()
+
+			if wp != nil {
 				<-Game.World().Exec(func(tx *world.Tx) {
-					tx.SetBlock(pos, lo.If(mapBlocks[vec3ToString(pos.Vec3())] != nil, mapBlocks[vec3ToString(pos.Vec3())]).Else(block.Air{}), nil)
-					woolPlaced[vec3ToString(pos.Vec3())] = nil
+					mu.RLock()
+					restoreBlock := mapBlocks[posKey]
+					mu.RUnlock()
+
+					tx.SetBlock(pos, lo.If(restoreBlock != nil, restoreBlock).Else(block.Air{}), nil)
+
+					mu.Lock()
+					woolPlaced[posKey] = nil
+					mu.Unlock()
 				})
 			}
 		})
@@ -226,8 +244,18 @@ func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item
 		return
 	}
 
-	if woolPlaced[vec3ToString(pos.Vec3())] == nil && mapBlocks[vec3ToString(pos.Vec3())] == nil {
-		mapBlocks[vec3ToString(pos.Vec3())] = pl.Tx().Block(pos)
+	posKey := vec3ToString(pos.Vec3())
+
+	mu.RLock()
+	isWoolPlaced := woolPlaced[posKey] == nil
+	isMapBlockEmpty := mapBlocks[posKey] == nil
+	mu.RUnlock()
+
+	if isWoolPlaced && isMapBlockEmpty {
+		mu.Lock()
+		mapBlocks[posKey] = pl.Tx().Block(pos)
+		mu.Unlock()
+
 		time.AfterFunc(10*time.Second, func() {
 			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 				tx.SetBlock(pos, b, nil)

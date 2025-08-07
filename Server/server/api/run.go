@@ -18,7 +18,6 @@ func init() {
 	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 	go func() {
-		// Load CA cert
 		caCert, err := os.ReadFile("../certs/ca.pem")
 		if err != nil {
 			panic(err)
@@ -39,7 +38,6 @@ func init() {
 		router := gin.New()
 		router.Use(gin.Recovery())
 
-		// custom logger that skips /api/connect
 		router.Use(func(c *gin.Context) {
 			if c.Request.URL.Path == "/api/connect" {
 				c.Next()
@@ -60,7 +58,6 @@ func init() {
 			)
 		})
 
-		// Apply JWT middleware
 		apiGroup := router.Group("/api")
 		apiGroup.Use(jwtAuthMiddleware())
 		initGetRequests(apiGroup)
@@ -79,7 +76,6 @@ func init() {
 	}()
 }
 
-// JWT middleware for Gin API routes
 func jwtAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")

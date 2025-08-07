@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 20 * time.Second
+const startingInDurationBW = 1 * time.Second //20 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 5 * time.Minute
 
@@ -226,9 +226,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 					g.World().Exec(func(tx *world.Tx) {
 						g.ForEachOriginalPlayer(func(pl *player.Player) {
+							fmt.Println(pl.Name())
 							u := user.GetUser(pl)
 							if g.WinningTeam().Contains(pl) {
 								if g.typeGame == game.TypeBedWars {
+									fmt.Println(1)
 									before, after, mvp := g.Reward(pl, tx)
 									gd.WinningTeam[u.Data.UserId] = []int{before, after}
 									if mvp {
@@ -238,8 +240,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
 							} else {
 								if g.typeGame == game.TypeBedWars {
+									fmt.Println(2)
 									before, after := g.Punish(pl, tx)
-									gd.LosingTeam[u.Data.UserId] = []int{before, max(after, 0)}
+									gd.LosingTeam[u.Data.UserId] = []int{before, after}
 								}
 								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
 							}
@@ -315,13 +318,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				} else {
 					currentStage := stages[0]
 
-					go func() {
-						<-g.World().Exec(func(tx *world.Tx) {
-							g.ForEachActivePlayer(func(pl *player.Player) {
-								sendRunningScoreboard(pl, g, currentStage)
-							}, tx)
-						})
-					}()
+					g.World().Exec(func(tx *world.Tx) {
+						for e := range tx.Players() {
+							sendRunningScoreboard(e.(*player.Player), g, currentStage)
+						}
+					})
 
 					if g.typeGame == game.TypeBedWars {
 						currentStage.dur -= 100 * time.Millisecond
@@ -645,7 +646,7 @@ func (b *BedWars) Punish(pl *player.Player, _ *world.Tx) (before, after int) {
 		u.Data.Statistics.ELO -= 45
 	}
 
-	after = u.Data.Statistics.ELO
+	after = max(u.Data.Statistics.ELO, 0)
 
 	if b.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Losses++
@@ -689,6 +690,9 @@ func (b *BedWars) NearestEnemyTeam(team *game.Team, pos mgl64.Vec3) *game.Team {
 
 func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 	u := user.GetUser(pl)
+	u.BuyMutex.Lock()
+	defer u.BuyMutex.Unlock()
+
 	if canAfford(pl, s) {
 		resource, cost := getCost(s)
 		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
@@ -726,8 +730,8 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 					flag = true
 				}
 			}
-
 			if !flag {
+				fmt.Println(1)
 				return addItem()
 			}
 		} else if _, ok := s.Item().(item.Axe); ok {
@@ -738,8 +742,8 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 					flag = true
 				}
 			}
-
 			if !flag {
+				fmt.Println(2)
 				return addItem()
 			}
 		} else if _, ok := s.Item().(item.Sword); ok {

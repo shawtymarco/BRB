@@ -62,6 +62,8 @@ type User struct {
 	PendingDuelRequestTo *world.EntityHandle
 
 	OldArmour OldArmour
+
+	BuyMutex sync.Mutex
 }
 
 func newUser(pl *player.Player, isBot bool) (*User, error) {

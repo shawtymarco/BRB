@@ -58,7 +58,8 @@
       "NotMuted": "<red>This player is not muted.</red>",
       "RankHierarchy": "<red>This player holds a higher rank than you.</red>",
       "CapeAlreadyOwned": "<red>This player already owns the specified cape.</red>",
-      "CapeNotOwned": "<red>This player doesn't own the specified cape in the first place.</red>"
+      "CapeNotOwned": "<red>This player doesn't own the specified cape in the first place.</red>",
+      "ReplyNoSender": "<red>No one messaged you recently.</red>"
     }
   },
   "Game": {
@@ -88,7 +89,7 @@
     "GiveEmerald": "<emerald>+%v Emerald</emerald>",
     "TrapTriggered": "<red>TRAP TRIGGERED!</red>",
     "GeneratorUpgraded": "<yellow>%v have been upgraded to Tier <red>%v</red></yellow>",
-    "BedGone": "<red>ALL BED HAS BEEN DESTROYED</red>",
+    "BedGone": "<red>ALL BEDS HAVE BEEN DESTROYED</red>",
     "SuddenDeath": "<red>%v has started</red>",
     "MagicMilkEffectGive": "<green>You will not trigger any enemy traps for 30 seconds!</green>",
     "MagicMilkEffectRemove": "<red>The magic milk effect is gone now. You will trigger enemy traps now!</red>",

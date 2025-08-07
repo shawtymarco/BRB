@@ -8,6 +8,8 @@ import (
 	"server/server/utils"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/world"
@@ -55,7 +57,7 @@ func (r SetRoleCommand) Run(src cmd.Source, o *cmd.Output, _ *world.Tx) {
 			})
 		}
 
-		pl.Message(text.Colourf(language.Translate(pl).Commands.Success.GiveRank, server.Config.Prefix, dt.Username, rank.Prefix()))
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Success.GiveRank, server.Config.Prefix, dt.Username, lo.If(rank == database.Player, text.Colourf("<grey>Player</grey>")).Else(rank.Prefix())))
 	} else {
 		o.Error(text.Colourf("<red>You cannot use this command in console. Please execute it in-game.</red>"))
 	}

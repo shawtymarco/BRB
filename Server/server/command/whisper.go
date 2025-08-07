@@ -1,6 +1,7 @@
 package command
 
 import (
+	"server/server/language"
 	"server/server/user"
 	"server/server/utils"
 
@@ -44,6 +45,11 @@ func (r ReplyCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 		return
 	}
 	u := user.GetUser(pl)
+
+	if u.LastMessenger == nil {
+		pl.Message(text.Colourf(language.Translate(pl).Commands.Error.ReplyNoSender))
+		return
+	}
 
 	f := func(target *player.Player) {
 		target.Message(text.Colourf("<yellow><bold>FROM</bold> %v:</yellow> <grey>%v</grey>", pl.Name(), r.Message))

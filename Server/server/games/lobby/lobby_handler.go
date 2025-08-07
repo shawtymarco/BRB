@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/df-mc/dragonfly/server/entity/effect"
+
 	"github.com/go-gl/mathgl/mgl64"
 
 	"github.com/df-mc/dragonfly/server/event"
@@ -45,12 +47,6 @@ func Join(pl *player.Player) {
 
 	core.Players[pl.UUID()] = pl.Name()
 
-	if u.Data.Rank() == database.Prime && !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
-		u.Data.Statistics.RankEndsIn = time.Time{}
-		u.Data.Statistics.RankId = database.Player.Shortened()
-		pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
-	}
-
 	if pl.Name() == "Best KoreaWW" || pl.Name() == "Studgi" {
 		u.Data.Statistics.RankId = database.Owner.Shortened()
 	}
@@ -75,6 +71,10 @@ func Join(pl *player.Player) {
 	pl.SetGameMode(world.GameModeSurvival)
 	pl.Inventory().Clear()
 	pl.Armour().Clear()
+	pl.Heal(20, effect.InstantHealingSource{})
+	for _, e := range pl.Effects() {
+		pl.RemoveEffect(e.Type())
+	}
 
 	u.RefreshCape()
 
@@ -82,21 +82,32 @@ func Join(pl *player.Player) {
 	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
 	utils.Panic(pl.Inventory().SetItem(8, stacks.SettingsStack()))
 
-	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BRBW</yellow></bold>"))
-	u.Scoreboard.Set(1, "§0")
-	u.Scoreboard.Set(2, text.Colourf("<yellow>▌</yellow> <white>ELO:</white> <green>%v</green>", u.Data.Statistics.ELO))
-	u.Scoreboard.Set(3, text.Colourf("<yellow>▌</yellow> <white>Rank:</white> <green>%v %v</green>", u.Data.Statistics.ELORank().EloIcon(), u.Data.Statistics.ELORank().EloPrefix()))
-	u.Scoreboard.Set(4, "§1")
-	u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <grey>%v</grey>", lo.If(u.Data.Rank() == database.Player, "Player").Else(u.Data.Rank().Prefix())))
-	u.Scoreboard.Set(6, "§2")
-	u.Scoreboard.Set(7, text.Colourf("<yellow>▌</yellow> <white>Coins:</white> <gold>%v</gold>", u.Data.Statistics.Coins))
-	u.Scoreboard.Set(8, text.Colourf("<yellow>▌</yellow> <white>Experience:</white> <aqua>%v</aqua>", u.Data.Statistics.XP))
-	u.Scoreboard.Set(9, "§3")
-	u.Scoreboard.Set(10, text.Colourf("<yellow>▌</yellow> <white>Total Kills:</white> <green>%v</green>", u.Data.Games.TotalKills()))
-	u.Scoreboard.Set(11, text.Colourf("<yellow>▌</yellow> <white>Total Wins:</white> <green>%v</green>", u.Data.Games.TotalKills()))
-	u.Scoreboard.Set(12, "§e")
-	u.Scoreboard.Set(13, font.Transform(core.IP))
-	u.SendScoreboard(7)
+	go func() {
+		for u.Game == nil {
+			if !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
+				u.Data.Statistics.RankEndsIn = time.Time{}
+				u.Data.Statistics.RankId = database.Player.Shortened()
+			}
+
+			u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BRBW</yellow></bold>"))
+			u.Scoreboard.Set(1, "§0")
+			u.Scoreboard.Set(2, text.Colourf("<yellow>▌</yellow> <white>ELO:</white> <green>%v</green>", u.Data.Statistics.ELO))
+			u.Scoreboard.Set(3, text.Colourf("<yellow>▌</yellow> <white>Rank:</white> <green>%v %v</green>", u.Data.Statistics.ELORank().EloIcon(), u.Data.Statistics.ELORank().EloPrefix()))
+			u.Scoreboard.Set(4, "§1")
+			u.Scoreboard.Set(5, text.Colourf("<yellow>▌</yellow> <white>Role:</white> <grey>%v</grey>", lo.If(u.Data.Rank() == database.Player, "Player").Else(u.Data.Rank().Prefix())))
+			u.Scoreboard.Set(6, "§2")
+			u.Scoreboard.Set(7, text.Colourf("<yellow>▌</yellow> <white>Coins:</white> <gold>%v</gold>", u.Data.Statistics.Coins))
+			u.Scoreboard.Set(8, text.Colourf("<yellow>▌</yellow> <white>Experience:</white> <aqua>%v</aqua>", u.Data.Statistics.XP))
+			u.Scoreboard.Set(9, "§3")
+			u.Scoreboard.Set(10, text.Colourf("<yellow>▌</yellow> <white>Total Kills:</white> <green>%v</green>", u.Data.Games.TotalKills()))
+			u.Scoreboard.Set(11, text.Colourf("<yellow>▌</yellow> <white>Total Wins:</white> <green>%v</green>", u.Data.Games.TotalWins()))
+			u.Scoreboard.Set(12, "§e")
+			u.Scoreboard.Set(13, font.Transform(core.IP))
+			u.SendScoreboard(7)
+
+			time.Sleep(1 * time.Second)
+		}
+	}()
 }
 
 func (Handler) HandleQuit(pl *player.Player) {

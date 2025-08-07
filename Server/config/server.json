@@ -18,14 +18,14 @@
     ]
   },
   "Pvp": {
-    "Force": 0.45,
-    "Height": 0.3608,
+    "Force": 0.46,
+    "Height": 0.394,
     "HitRegistration": 450
   },
   "Hub": {
     "SpawnPoint": [
       -111.5,
-      103.0,
+      105.0,
       -143.5
     ]
   }

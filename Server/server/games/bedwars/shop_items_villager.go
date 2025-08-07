@@ -9,6 +9,7 @@ import (
 	"server/server/utils"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/samber/lo"
 
@@ -65,7 +66,7 @@ func (v *ItemsShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, data 
 
 func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
-		if pl, ok := src.Attacker.(*player.Player); ok {
+		if pl, ok := src.Attacker.(*player.Player); ok && !user.GetUser(pl).IsCooldownActive(user.Interact, 50*time.Millisecond, false, true, false) {
 			SendItemShopUI(&ItemShop{game: v.Game, Player: pl}, false)
 		}
 	}
@@ -165,13 +166,13 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 						go func() {
 							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 								owned := strings.Contains(stack.Lore()[len(stack.Lore())-1], "Purchased!")
-								if !owned && shop.game.buyItem(pl, stack) {
+								if !owned && shop.game.buyItem(pl, stack.AsUnbreakable()) {
 									if _, ok := stack.Item().(item.Boots); ok {
 										menu.WithStacks(lo.If(inArmoury, shop.Armour()).Else(shop.itemShopDashboard(true))...)
-									} else if tool, ok := stack.Item().(item.Tool); ok && (slot == 20 || slot == 21) {
+									} else if tool, ok := stack.Item().(item.Tool); ok {
 										if tool.ToolType() == item.TypePickaxe {
 											utils.Panic(menuInv.SetItem(slot, pickaxeTier(pl, 1)))
-										} else {
+										} else if tool.ToolType() == item.TypeAxe {
 											utils.Panic(menuInv.SetItem(slot, axeTier(pl, 1)))
 										}
 									}
