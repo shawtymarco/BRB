@@ -13,7 +13,6 @@ type nameConfig struct {
 	Rank       bool
 	ELO        bool
 	TeamColour string
-	ShowHealth bool 
 }
 
 func (nc nameConfig) Name(pd *PlayerData) string {
@@ -34,22 +33,14 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 		n = pd.Cosmetics.Nickname
 	}
 
-	var result string
 	if nc.Rank && r != Player {
-		result = text.Colourf("%v%v%v <%v>%v</%v>", eloStr, teamColourStr, r.Prefix(), r.ChatPrefix(), n, r.ChatPrefix())
-	} else {
-		result = text.Colourf("%v%v<grey>%v</grey>", eloStr, teamColourStr, n)
+		return text.Colourf("%v%v%v <%v>%v</%v>", eloStr, teamColourStr, r.Prefix(), r.ChatPrefix(), n, r.ChatPrefix())
 	}
 
-	if nc.ShowHealth {
-		health := pd.Health 
-		result += text.Colourf("\n<red>%v ❤</red>", health)
-	}
-
-	return result
+	return text.Colourf("%v%v<grey>%v</grey>", eloStr, teamColourStr, n)
 }
 
-var LobbyNameDisplay = nameConfig{Rank: true, ELO: true, ShowHealth: false}
+var LobbyNameDisplay = nameConfig{Rank: true, ELO: true}
 var BedWarsNameDisplay = func(teamColour string) nameConfig {
-	return nameConfig{TeamColour: teamColour, ShowHealth: true}
+	return nameConfig{TeamColour: teamColour}
 }
