@@ -39,7 +39,7 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 
 	return text.Colourf("%v%v<grey>%v</grey>", eloStr, teamColourStr, n)
 }
-//A?
+
 var LobbyNameDisplay = nameConfig{Rank: true, ELO: true}
 var BedWarsNameDisplay = func(teamColour string) nameConfig {
 	return nameConfig{TeamColour: teamColour}
