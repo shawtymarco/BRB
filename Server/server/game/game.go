@@ -79,7 +79,7 @@ func (g *Game) ForEachActivePlayer(f func(pl *player.Player), tx *world.Tx) {
 
 func (g *Game) PlayerTeam(pl *player.Player) *Team {
 	for _, team := range g.teams {
-		if team.Contains(pl) {
+		if team.Contains(pl.H()) {
 			return team
 		}
 	}
@@ -164,8 +164,6 @@ type Essentials interface {
 	Maps() []string
 	MapConfig() MapData
 	Handler() player.Handler
-	Reward(player *player.Player, tx *world.Tx) (before, after int, mvp bool)
-	Punish(player *player.Player, tx *world.Tx) (before, after int)
 }
 
 const (

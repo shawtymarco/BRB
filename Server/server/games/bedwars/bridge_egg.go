@@ -1,8 +1,14 @@
 package bedwars
 
 import (
+	"server/server/itemutil"
+	user2 "server/server/user"
 	"server/server/utils"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/player"
+
+	"github.com/df-mc/dragonfly/server/block"
 
 	"github.com/df-mc/dragonfly/server/world/particle"
 
@@ -14,7 +20,11 @@ import (
 	"github.com/go-gl/mathgl/mgl64"
 )
 
-func NewBridgeEgg(opts world.EntitySpawnOpts, owner world.Entity) *world.EntityHandle {
+func init() {
+	itemutil.RegisterSpecialItem(itemutil.BridgeEgg, BridgeEggItem{})
+}
+
+func newBridgeEgg(opts world.EntitySpawnOpts, owner world.Entity) *world.EntityHandle {
 	conf := eggConf
 	conf.Owner = owner.H()
 	return opts.New(entity.EggType, conf)
@@ -27,13 +37,27 @@ var eggConf = entity.ProjectileBehaviourConfig{
 	ParticleCount: 6,
 }
 
-type BridgeEgg struct {
+type BridgeEggItem struct {
 	item.Egg
-	Block world.Block
 }
 
-func (e BridgeEgg) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool {
-	ent := NewBridgeEgg(world.EntitySpawnOpts{
+func NewBridgeEggItem() item.Stack {
+	return item.NewStack(BridgeEggItem{}, 1).WithValue("special_item", int16(itemutil.BridgeEgg))
+}
+
+func (e BridgeEggItem) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool {
+	pl := user.(*player.Player)
+	u := user2.GetUser(pl)
+	if u.Game == nil {
+		return false
+	}
+
+	team := u.Game.PlayerTeam(pl)
+	if team == nil {
+		return false
+	}
+
+	ent := newBridgeEgg(world.EntitySpawnOpts{
 		Position: eyePosition(user),
 		Velocity: user.Rotation().Vec3().Mul(0.5),
 	}, user)
@@ -54,15 +78,16 @@ func (e BridgeEgg) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool 
 
 		for range ticker.C {
 			ent.ExecWorld(func(tx *world.Tx, ee world.Entity) {
-				pos := cube.PosFromVec3(ee.Position())
-				go func() {
+				pos := cube.PosFromVec3(ee.Position().Sub(mgl64.Vec3{0, 2, 0}))
+				if _, ok := tx.Block(pos).(block.Air); ok {
 					time.AfterFunc(200*time.Millisecond, func() {
 						ent.ExecWorld(func(tx *world.Tx, ee world.Entity) {
-							tx.SetBlock(pos, e.Block, nil)
-							blocksPlaced[vec3ToString(pos.Vec3())] = e.Block
+							b := block.Wool{Colour: team.WoolColour()}
+							tx.SetBlock(pos, b, nil)
+							blocksPlaced[vec3ToString(pos.Vec3())] = b
 						})
 					})
-				}()
+				}
 			})
 		}
 	}()

@@ -7,12 +7,13 @@ import (
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
-	"server/server/games/lobby"
-	"server/server/items/stacks"
+	"server/server/itemutil/enchants"
+	"server/server/itemutil/stacks"
 	"server/server/language"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
+	"strings"
 	"sync"
 	"time"
 
@@ -88,7 +89,25 @@ func (Handler) HandleQuit(pl *player.Player) {
 }
 
 func (Handler) HandleChat(ctx *player.Context, msg *string) {
-	lobby.Handler{}.HandleChat(ctx, msg)
+	ctx.Cancel()
+
+	pl := ctx.Val()
+	u := user.GetUser(pl)
+
+	if listener.CheckChatCoolDown(pl) {
+		return
+	}
+
+	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
+
+	*msg = strings.ReplaceAll(strings.ReplaceAll(*msg, "§", ""), "%", "")
+	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
+
+	for p := range core.MCServer.Players(pl.Tx()) {
+		if um := user.GetUser(p); um.Game == nil || um.Game.ID() == Game.ID() {
+			p.Message(*msg)
+		}
+	}
 }
 
 func (Handler) HandleAttackEntity(ctx *player.Context, e world.Entity, force, height *float64, critical *bool) {
@@ -278,10 +297,6 @@ func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 	listener.HandleStartBreak(ctx, pos)
 }
 
-func (Handler) HandlePunchAir(ctx *player.Context) {
-	listener.HandlePunchAir(ctx)
-}
-
 func (Handler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
 }
@@ -293,7 +308,7 @@ func giveKit(pl *player.Player) {
 	utils.Panics(u.AddItemWithHBConfig(2, item.NewStack(item.Shears{}, 1).WithEnchantments(item.NewEnchantment(enchantment.Efficiency, 1)).AsUnbreakable()))
 
 	utils.Panics(u.AddItemWithHBConfig(4, item.NewStack(block.Wool{Colour: item.ColourLime()}, 64)))
-	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(stacks.KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(stacks.CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
+	utils.Panics(u.AddItemWithHBConfig(8, item.NewStack(stacks.KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchants.CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>"))))
 
 	pl.Armour().Set(
 		item.NewStack(item.Helmet{Tier: item.ArmourTierLeather{Colour: color.RGBA{G: 255}}}, 1).AsUnbreakable(),

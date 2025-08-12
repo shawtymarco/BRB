@@ -49,8 +49,8 @@ func (t *Team) ForEachPlayer(tx *world.Tx, f func(pl *player.Player)) {
 	}
 }
 
-func (t *Team) Contains(pl *player.Player) bool {
-	return slices.Contains(t.originalHandles, pl.H())
+func (t *Team) Contains(h *world.EntityHandle) bool {
+	return slices.Contains(t.originalHandles, h)
 }
 
 func (t *Team) AddPlayer(pl *player.Player) {

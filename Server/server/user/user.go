@@ -305,6 +305,7 @@ func ActiveMute(pd *database.PlayerData) *database.PunishmentData {
 func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err error) {
 	var category database.HotBarCategory
 
+	// 1. Categorize the item
 	switch it.Item().(type) {
 	case item.Sword, item.Stick:
 		category = database.Melee
@@ -327,7 +328,6 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 	}
 
 	slot := -1
-
 	if category != database.None {
 		for s, c := range u.Data.Settings.HotBarConfig {
 			if c == category {
@@ -337,15 +337,28 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 		}
 	}
 
+	// Try category slot
 	if slot != -1 {
-		sa, sb := it.AddStack(utils.Panics(u.pl.Inventory().Item(slot)))
+		existing := utils.Panics(u.pl.Inventory().Item(slot))
+		sa, sb := it.AddStack(existing)
+
 		if sb.Count() != 0 {
+			// Merge failed, check if different item
+			if existing.Item() != it.Item() && !existing.Empty() {
+				// Move existing to another slot
+				if movedCount, moveErr := u.pl.Inventory().AddItem(existing); movedCount == existing.Count() && moveErr == nil {
+					return it.Count(), u.pl.Inventory().SetItem(slot, it)
+				}
+				// If couldn't move fully, fallback
+			}
+			// Merge failed but same item or can't move → fallback
 			slot = -1
 		} else {
 			return it.Count(), u.pl.Inventory().SetItem(slot, sa)
 		}
 	}
 
+	// Try preferredSlot (fallback)
 	if slot == -1 && preferredSlot != -1 {
 		sa, sb := it.AddStack(utils.Panics(u.pl.Inventory().Item(preferredSlot)))
 		if sb.Count() == 0 {

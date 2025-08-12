@@ -92,7 +92,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	case game.TypeBedFight:
 		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDFIGHT</yellow></bold>"))
 	default:
-		panic("Unhandled game type")
+		panic("Unhandled gameId type")
 	}
 
 	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
@@ -189,6 +189,10 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	pl.Handle(PlayerHandler{game: bwGame})
 
 	if bwGame.Stage() == game.Running {
+		for _, s := range bwGame.rejoiningPlayerInventories[pl.UUID()] {
+			_, _ = pl.Inventory().AddItem(s)
+		}
+		delete(bwGame.rejoiningPlayerInventories, pl.UUID())
 		pl.Hurt(20, entity.VoidDamageSource{})
 	} else {
 		bwGame.ForEachActivePlayer(func(pl *player.Player) {
@@ -203,6 +207,7 @@ func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u := user.GetUser(pl)
 	u.Game = nil
 	user.Save(pl)
+	h.game.rejoiningPlayerInventories[pl.UUID()] = pl.Inventory().Items()
 	h.game.RemovePlayerFromTeam(pl)
 }
 
@@ -357,8 +362,18 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 		return
 	}
 
-	if s, ok := src.(entity.AttackDamageSource); ok {
-		if attacker, ok := s.Attacker.(*player.Player); ok {
+	var attacker world.Entity
+	s1, isAttackSrc := src.(entity.AttackDamageSource)
+	if isAttackSrc {
+		attacker = s1.Attacker
+	}
+	s2, isProjectileSrc := src.(entity.ProjectileDamageSource)
+	if isProjectileSrc {
+		attacker = s2.Owner
+	}
+
+	if attacker != nil {
+		if attacker, ok := attacker.(*player.Player); ok {
 			if !h.game.EnemyWith(pl, attacker) {
 				ctx.Cancel()
 				return
@@ -370,7 +385,7 @@ func (h PlayerHandler) HandleHurt(ctx *player.Context, damage *float64, immune b
 			u.LastHitAt = time.Now()
 			ua.LastHitAt = time.Now()
 
-			if _, isInvis := pl.Effect(effect.Invisibility); isInvis {
+			if _, isInvisible := pl.Effect(effect.Invisibility); isInvisible {
 				*damage = 2
 				pl.RemoveEffect(effect.Invisibility)
 				pl.Armour().Set(u.OldArmour.Helmet, u.OldArmour.ChestPlate, u.OldArmour.Leggings, u.OldArmour.Boots)
@@ -531,27 +546,6 @@ func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 
 func (PlayerHandler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
-
-	pl := ctx.Val()
-	main, _ := pl.HeldItems()
-
-	if c, ok := main.Item().(item.Consumable); ok {
-		c.ConsumeDuration()
-	}
-}
-
-func (h PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
-	pl := ctx.Val()
-	main, _ := pl.HeldItems()
-	if _, ok := main.Item().(item.Bucket); ok {
-		time.AfterFunc(50*time.Millisecond, func() {
-			pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-				pl = e.(*player.Player)
-				main, off := pl.HeldItems()
-				pl.SetHeldItems(main.Grow(-1), off)
-			})
-		})
-	}
 }
 
 func (h PlayerHandler) HandleItemUseOnEntity(ctx *player.Context, e world.Entity) {
@@ -563,14 +557,21 @@ func (h PlayerHandler) HandleItemUseOnEntity(ctx *player.Context, e world.Entity
 	}
 }
 
+func (PlayerHandler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
+	listener.HandleItemUseOnBlock(ctx, pos, face, clickPos)
+}
+
 func (PlayerHandler) HandleItemConsume(ctx *player.Context, s item.Stack) {
-	ctx.Cancel()
+	listener.HandleItemConsume(ctx, s)
 
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 
 	if s, ok := s.Item().(item.Potion); ok {
 		ctx.Cancel()
+
+		main, off := pl.HeldItems()
+		pl.SetHeldItems(main.Grow(-1), off)
 
 		switch s.Type {
 		case potion.StrongLeaping():
@@ -726,10 +727,6 @@ func (PlayerHandler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 			putItem(pl.EnderChestInventory())
 		}
 	}
-}
-
-func (PlayerHandler) HandlePunchAir(ctx *player.Context) {
-	listener.HandlePunchAir(ctx)
 }
 
 func (h PlayerHandler) HandleItemDrop(ctx *player.Context, s item.Stack) {

@@ -1,6 +1,8 @@
 package bedwars
 
 import (
+	"server/server/itemutil"
+	user2 "server/server/user"
 	"server/server/utils"
 
 	"github.com/sandertv/gophertunnel/minecraft/protocol"
@@ -13,18 +15,27 @@ import (
 	"github.com/df-mc/dragonfly/server/world/sound"
 )
 
-type BedCompass struct {
-	item.Compass
-	*BedWars
+func init() {
+	itemutil.RegisterSpecialItem(itemutil.BedCompass, BedCompassItem{})
 }
 
-func (c BedCompass) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool {
+type BedCompassItem struct {
+	item.Compass
+}
+
+func NewBedCompassItem() item.Stack {
+	return item.NewStack(BedCompassItem{}, 1).WithValue("special_item", int16(itemutil.BedCompass))
+}
+
+func (c BedCompassItem) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool {
 	pl := user.(*player.Player)
+	u := user2.GetUser(pl)
+	g := Games[u.Game.ID()]
 	w := tx.World()
 
 	var nearestEnemy *player.Player
-	c.BedWars.ForEachActivePlayer(func(p *player.Player) {
-		if p.GameMode() != world.GameModeSpectator && c.BedWars.EnemyWith(p, pl) && (nearestEnemy == nil || utils.Distance(pl.Position(), p.Position()) < utils.Distance(pl.Position(), nearestEnemy.Position())) {
+	g.ForEachActivePlayer(func(p *player.Player) {
+		if p.GameMode() != world.GameModeSpectator && g.EnemyWith(p, pl) && (nearestEnemy == nil || utils.Distance(pl.Position(), p.Position()) < utils.Distance(pl.Position(), nearestEnemy.Position())) {
 			nearestEnemy = p
 		}
 	}, tx)

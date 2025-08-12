@@ -127,8 +127,9 @@ export class Game {
                     **Team 2 Captain:** <@${captains[1].id}>`,
                 color: 0xFFFFFF,
                 footer: {
-                    text: `brbw.net | <t:${Math.floor(Date.now() / 1000)}>`
+                    text: `brbw.net`
                 },
+                timestamp: new Date().toISOString()
             }]
         });
     }
@@ -174,6 +175,7 @@ export class Game {
                     footer: {
                         text: `brbw.net`
                     },
+                    timestamp: new Date().toISOString()
                 }],
                 components: []
             });
@@ -206,6 +208,7 @@ export class Game {
                 footer: {
                     text: `brbw.net`
                 },
+                timestamp: new Date().toISOString()
             }],
             components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
                 new StringSelectMenuBuilder()
@@ -268,6 +271,7 @@ export class Game {
                 footer: {
                     text: `brbw.net`
                 },
+                timestamp: new Date().toISOString()
             }]
         });
 

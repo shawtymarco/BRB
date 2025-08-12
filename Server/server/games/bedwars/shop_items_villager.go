@@ -85,17 +85,16 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 	activeItemShops[pl.UUID()] = shop
 	menu := inv.NewCustomMenu(text.Colourf("<emerald>Item Shop</emerald>"), inv.ContainerChest{DoubleChest: true}, menuInv, nil)
 	menu.WithStacks(shop.itemShopDashboard(true)...)
+	inQuickBuy := true
 
 	var qbSlot int
-
-	var inArmoury bool
 
 	menuInv.Handle(inv2.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 
 			if slot >= 1 && slot <= 7 {
-				inArmoury = false
+				inQuickBuy = false
 				go func() {
 					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 					menuInv.Clear()
@@ -108,7 +107,6 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 						return
 					case 3:
 						menu.WithStacks(shop.Armour()...)
-						inArmoury = true
 						return
 					case 4:
 						menu.WithStacks(shop.Tools()...)
@@ -132,6 +130,7 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 					menuInv.Clear()
 					menu.WithStacks(shop.itemShopDashboard(true)...)
+					inQuickBuy = true
 				}()
 				return
 			}
@@ -168,12 +167,16 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 								owned := strings.Contains(stack.Lore()[len(stack.Lore())-1], "Purchased!")
 								if !owned && shop.game.buyItem(pl, stack.AsUnbreakable()) {
 									if _, ok := stack.Item().(item.Boots); ok {
-										menu.WithStacks(lo.If(inArmoury, shop.Armour()).Else(shop.itemShopDashboard(true))...)
+										menu.WithStacks(lo.If(inQuickBuy, shop.itemShopDashboard(true)).Else(shop.Armour())...)
 									} else if tool, ok := stack.Item().(item.Tool); ok {
-										if tool.ToolType() == item.TypePickaxe {
+										switch tool.ToolType() {
+										case item.TypePickaxe:
 											utils.Panic(menuInv.SetItem(slot, pickaxeTier(pl, 1)))
-										} else if tool.ToolType() == item.TypeAxe {
+										case item.TypeAxe:
 											utils.Panic(menuInv.SetItem(slot, axeTier(pl, 1)))
+										case item.TypeShears:
+											utils.Panic(menuInv.SetItem(slot, axeTier(pl, 1)))
+											menu.WithStacks(lo.If(inQuickBuy, shop.itemShopDashboard(true)).Else(shop.Tools())...)
 										}
 									}
 									pl.PlaySound(sound.Experience{})
@@ -201,6 +204,7 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 							pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
 							menuInv.Clear()
 							menu.WithStacks(shop.itemShopDashboard(true)...)
+							inQuickBuy = true
 						}()
 					}
 				} else if qbMode.Equal(redDye) {

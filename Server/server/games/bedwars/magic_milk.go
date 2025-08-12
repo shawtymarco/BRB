@@ -1,6 +1,7 @@
 package bedwars
 
 import (
+	"server/server/itemutil"
 	"server/server/language"
 	user2 "server/server/user"
 	"time"
@@ -11,32 +12,28 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
-type MagicMilk struct {
+func init() {
+	itemutil.RegisterSpecialItem(itemutil.MagicMilk, MagicMilkItem{})
+}
+
+type MagicMilkItem struct {
 	item.Bucket
-	game *BedWars
 }
 
-func NewMagicMilk(game *BedWars) world.Item {
-	return MagicMilk{game: game, Bucket: item.Bucket{Content: item.MilkBucketContent()}}
+func NewMagicMilkItem() item.Stack {
+	return item.NewStack(MagicMilkItem{Bucket: item.Bucket{Content: item.MilkBucketContent()}}, 1).WithValue("special_item", int16(itemutil.MagicMilk))
 }
 
-func (m MagicMilk) Use(tx *world.Tx, user item.User, ctx *item.UseContext) bool {
-	if m.game == nil {
-		return false
-	}
-
-	pl := user.(*player.Player)
-	main, off := pl.HeldItems()
-
-	pl.SetHeldItems(main.Grow(-1), off)
-
-	m.game.trapIgnore[pl.UUID()] = true
-	user2.GetUser(pl).PlaySound("random.drink", 1, 1)
+func (m MagicMilkItem) Consume(_ *world.Tx, c item.Consumer) item.Stack {
+	pl := c.(*player.Player)
+	u := user2.GetUser(pl)
+	g := Games[u.Game.ID()]
+	g.trapIgnore[pl.UUID()] = true
 	pl.Message(text.Colourf(language.Translate(pl).BedWars.MagicMilkEffectGive))
 
 	time.AfterFunc(30*time.Second, func() {
-		m.game.trapIgnore[pl.UUID()] = false
-		pl.Message(text.Colourf(language.Translate(pl).BedWars.MagicMilkEffectGive))
+		g.trapIgnore[pl.UUID()] = false
+		pl.Message(text.Colourf(language.Translate(pl).BedWars.MagicMilkEffectRemove))
 	})
-	return true
+	return item.Stack{}
 }

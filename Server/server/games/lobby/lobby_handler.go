@@ -1,12 +1,12 @@
 package lobby
 
 import (
-	"fmt"
 	core "server/server"
 	"server/server/database"
 	"server/server/font"
+	"server/server/games/buildffa"
 	"server/server/inv"
-	"server/server/items/stacks"
+	"server/server/itemutil/stacks"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
@@ -28,7 +28,6 @@ import (
 
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/player"
-	"github.com/df-mc/dragonfly/server/player/chat"
 	"github.com/df-mc/dragonfly/server/world"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
@@ -78,12 +77,12 @@ func Join(pl *player.Player) {
 
 	u.RefreshCape()
 
-	utils.Panic(pl.Inventory().SetItem(0, stacks.CosmeticsStack()))
-	utils.Panic(pl.Inventory().SetItem(4, stacks.GameSelectorStack()))
-	utils.Panic(pl.Inventory().SetItem(8, stacks.SettingsStack()))
+	utils.Panic(pl.Inventory().SetItem(0, stacks.NewCosmeticsItem()))
+	utils.Panic(pl.Inventory().SetItem(4, stacks.NewGameSelectorItem()))
+	utils.Panic(pl.Inventory().SetItem(8, stacks.NewSettingsItem()))
 
 	go func() {
-		for u.Game == nil {
+		for u.Game == nil && pl.GameMode() != world.GameModeSpectator {
 			if !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
 				u.Data.Statistics.RankEndsIn = time.Time{}
 				u.Data.Statistics.RankId = database.Player.Shortened()
@@ -130,10 +129,13 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
 	*msg = strings.ReplaceAll(strings.ReplaceAll(*msg, "§", ""), "%", "")
-	newMsg := fmt.Sprintf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
-	*msg = text.Colourf(newMsg)
+	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
 
-	_, _ = fmt.Fprintf(chat.Global, *msg)
+	for p := range core.MCServer.Players(pl.Tx()) {
+		if um := user.GetUser(p); um.Game == nil || um.Game.ID() == buildffa.Game.ID() {
+			p.Message(*msg)
+		}
+	}
 }
 
 func (Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
@@ -165,16 +167,16 @@ func (Handler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops *[]item
 	ctx.Cancel()
 }
 
+func (Handler) HandleItemUseOnBlock(ctx *player.Context, pos cube.Pos, face cube.Face, clickPos mgl64.Vec3) {
+	ctx.Cancel()
+}
+
 func (Handler) HandleItemDrop(ctx *player.Context, s item.Stack) {
 	ctx.Cancel()
 }
 
 func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 	listener.HandleStartBreak(ctx, pos)
-}
-
-func (Handler) HandlePunchAir(ctx *player.Context) {
-	listener.HandlePunchAir(ctx)
 }
 
 func (Handler) HandleItemUse(ctx *player.Context) {

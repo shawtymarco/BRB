@@ -32,7 +32,7 @@ func (h WorldHandler) HandleExplosion(ctx *world.Context, position mgl64.Vec3, e
 		for _, pos := range *blocks {
 			b := ctx.Val().Block(pos)
 			_, ok1 := b.(*bed.Bed)
-			_, ok2 := b.(*block.Glass)
+			_, ok2 := b.(*block.StainedGlass)
 			if !ok1 && !ok2 && blocksPlaced[vec3ToString(pos.Vec3())] != nil {
 				filtered = append(filtered, pos)
 			}

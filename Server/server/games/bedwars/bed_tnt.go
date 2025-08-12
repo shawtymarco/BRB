@@ -1,6 +1,8 @@
 package bedwars
 
 import (
+	"server/server/itemutil"
+
 	"github.com/df-mc/dragonfly/server/block"
 	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/entity"
@@ -11,7 +13,11 @@ import (
 	"github.com/go-gl/mathgl/mgl64"
 )
 
-func NewTNT(opts world.EntitySpawnOpts) *world.EntityHandle {
+func init() {
+	itemutil.RegisterSpecialItem(itemutil.BedTNT, BedTNTItem{})
+}
+
+func newTNT(opts world.EntitySpawnOpts) *world.EntityHandle {
 	conf := tntConf
 	return opts.New(entity.TNTType, conf)
 }
@@ -29,13 +35,16 @@ var tntConf = entity.PassiveBehaviourConfig{
 	},
 }
 
-type BedTNT struct {
+type BedTNTItem struct {
 	block.TNT
-	Block world.Block
 }
 
-func (t BedTNT) UseOnBlock(pos cube.Pos, face cube.Face, clickPos mgl64.Vec3, tx *world.Tx, user item.User, ctx *item.UseContext) bool {
-	ent := NewTNT(world.EntitySpawnOpts{Position: clickPos})
+func NewBedTNTItem() item.Stack {
+	return item.NewStack(BedTNTItem{}, 1).WithValue("special_item", int16(itemutil.BedTNT))
+}
+
+func (t BedTNTItem) UseOnBlock(pos cube.Pos, face cube.Face, clickPos mgl64.Vec3, tx *world.Tx, user item.User, ctx *item.UseContext) bool {
+	ent := newTNT(world.EntitySpawnOpts{Position: clickPos})
 	tx.AddEntity(ent)
 	return true
 }

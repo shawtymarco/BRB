@@ -75,20 +75,22 @@ type BedWars struct {
 	emeraldGeneratorSettings *GeneratorSettings
 	generators               []*GeneratorBlockType
 
-	trapIgnore map[uuid.UUID]bool
+	trapIgnore                 map[uuid.UUID]bool
+	rejoiningPlayerInventories map[uuid.UUID][]item.Stack
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
 	newId := uuid.New()
 	startInDur := lo.If(typeGame == game.TypeBedWars, startingInDurationBW).Else(startingInDurationBF)
 	Games[newId] = &BedWars{
-		TeamSize:   teamSize,
-		TeamCount:  teamCount,
-		typeGame:   typeGame,
-		isCustom:   isCustom,
-		startingIn: startInDur,
-		waitingDur: maxWaitingDuration,
-		trapIgnore: make(map[uuid.UUID]bool),
+		TeamSize:                   teamSize,
+		TeamCount:                  teamCount,
+		typeGame:                   typeGame,
+		isCustom:                   isCustom,
+		startingIn:                 startInDur,
+		waitingDur:                 maxWaitingDuration,
+		trapIgnore:                 make(map[uuid.UUID]bool),
+		rejoiningPlayerInventories: make(map[uuid.UUID][]item.Stack),
 	}
 	g := Games[newId]
 
@@ -225,41 +227,52 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					suddenDeathTicker.Stop()
 
 					g.World().Exec(func(tx *world.Tx) {
-						g.ForEachOriginalPlayer(func(pl *player.Player) {
-							fmt.Println(pl.Name())
-							u := user.GetUser(pl)
-							if g.WinningTeam().Contains(pl) {
+						if g.typeGame == game.TypeBedFight {
+							g.WinningTeam().ForEachPlayer(tx, func(pl *player.Player) {
+								u := user.GetUser(pl)
+								g.UsersToJoin = append(g.UsersToJoin, u.Data.UserId)
+							})
+						}
+
+						for _, userId := range g.UsersToJoin {
+							u := user.GetUserByUserID(userId)
+							e, ok := u.H().Entity(tx)
+							if g.WinningTeam().Contains(u.H()) {
 								if g.typeGame == game.TypeBedWars {
-									fmt.Println(1)
-									before, after, mvp := g.Reward(pl, tx)
+									before, after, mvp := g.Reward(u, tx)
 									gd.WinningTeam[u.Data.UserId] = []int{before, after}
 									if mvp {
 										gd.MVPs = append(gd.MVPs, u.Data.UserId)
 									}
 								}
-								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.VictoryTitle)))
+								if ok {
+									e.(*player.Player).SendTitle(title.New(text.Colourf(language.Translate(e.(*player.Player)).BedWars.VictoryTitle)))
+								}
 							} else {
 								if g.typeGame == game.TypeBedWars {
-									fmt.Println(2)
-									before, after := g.Punish(pl, tx)
+									before, after := g.Punish(u, tx)
 									gd.LosingTeam[u.Data.UserId] = []int{before, after}
 								}
-								pl.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.DefeatTitle)))
+								e.(*player.Player).SendTitle(title.New(text.Colourf(language.Translate(e.(*player.Player)).BedWars.DefeatTitle)))
 							}
 
 							var name string
 							var mostKills int
-							g.WinningTeam().ForEachPlayer(pl.Tx(), func(p *player.Player) {
-								uwt := user.GetUser(p)
-								if name == "" || mostKills < uwt.GameInfo.TotalBWKills() {
-									name = database.LobbyNameDisplay.Name(uwt.Data)
-									mostKills = uwt.GameInfo.TotalBWKills()
+							for _, uid := range g.UsersToJoin {
+								uwt := user.GetUserByUserID(uid)
+								if name == "" {
+									if mostKills < uwt.GameInfo.TotalBWKills() {
+										name = database.LobbyNameDisplay.Name(uwt.Data)
+										mostKills = uwt.GameInfo.TotalBWKills()
+									} else {
+										name += ", " + database.LobbyNameDisplay.Name(uwt.Data)
+									}
 								}
-							})
+							}
 
 							var sorted []*player.Player
 							for _, e := range g.OriginalPlayers() {
-								if p, ok := e.Entity(pl.Tx()); ok {
+								if p, ok := e.Entity(tx); ok {
 									sorted = append(sorted, p.(*player.Player))
 								}
 							}
@@ -290,7 +303,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
 							}
 
-							pl.Message(text.Colourf(
+							e.(*player.Player).Message(text.Colourf(
 								`<green>============================================================</green>
                                     <bold>%v</bold>
 
@@ -311,7 +324,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								strings.Repeat(" ", lo.If(80-len(l4) > 0, 110-len(l4)).Else(20)),
 								l4,
 							))
-						}, tx)
+						}
 					})
 
 					g.SetStage(game.Ending)
@@ -553,7 +566,7 @@ func (b *BedWars) Handler() player.Handler {
 	return PlayerHandler{}
 }
 
-func (b *BedWars) Reward(pl *player.Player, tx *world.Tx) (before, after int, mvp bool) {
+func (b *BedWars) Reward(u *user.User, tx *world.Tx) (before, after int, mvp bool) {
 	var sorted []*player.Player
 	b.ForEachOriginalPlayer(func(p *player.Player) {
 		sorted = append(sorted, p)
@@ -568,7 +581,6 @@ func (b *BedWars) Reward(pl *player.Player, tx *world.Tx) (before, after int, mv
 
 	mostKills := user.GetUser(sorted[0]).GameInfo.TotalBWKills()
 
-	u := user.GetUser(pl)
 	before = u.Data.Statistics.ELO
 
 	if u.GameInfo.TotalBWKills() == mostKills {
@@ -623,8 +635,7 @@ func (b *BedWars) Reward(pl *player.Player, tx *world.Tx) (before, after int, mv
 	return before, after, mvp
 }
 
-func (b *BedWars) Punish(pl *player.Player, _ *world.Tx) (before, after int) {
-	u := user.GetUser(pl)
+func (b *BedWars) Punish(u *user.User, _ *world.Tx) (before, after int) {
 	before = u.Data.Statistics.ELO
 
 	switch u.Data.Statistics.ELORank() {
@@ -731,7 +742,6 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 				}
 			}
 			if !flag {
-				fmt.Println(1)
 				return addItem()
 			}
 		} else if _, ok := s.Item().(item.Axe); ok {
@@ -743,7 +753,6 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 				}
 			}
 			if !flag {
-				fmt.Println(2)
 				return addItem()
 			}
 		} else if _, ok := s.Item().(item.Sword); ok {

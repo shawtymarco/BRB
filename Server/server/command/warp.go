@@ -19,7 +19,7 @@ type WarpCommand struct {
 func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.GetUser(pl)
-		if u.Game == nil {
+		if u.Game == nil || pl.GameMode() == world.GameModeSpectator {
 			o.Error(text.Colourf(language.Translate(pl).Game.Error.NotInAGame))
 			return
 		}

@@ -1,7 +1,8 @@
 package bedwars
 
 import (
-	"server/server/items/stacks"
+	"server/server/itemutil/enchants"
+	"server/server/itemutil/stacks"
 	"server/server/user"
 	"strings"
 
@@ -110,7 +111,7 @@ func (s *ItemShop) Melee() []item.Stack {
 	items[20] = i20
 	items[21] = i21
 
-	items[22] = shopify(s.Player, item.NewStack(stacks.KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(stacks.CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>")), Gold, 5, false, false)
+	items[22] = shopify(s.Player, item.NewStack(stacks.KnockBackStick{}, 1).AsUnbreakable().WithEnchantments(item.NewEnchantment(enchants.CustomKnockBack{}, 1)).WithCustomName(text.Colourf("<green>Knockback Stick</green>")), Gold, 5, false, false)
 	return items
 }
 
@@ -181,26 +182,28 @@ func (s *ItemShop) Potions() []item.Stack {
 func (s *ItemShop) Utility() []item.Stack {
 	items := s.itemShopDashboard(false)
 	items[19] = shopify(s.Player, item.NewStack(item.GoldenApple{}, 1), Gold, 3, false, false)
-	items[20] = shopify(s.Player, item.NewStack(SilverfishSnowball{game: s.game}, 1), Iron, 20, false, false)
-	items[21] = editName(shopify(s.Player, item.NewStack(block.TNT{}, 1), Gold, 8, false, false), "TNT")
+	items[20] = editName(
+		shopify(s.Player, NewSilverfishSnowballItem(), Iron, 20, false, false),
+		text.Colourf("<green>Silverfish</green>"),
+	)
+	items[21] = shopify(s.Player, NewBedTNTItem(), Gold, 8, false, false)
 	items[22] = shopify(s.Player, item.NewStack(item.EnderPearl{}, 1), Emerald, 4, false, false)
 	items[23] = shopify(s.Player, item.NewStack(item.Bucket{Content: item.LiquidBucketContent(block.Water{})}, 1), Gold, 3, false, false)
 
-	colour := item.ColourWhite()
-	if s.game != nil {
-		if team := s.game.PlayerTeam(s.Player); team != nil {
-			colour = team.WoolColour()
-		}
-	}
-
 	items[24] = editName(
-		shopify(s.Player, item.NewStack(BridgeEgg{Block: block.Wool{Colour: colour}}, 1), Emerald, 1, false, false),
+		shopify(s.Player, NewBridgeEggItem(), Emerald, 1, false, false),
 		text.Colourf("<green>Bridge Egg</green>"),
 	)
 
-	items[25] = editName(shopify(s.Player, item.NewStack(NewMagicMilk(s.game), 1), Gold, 3, false, false), text.Colourf("<green>Magic Milk</green>"))
+	items[25] = editName(
+		shopify(s.Player, NewMagicMilkItem(), Gold, 3, false, false),
+		text.Colourf("<green>Magic Milk</green>"),
+	)
 	items[28] = shopify(s.Player, item.NewStack(block.Sponge{}, 4), Gold, 3, false, false)
-	items[29] = shopify(s.Player, item.NewStack(BedCompass{BedWars: s.game}, 1), Emerald, 2, false, false)
+	items[29] = editName(
+		shopify(s.Player, NewBedCompassItem(), Emerald, 2, false, false),
+		text.Colourf("<green>Player Locator</green>"),
+	)
 	return items
 }
 
