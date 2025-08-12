@@ -99,7 +99,7 @@ func sendUpgradesShopUI(shop *upgradesShop) {
 							pl.PlaySound(sound.Experience{})
 
 							shop.team.ForEachPlayer(tx, func(p *player.Player) {
-								for invSlot, invStack := range p.Inventory().Items() {
+								for invSlot, invStack := range p.Inventory().Slots() {
 									if _, ok := invStack.Item().(item.Sword); ok {
 										utils.Panic(p.Inventory().SetItem(invSlot, invStack.WithEnchantments(item.NewEnchantment(enchantment.Sharpness, shop.team.Upgrades.Sharpness))))
 									}

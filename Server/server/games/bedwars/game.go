@@ -729,24 +729,24 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 			)
 
 			if t.Upgrades.Protection != 0 {
-				for slot, stack := range pl.Armour().Items() {
+				for slot, stack := range pl.Armour().Slots() {
 					utils.Panic(pl.Armour().Inventory().SetItem(slot, stack.WithEnchantments(item.NewEnchantment(enchantment.Protection, t.Upgrades.Protection))))
 				}
 			}
 		} else if _, ok := s.Item().(item.Pickaxe); ok {
 			var flag bool
-			for slot, stack := range pl.Inventory().Items() {
+			for slot, stack := range pl.Inventory().Slots() {
 				if _, ok := stack.Item().(item.Pickaxe); ok {
 					utils.Panic(pl.Inventory().SetItem(slot, pickaxeTier(pl, 1).WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true
 				}
 			}
 			if !flag {
-				return addItem()
+				addItem()
 			}
 		} else if _, ok := s.Item().(item.Axe); ok {
 			var flag bool
-			for slot, stack := range pl.Inventory().Items() {
+			for slot, stack := range pl.Inventory().Slots() {
 				if _, ok := stack.Item().(item.Axe); ok {
 					utils.Panic(pl.Inventory().SetItem(slot, axeTier(pl, 1).WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true
@@ -757,7 +757,7 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 			}
 		} else if _, ok := s.Item().(item.Sword); ok {
 			var flag bool
-			for slot, stack := range pl.Inventory().Items() {
+			for slot, stack := range pl.Inventory().Slots() {
 				if _, ok := stack.Item().(item.Sword); ok {
 					utils.Panic(pl.Inventory().SetItem(slot, s.WithLore().WithValue("resource", nil).WithValue("cost", nil)))
 					flag = true

@@ -117,15 +117,17 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		b := tx2.Block(*openedPos.Load())
 		if shop := activeItemShops[pl.UUID()]; shop != nil {
 			if _, ok := b.(block.Air); ok {
-				isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
-					_, ok := stack.Item().(item.Shears)
-					return ok
-				})
-				it43, _ := shop.inv.Item(43)
-				isQuickBuy := !it43.Empty()
-
 				go func() {
 					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+
+					it22, _ := shop.inv.Item(22)
+					isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
+						_, ok := stack.Item().(item.Shears)
+						return ok
+					}) && it22.Empty()
+					it43, _ := shop.inv.Item(43)
+					isQuickBuy := !it43.Empty()
+
 					if isTools {
 						shop.inv.Clear()
 						for i, it := range shop.Tools() {
@@ -207,7 +209,7 @@ func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u := user.GetUser(pl)
 	u.Game = nil
 	user.Save(pl)
-	h.game.rejoiningPlayerInventories[pl.UUID()] = pl.Inventory().Items()
+	h.game.rejoiningPlayerInventories[pl.UUID()] = pl.Inventory().Slots()
 	h.game.RemovePlayerFromTeam(pl)
 }
 
