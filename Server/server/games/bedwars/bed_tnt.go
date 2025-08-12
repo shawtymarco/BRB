@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"server/server/itemutil"
+	"time"
 
 	"github.com/df-mc/dragonfly/server/block"
 	"github.com/df-mc/dragonfly/server/block/cube"
@@ -19,6 +20,7 @@ func init() {
 
 func newTNT(opts world.EntitySpawnOpts) *world.EntityHandle {
 	conf := tntConf
+	conf.ExistenceDuration = 3 * time.Second
 	return opts.New(entity.TNTType, conf)
 }
 
@@ -44,7 +46,8 @@ func NewBedTNTItem() item.Stack {
 }
 
 func (t BedTNTItem) UseOnBlock(pos cube.Pos, face cube.Face, clickPos mgl64.Vec3, tx *world.Tx, user item.User, ctx *item.UseContext) bool {
-	ent := newTNT(world.EntitySpawnOpts{Position: clickPos})
+	ent := newTNT(world.EntitySpawnOpts{Position: pos.Side(face).Vec3().Add(clickPos)})
 	tx.AddEntity(ent)
+	ctx.CountSub = 1
 	return true
 }

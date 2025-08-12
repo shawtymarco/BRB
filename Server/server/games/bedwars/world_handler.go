@@ -25,9 +25,7 @@ func (h WorldHandler) HandleLeavesDecay(ctx *world.Context, pos cube.Pos) {
 }
 
 func (h WorldHandler) HandleExplosion(ctx *world.Context, position mgl64.Vec3, entities *[]world.Entity, blocks *[]cube.Pos, itemDropChance *float64, spawnFire *bool) {
-	if *itemDropChance == 1 { // Bed TNT explosion
-		*itemDropChance = 0.8
-
+	if *itemDropChance == 0.8 { // Bed TNT explosion
 		filtered := (*blocks)[:0]
 		for _, pos := range *blocks {
 			b := ctx.Val().Block(pos)

@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 20 * time.Second
+const startingInDurationBW = 1 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 5 * time.Minute
 
@@ -69,14 +69,11 @@ type BedWars struct {
 	startingIn time.Duration
 	waitingDur time.Duration
 
-	ironGeneratorSettings    *GeneratorSettings
-	goldGeneratorSettings    *GeneratorSettings
-	diamondGeneratorSettings *GeneratorSettings
-	emeraldGeneratorSettings *GeneratorSettings
-	generators               []*GeneratorBlockType
+	generators []*GeneratorBlockType
 
 	trapIgnore                 map[uuid.UUID]bool
 	rejoiningPlayerInventories map[uuid.UUID][]item.Stack
+	rejoiningPlayerArmour      map[uuid.UUID][]item.Stack
 }
 
 func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
@@ -91,6 +88,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		waitingDur:                 maxWaitingDuration,
 		trapIgnore:                 make(map[uuid.UUID]bool),
 		rejoiningPlayerInventories: make(map[uuid.UUID][]item.Stack),
+		rejoiningPlayerArmour:      make(map[uuid.UUID][]item.Stack),
 	}
 	g := Games[newId]
 
@@ -175,9 +173,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 					g.World().Exec(func(tx *world.Tx) {
 						if g.startingIn == 0 {
-							g.initBedWarsFeatures(tx)
-
-							if len(g.UsersToJoin) != 0 {
+							if g.typeGame == game.TypeBedWars {
 								g.ForEachActivePlayer(func(pl *player.Player) {
 									g.RemovePlayerFromTeam(pl)
 								}, tx)
@@ -186,7 +182,12 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 									u := user.GetUserByUserID(userId)
 									g.AddPlayerToTeam(u.Player(), g.TeamSize, typeGame)
 								}
+
+								g.AddTeam() // add blue
+								g.AddTeam() // add yellow
 							}
+
+							g.initBedWarsFeatures(tx)
 
 							g.ForEachActivePlayer(func(pl *player.Player) {
 								u := user.GetUser(pl)
@@ -253,7 +254,10 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 									before, after := g.Punish(u, tx)
 									gd.LosingTeam[u.Data.UserId] = []int{before, after}
 								}
-								e.(*player.Player).SendTitle(title.New(text.Colourf(language.Translate(e.(*player.Player)).BedWars.DefeatTitle)))
+
+								if ok {
+									e.(*player.Player).SendTitle(title.New(text.Colourf(language.Translate(e.(*player.Player)).BedWars.DefeatTitle)))
+								}
 							}
 
 							var name string
@@ -303,8 +307,9 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
 							}
 
-							e.(*player.Player).Message(text.Colourf(
-								`<green>============================================================</green>
+							if ok {
+								e.(*player.Player).Message(text.Colourf(
+									`<green>============================================================</green>
                                     <bold>%v</bold>
 
 %v%v
@@ -314,16 +319,17 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 %v%v
 
 <green>============================================================</green>`,
-								lo.If(g.typeGame == game.TypeBedWars, "Bed Wars").Else("Bed Fight"),
-								strings.Repeat(" ", lo.If(85-len(l1) > 0, 110-len(l1)).Else(25)),
-								l1,
-								strings.Repeat(" ", lo.If(80-len(l2) > 0, 110-len(l2)).Else(20)),
-								l2,
-								strings.Repeat(" ", lo.If(80-len(l3) > 0, 110-len(l3)).Else(20)),
-								l3,
-								strings.Repeat(" ", lo.If(80-len(l4) > 0, 110-len(l4)).Else(20)),
-								l4,
-							))
+									lo.If(g.typeGame == game.TypeBedWars, "Bed Wars").Else("Bed Fight"),
+									strings.Repeat(" ", lo.If(85-len(l1) > 0, 110-len(l1)).Else(25)),
+									l1,
+									strings.Repeat(" ", lo.If(80-len(l2) > 0, 110-len(l2)).Else(20)),
+									l2,
+									strings.Repeat(" ", lo.If(80-len(l3) > 0, 110-len(l3)).Else(20)),
+									l3,
+									strings.Repeat(" ", lo.If(80-len(l4) > 0, 110-len(l4)).Else(20)),
+									l4,
+								))
+							}
 						}
 					})
 
@@ -342,12 +348,14 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 						if currentStage.dur == 0 {
 							switch currentStage.action {
 							case "<diamond>Diamond Generators</diamond>", "<emerald>Emerald Generators</emerald>":
-								if currentStage.action == "<diamond>Diamond Generators</diamond>" {
-									g.diamondGeneratorSettings.Tier++
-									g.diamondGeneratorSettings.SpawnRate = lo.If(currentStage.tier == 2, 23*time.Second).Else(12 * time.Second)
-								} else {
-									g.emeraldGeneratorSettings.Tier++
-									g.emeraldGeneratorSettings.SpawnRate = lo.If(currentStage.tier == 2, 40*time.Second).Else(27 * time.Second)
+								for _, gen := range g.generators {
+									if currentStage.action == "<diamond>Diamond Generators</diamond>" && gen.Resource == Diamond {
+										gen.Tier++
+										gen.SpawnRate = lo.If(currentStage.tier == 2, 23*time.Second).Else(12 * time.Second)
+									} else if gen.Resource == Emerald {
+										gen.Tier++
+										gen.SpawnRate = lo.If(currentStage.tier == 2, 40*time.Second).Else(27 * time.Second)
+									}
 								}
 								g.World().Exec(func(tx *world.Tx) {
 									for e := range tx.Players() {
@@ -485,45 +493,44 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 		v.LookAt(utils.VecSetY(b.MapConfig().TeamSpawnPoints[t.ID()], v.Position().Y()), tx)
 	}
 
-	b.ironGeneratorSettings = &GeneratorSettings{
-		Game:      b,
-		Resource:  Iron,
-		Tier:      1,
-		Cap:       48,
-		SpawnRate: 400 * time.Millisecond,
-	}
-	b.goldGeneratorSettings = &GeneratorSettings{
-		Game:      b,
-		Resource:  Gold,
-		Tier:      1,
-		Cap:       12,
-		SpawnRate: 4 * time.Second,
-	}
-	b.diamondGeneratorSettings = &GeneratorSettings{
-		Resource:  Diamond,
-		Tier:      1,
-		Name:      text.Colourf("<bold><diamond>Diamond</diamond></bold>"),
-		Cap:       8,
-		SpawnRate: 30 * time.Second,
-	}
-	b.emeraldGeneratorSettings = &GeneratorSettings{
-		Resource:  Emerald,
-		Tier:      1,
-		Name:      text.Colourf("<bold><emerald>Emerald</emerald></bold>"),
-		Cap:       6,
-		SpawnRate: 66 * time.Second,
-	}
-
 	for _, pos := range b.MapConfig().IronGenerators {
-		b.generators = append(b.generators, b.ironGeneratorSettings.New(pos, tx), b.goldGeneratorSettings.New(pos, tx))
+		b.generators = append(
+			b.generators,
+			GeneratorSettings{
+				Game:      b,
+				Resource:  Iron,
+				Tier:      1,
+				Cap:       48,
+				SpawnRate: 400 * time.Millisecond,
+			}.New(pos, tx),
+			GeneratorSettings{
+				Game:      b,
+				Resource:  Gold,
+				Tier:      1,
+				Cap:       12,
+				SpawnRate: 4 * time.Second,
+			}.New(pos, tx),
+		)
 	}
 
 	for _, pos := range b.MapConfig().DiamondGenerators {
-		b.generators = append(b.generators, b.diamondGeneratorSettings.New(pos, tx))
+		b.generators = append(b.generators, GeneratorSettings{
+			Resource:  Diamond,
+			Tier:      1,
+			Name:      text.Colourf("<bold><diamond>Diamond</diamond></bold>"),
+			Cap:       8,
+			SpawnRate: 30 * time.Second,
+		}.New(pos, tx))
 	}
 
 	for _, pos := range b.MapConfig().EmeraldGenerators {
-		b.generators = append(b.generators, b.emeraldGeneratorSettings.New(pos, tx))
+		b.generators = append(b.generators, GeneratorSettings{
+			Resource:  Emerald,
+			Tier:      1,
+			Name:      text.Colourf("<bold><emerald>Emerald</emerald></bold>"),
+			Cap:       6,
+			SpawnRate: 66 * time.Second,
+		}.New(pos, tx))
 	}
 
 	for _, pos := range b.MapConfig().ChestPositions {

@@ -25,15 +25,14 @@ type GeneratorSettings struct {
 	Game   *BedWars
 
 	Resource Resource
-
-	Tier int
-	Name string
+	Name     string
+	Tier     int
 
 	Cap       int
 	SpawnRate time.Duration
 }
 
-func (gs *GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockType {
+func (gs GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockType {
 	t := &GeneratorBlockType{GeneratorSettings: gs}
 	if gs.Game != nil {
 		t.Team = gs.Game.NearestTeam(pos)
@@ -65,7 +64,7 @@ type GeneratorBlockType struct {
 	living.NopLivingType
 
 	*living.Living
-	*GeneratorSettings
+	GeneratorSettings
 	Team *game.Team
 
 	tick      time.Duration
@@ -170,6 +169,7 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 	}
 
 	if b.Team != nil {
+		b.Tier = b.Team.Upgrades.GeneratorTier + 1
 		b.updateTier()
 	}
 
@@ -189,34 +189,34 @@ func (b *GeneratorBlockType) Tick(tx *world.Tx, current int64) {
 }
 
 func (b *GeneratorBlockType) updateTier() {
-	if b.Resource == Iron {
-		b.Tier = b.Team.Upgrades.GeneratorTier + 1
-		switch b.Tier {
-		case 2:
+	genTier := b.Team.Upgrades.GeneratorTier
+	switch b.Resource {
+	case Iron:
+		switch genTier {
+		case 1:
 			b.SpawnRate = 300 * time.Millisecond
 			b.Cap = 64
-		case 3:
+		case 2:
 			b.SpawnRate = 200 * time.Millisecond
+		case 3:
 		case 4:
-		case 5:
 			b.SpawnRate = 150 * time.Millisecond
 		}
-	} else if b.Resource == Gold {
-		b.Tier = b.Team.Upgrades.GeneratorTier + 1
-		switch b.Tier {
-		case 2:
+	case Gold:
+		switch genTier {
+		case 1:
 			b.SpawnRate = 3000 * time.Millisecond
 			b.Cap = 16
-		case 3:
+		case 2:
 			b.SpawnRate = 2000 * time.Millisecond
+		case 3:
 		case 4:
-		case 5:
 			b.SpawnRate = 1350 * time.Millisecond
 		}
-	} else if b.Resource == Emerald {
-		b.Tier = b.Team.Upgrades.GeneratorTier + 1
-		if b.Tier == 5 {
+	case Emerald:
+		if genTier == 4 {
 			b.SpawnRate = 15 * time.Second
 		}
+	default:
 	}
 }

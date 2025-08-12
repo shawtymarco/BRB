@@ -311,14 +311,14 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 		category = database.Melee
 	case block.Ladder:
 		category = database.Ladder
+	case item.GoldenApple, item.Snowball, block.TNT, item.EnderPearl, item.Bucket, item.Egg, block.Sponge, item.Compass:
+		category = database.Utility
 	case world.Block:
 		category = database.Blocks
 	case item.Bow:
 		category = database.Bows
 	case item.Potion:
 		category = database.Potions
-	case item.GoldenApple, item.Snowball, block.TNT, item.EnderPearl, item.Bucket, item.Egg, block.Sponge, item.Compass:
-		category = database.Utility
 	case item.Shears:
 		category = database.Shears
 	case item.Pickaxe:
@@ -339,17 +339,13 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 
 	// Try category slot
 	if slot != -1 {
-		existing := utils.Panics(u.pl.Inventory().Item(slot))
-		sa, sb := it.AddStack(existing)
+		sa, sb := it.AddStack(utils.Panics(u.pl.Inventory().Item(slot)))
 
 		if sb.Count() != 0 {
 			// Merge failed, check if different item
-			if existing.Item() != it.Item() && !existing.Empty() {
-				// Move existing to another slot
-				if movedCount, moveErr := u.pl.Inventory().AddItem(existing); movedCount == existing.Count() && moveErr == nil {
-					return it.Count(), u.pl.Inventory().SetItem(slot, it)
-				}
-				// If couldn't move fully, fallback
+			if sa.Item() != sb.Item() {
+				_ = u.pl.Inventory().SetItem(slot, sa)
+				_, _ = u.pl.Inventory().AddItem(sb)
 			}
 			// Merge failed but same item or can't move → fallback
 			slot = -1

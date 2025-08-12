@@ -43,7 +43,7 @@ func (s *upgradesShop) Main() []item.Stack {
 		"Haste",
 		"Increase your tool's haste",
 		upgrades.Haste,
-		[]int{2, 4},
+		[]int{4, 6},
 		false,
 	)
 
@@ -77,7 +77,7 @@ func (s *upgradesShop) Main() []item.Stack {
 		"Forge Upgrade",
 		"Increases the speed and cap of resources generated",
 		upgrades.GeneratorTier,
-		[]int{5, 10, 15, 20},
+		[]int{4, 8, 12, 16},
 		false,
 	)
 	items[20] = s.uShopify(

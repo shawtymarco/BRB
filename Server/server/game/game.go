@@ -43,6 +43,11 @@ func (g *Game) Teams() []*Team {
 	return g.teams
 }
 
+func (g *Game) AddTeam() {
+	teamColor := []string{"red", "green", "blue", "yellow"}[len(g.Teams())]
+	g.teams = append(g.teams, &Team{id: ColorToID(teamColor), color: teamColor})
+}
+
 func (g *Game) OriginalPlayers() (handles []*world.EntityHandle) {
 	for _, team := range g.teams {
 		handles = append(handles, team.originalHandles...)

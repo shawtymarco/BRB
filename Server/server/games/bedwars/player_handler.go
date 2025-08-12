@@ -195,6 +195,11 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 			_, _ = pl.Inventory().AddItem(s)
 		}
 		delete(bwGame.rejoiningPlayerInventories, pl.UUID())
+
+		armourStacks := bwGame.rejoiningPlayerArmour[pl.UUID()]
+		pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+		delete(bwGame.rejoiningPlayerArmour, pl.UUID())
+
 		pl.Hurt(20, entity.VoidDamageSource{})
 	} else {
 		bwGame.ForEachActivePlayer(func(pl *player.Player) {
@@ -210,6 +215,7 @@ func (h PlayerHandler) HandleQuit(pl *player.Player) {
 	u.Game = nil
 	user.Save(pl)
 	h.game.rejoiningPlayerInventories[pl.UUID()] = pl.Inventory().Slots()
+	h.game.rejoiningPlayerArmour[pl.UUID()] = pl.Armour().Slots()
 	h.game.RemovePlayerFromTeam(pl)
 }
 
