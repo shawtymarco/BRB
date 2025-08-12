@@ -683,7 +683,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			return
 		}
 
-		if teamIndex == 2 { // TODO: I know it could've been done better. We gotta improve team indexing with colors because bedfight has red vs blue and bedwars has red vs green so it kinda makes it a bit more difficult to deal with different situations
+		if teamIndex == 2 {
 			teamIndex = 1
 		}
 		h.game.Teams()[teamIndex].Status = game.BedBroken

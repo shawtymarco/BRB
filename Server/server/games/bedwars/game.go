@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 1 * time.Second //20 * time.Second
+const startingInDurationBW = 20 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 5 * time.Minute
 
