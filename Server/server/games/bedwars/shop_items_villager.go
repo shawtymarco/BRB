@@ -66,7 +66,7 @@ func (v *ItemsShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, data 
 
 func (v *ItemsShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
-		if pl, ok := src.Attacker.(*player.Player); ok && !user.GetUser(pl).IsCooldownActive(user.Interact, 50*time.Millisecond, false, true, false) {
+		if pl, ok := src.Attacker.(*player.Player); ok && !user.GetUser(pl).IsCooldownActive(user.Interact, 200*time.Millisecond, false, true, false) {
 			SendItemShopUI(&ItemShop{game: v.Game, Player: pl}, false)
 		}
 	}

@@ -4,6 +4,7 @@ import (
 	"server/server/game"
 	"server/server/inv"
 	"server/server/living"
+	"server/server/user"
 	"server/server/utils"
 	"strings"
 	"time"
@@ -64,7 +65,7 @@ func (v *UpgradesShopVillager) Open(tx *world.Tx, handle *world.EntityHandle, da
 
 func (v *UpgradesShopVillager) Hurt(dmg float64, src world.DamageSource) (float64, bool) {
 	if src, ok := src.(entity.AttackDamageSource); ok {
-		if pl, ok := src.Attacker.(*player.Player); ok {
+		if pl, ok := src.Attacker.(*player.Player); ok && !user.GetUser(pl).IsCooldownActive(user.Interact, 200*time.Millisecond, false, true, false) {
 			sendUpgradesShopUI(&upgradesShop{game: v.Game, team: v.Game.PlayerTeam(pl), player: pl})
 		}
 	}
