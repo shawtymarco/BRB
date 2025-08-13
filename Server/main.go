@@ -78,7 +78,7 @@ func main() {
 	c := core.DefaultConfig()
 	conf := utils.Panics(c.Config(log))
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
-	conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
+	//conf.ShutdownMessage = chat.Translate(language.TranslateString("%disconnect.disconnected"), 1, "")
 	conf.ReadOnlyWorld = true
 
 	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
@@ -97,9 +97,9 @@ func main() {
 	srv.CloseOnProgramEnd()
 	core.MCServer = srv
 
-	srv.World().Exec(func(tx *world.Tx) {
-		initBots(tx)
-	})
+	//srv.World().Exec(func(tx *world.Tx) {
+	//	initBots(tx)
+	//})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {
@@ -117,7 +117,7 @@ func main() {
 
 	buildffa.NewBuildFFA()
 	bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
-	bw.UsersToJoin = []string{"1381057370033229855", "436765918169792524"}
+	bw.UsersToJoin = []string{"479990305404485643", "1163341419189112892"}
 
 	srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}
