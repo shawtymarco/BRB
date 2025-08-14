@@ -50,8 +50,6 @@ func (r SpectateCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 			return
 		}
 
-		u.Game = ut.Game
-
 		pl.SetGameMode(world.GameModeSpectator)
 		pl.Inventory().Clear()
 		pl.Armour().Clear()

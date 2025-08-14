@@ -551,11 +551,11 @@ func (b *BedWars) Maps() []string {
 		return []string{
 			"BW-Aquarium",
 			"BW-Archway",
-			//"BW-Boletum",
-			//"BW-Invasion",
-			//"BW-Katsu",
-			//"BW-Lectus",
-			//"BW-Planet98",
+			"BW-Boletum",
+			"BW-Invasion",
+			"BW-Katsu",
+			"BW-Lectus",
+			"BW-Planet98",
 		}
 	}
 	return []string{

@@ -82,7 +82,15 @@ func Join(pl *player.Player) {
 	utils.Panic(pl.Inventory().SetItem(8, stacks.NewSettingsItem()))
 
 	go func() {
-		for u.Game == nil && pl.GameMode() != world.GameModeSpectator {
+		for u.Game == nil {
+			inLobby := true
+			<-core.MCServer.World().Exec(func(tx *world.Tx) {
+				_, inLobby = u.H().Entity(tx)
+			})
+			if !inLobby {
+				break
+			}
+
 			if !u.Data.Statistics.RankEndsIn.IsZero() && u.Data.Statistics.RankEndsIn.Before(time.Now()) {
 				u.Data.Statistics.RankEndsIn = time.Time{}
 				u.Data.Statistics.RankId = database.Player.Shortened()

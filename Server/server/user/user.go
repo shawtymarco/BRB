@@ -346,6 +346,7 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 			if sa.Item() != sb.Item() {
 				_ = u.pl.Inventory().SetItem(slot, sa)
 				_, _ = u.pl.Inventory().AddItem(sb)
+				return it.Count(), nil
 			}
 			// Merge failed but same item or can't move → fallback
 			slot = -1
