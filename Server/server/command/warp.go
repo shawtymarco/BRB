@@ -40,8 +40,8 @@ func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 
 			go func() {
 				for p := range server.MCServer.Players(nil) {
-					u := user.GetUser(p)
-					if u.Data.IsRegistered() && slices.Contains(bwGame.UsersToJoin, u.Data.UserId) {
+					ut := user.GetUser(p)
+					if (ut.Game == nil || ut.Game.ID() != bwGame.ID()) && ut.Data.IsRegistered() && slices.Contains(bwGame.UsersToJoin, ut.Data.UserId) {
 						p.Handler().HandleQuit(p)
 						bedwars.Join(p, p.Tx(), bwGame.TeamSize, bwGame.TeamCount, bwGame.Type(), false, bwGame)
 						p.Message(text.Colourf(language.Translate(p).Commands.Success.YouGotWarped))
