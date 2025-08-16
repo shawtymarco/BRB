@@ -274,18 +274,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								}
 							}
 
-							var sorted []*player.Player
-							for _, e := range g.OriginalPlayers() {
-								if p, ok := e.Entity(tx); ok {
-									sorted = append(sorted, p.(*player.Player))
-								}
+							var sorted []*user.User
+							for _, userId := range g.UsersToJoin {
+								sorted = append(sorted, user.GetUserByUserID(userId))
 							}
 
-							slices.SortFunc(sorted, func(a, b *player.Player) int {
-								ua := user.GetUser(a)
-								ub := user.GetUser(b)
-
-								return ub.GameInfo.TotalBWKills() - ua.GameInfo.TotalBWKills()
+							slices.SortFunc(sorted, func(a, b *user.User) int {
+								return b.GameInfo.TotalBWKills() - a.GameInfo.TotalBWKills()
 							})
 
 							var l1, l2, l3, l4 string
@@ -295,15 +290,15 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 							}
 
 							if len(sorted) > 0 {
-								u := user.GetUser(sorted[0])
+								u := sorted[0]
 								l2 = text.Colourf("<yellow>1st Killer</yellow> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
 							}
 							if len(sorted) > 1 {
-								u := user.GetUser(sorted[1])
+								u := sorted[1]
 								l3 = text.Colourf("<gold>2nd Killer</gold> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
 							}
 							if len(sorted) > 2 {
-								u := user.GetUser(sorted[2])
+								u := sorted[2]
 								l4 = text.Colourf("<red>3rd Killer</red> <grey>-</grey> %v <grey>- %v</grey>", database.LobbyNameDisplay.Name(u.Data), u.GameInfo.TotalBWKills())
 							}
 
@@ -875,12 +870,12 @@ func sendRunningScoreboard(pl *player.Player, g *BedWars, stage *stage) {
 	}
 	u.Scoreboard.Set(i, "§2")
 	i++
-	u.Scoreboard.Set(i, text.Colourf("<white>Kills:</white> <green>%v</green>", u.GameInfo.BedWars.Kills))
+	u.Scoreboard.Set(i, text.Colourf("<white>Kills:</white> <green>%v</green>", u.GameInfo.BedWarsInfo.Kills))
 	i++
 	if g.Type() == game.TypeBedWars {
-		u.Scoreboard.Set(i, text.Colourf("<white>Final Kills:</white> <green>%v</green>", u.GameInfo.BedWars.FinalKills))
+		u.Scoreboard.Set(i, text.Colourf("<white>Final Kills:</white> <green>%v</green>", u.GameInfo.BedWarsInfo.FinalKills))
 		i++
-		u.Scoreboard.Set(i, text.Colourf("<white>Beds Broken:</white> <green>%v</green>", u.GameInfo.BedWars.BedsBroken))
+		u.Scoreboard.Set(i, text.Colourf("<white>Beds Broken:</white> <green>%v</green>", u.GameInfo.BedWarsInfo.BedsBroken))
 		i++
 	}
 	u.Scoreboard.Set(i, "§3")

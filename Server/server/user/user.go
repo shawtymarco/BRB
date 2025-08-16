@@ -407,18 +407,22 @@ func (u *User) RefreshCape() {
 }
 
 type GameRuntimeData struct {
-	BedWars struct {
-		Kills      int
-		FinalKills int
-		BedsBroken int
-	}
-	BuildFFA struct {
-		Kills int
-	}
+	BedWarsInfo
+	BuildFFAInfo
+}
+
+type BedWarsInfo struct {
+	Kills      int
+	FinalKills int
+	BedsBroken int
+}
+
+type BuildFFAInfo struct {
+	Kills int
 }
 
 func (d GameRuntimeData) TotalBWKills() int {
-	return d.BedWars.Kills + d.BedWars.FinalKills
+	return d.BedWarsInfo.Kills + d.BedWarsInfo.FinalKills
 }
 
 type OldArmour struct {

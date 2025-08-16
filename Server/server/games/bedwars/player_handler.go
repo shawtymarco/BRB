@@ -86,6 +86,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	u := user.GetUser(pl)
 	u.Game = bwGame.Game
+	u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
 	switch typeGame {
 	case game.TypeBedWars:
 		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDWARS</yellow></bold>"))
@@ -460,7 +461,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		pl.Inventory().Clear()
 		pl.Armour().Clear()
 		if ua != nil {
-			ua.GameInfo.BedWars.FinalKills++
+			ua.GameInfo.BedWarsInfo.FinalKills++
 			if g.typeGame == game.TypeBedWars {
 				ua.Data.Games.BedWars.FinalKills++
 			} else {
@@ -514,7 +515,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}()
 
 		if ua != nil {
-			ua.GameInfo.BedWars.Kills++
+			ua.GameInfo.BedWarsInfo.Kills++
 			if g.typeGame == game.TypeBedWars {
 				ua.Data.Games.BedWars.Kills++
 			} else {
@@ -709,7 +710,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			p.SendTitle(title.New(text.Colourf(language.Translate(pl).BedWars.BedBreakTitle)).WithSubtitle(text.Colourf(language.Translate(pl).BedWars.BedBreakSubTitle)))
 		})
 
-		u.GameInfo.BedWars.BedsBroken++
+		u.GameInfo.BedWarsInfo.BedsBroken++
 		if h.game.typeGame == game.TypeBedWars {
 			u.Data.Games.BedWars.BedsBroken++
 		} else {

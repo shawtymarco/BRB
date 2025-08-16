@@ -194,7 +194,7 @@ func onDeath(pl *player.Player, u *user.User, ua *user.User) {
 	}, pl.Tx())
 
 	if ua != nil {
-		ua.GameInfo.BuildFFA.Kills++
+		ua.GameInfo.BuildFFAInfo.Kills++
 		ua.Player().Heal(20, effect.InstantHealingSource{})
 		ua.Player().PlaySound(sound.Experience{})
 	}

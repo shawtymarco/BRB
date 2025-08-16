@@ -82,7 +82,7 @@
   "./maps/BW-Aquarium": {
     "Name": "Aquarium",
     "Type": "bedwars",
-    "Void": -40,
+    "Void": -20,
     "HeightLimit": 110,
     "SpawnPoint": [
       0.5,
@@ -301,7 +301,7 @@
   "./maps/BW-Archway": {
     "Name": "Archway",
     "Type": "bedwars",
-    "Void": -40,
+    "Void": -20,
     "HeightLimit": 86,
     "SpawnPoint": [
       0.5,
@@ -958,7 +958,7 @@
   "./maps/BW-Katsu": {
     "Name": "Katsu",
     "Type": "bedwars",
-    "Void": -30,
+    "Void": -15,
     "HeightLimit": 96,
     "SpawnPoint": [
       0.5,
@@ -1177,7 +1177,7 @@
   "./maps/BW-Lectus": {
     "Name": "Lectus",
     "Type": "bedwars",
-    "Void": -40,
+    "Void": -20,
     "HeightLimit": 90,
     "SpawnPoint": [
       0.5,
@@ -1396,7 +1396,7 @@
   "./maps/BW-Planet98": {
     "Name": "Planet98",
     "Type": "bedwars",
-    "Void": -40,
+    "Void": -20,
     "HeightLimit": 103,
     "SpawnPoint": [
       0.5,
