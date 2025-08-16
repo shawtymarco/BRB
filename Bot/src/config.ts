@@ -14,6 +14,39 @@ export const dconfig = {
     prefix: "=",
     api: "https://localhost:8080",
     clientId: "1268295659820159118",
+    guildId: "967360687561138228",
+
+    roles: {
+        registered: "1258628748878676029"
+    },
+
+    categories: {
+        games: "1330480792777789500"
+    },
+
+    channels: {
+        register: "1234811561647013909",
+        touchAlerts: "1234129493535228046",
+        touch2v2: "1339305887084318820",
+        touch3v3: "1336343043283881984",
+        allAlerts: "1234129493535228046",
+        all3v3: "1234129207710318592",
+        all4v4: "1234129355194765443",
+        gameChat: "1330480792777789500",
+        waitingRoom: "1234130106684018830",
+        scoring: "1234130482455908413"
+    },
+
+    emojis: {
+        yes: ":yes:",
+        no: ":no:"
+    }
+}
+
+export const dconfig_test = {
+    prefix: "=",
+    api: "https://localhost:8080",
+    clientId: "1268295659820159118",
     guildId: "1373222394046578731",
 
     roles: {
