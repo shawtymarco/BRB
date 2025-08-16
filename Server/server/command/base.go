@@ -69,9 +69,9 @@ func (p Permission) PermissionMessage(src cmd.Source) string {
 }
 
 var rankPermissions = map[database.Rank][]Permission{
-	database.Owner:     {Sudo},
+	database.Owner:     {Sudo, GameMode},
 	database.Manager:   {SetRole},
-	database.Admin:     {ResetStats, ChangeCape, GameMode},
+	database.Admin:     {ResetStats, ChangeCape},
 	database.Moderator: {Alias, Ban},
 	database.Helper:    {Mute},
 	database.Prime:     {Nick, ClaimELO},
