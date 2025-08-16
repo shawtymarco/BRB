@@ -191,7 +191,11 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	}})
 	plUI := utils.FetchPrivateField[*inventory.Inventory](pl, "ui")
 	plUI.Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		nil,
+		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+			if slot == 50 {
+				ctx.Cancel()
+			}
+		},
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			if slot >= 28 && slot <= 31 {
 				ctx.Cancel()

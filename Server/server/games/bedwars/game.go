@@ -185,6 +185,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 								g.AddTeam() // add blue
 								g.AddTeam() // add yellow
+							} else {
+								g.ForEachActivePlayer(func(pl *player.Player) {
+									u := user.GetUser(pl)
+									g.UsersToJoin = append(g.UsersToJoin, u.Data.UserId)
+								}, tx)
 							}
 
 							g.initBedWarsFeatures(tx)
@@ -228,13 +233,6 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					suddenDeathTicker.Stop()
 
 					g.World().Exec(func(tx *world.Tx) {
-						if g.typeGame == game.TypeBedFight {
-							g.WinningTeam().ForEachPlayer(tx, func(pl *player.Player) {
-								u := user.GetUser(pl)
-								g.UsersToJoin = append(g.UsersToJoin, u.Data.UserId)
-							})
-						}
-
 						for _, userId := range g.UsersToJoin {
 							u := user.GetUserByUserID(userId)
 							e, ok := u.H().Entity(tx)
