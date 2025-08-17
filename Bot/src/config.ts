@@ -38,8 +38,8 @@ export const dconfig = {
     },
 
     emojis: {
-        yes: ":yes:",
-        no: ":no:"
+        yes: "<:yes:1360573400908824637>",
+        no: "<:no:1360573506865332387>"
     }
 }
 
