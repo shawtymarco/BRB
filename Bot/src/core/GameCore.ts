@@ -14,11 +14,11 @@ import {
     VoiceChannel
 } from "discord.js";
 import path from "path";
-import { client } from "..";
-import { APIEndpoints, Request } from "../api";
-import { dconfig } from "../config";
-import { CacheUtil } from "./CacheUtil";
-import { DB } from "./DB";
+import {client} from "..";
+import {APIEndpoints, Request} from "../api";
+import {dconfig} from "../config";
+import {CacheUtil} from "./CacheUtil";
+import {DB} from "./DB";
 
 export var gamesDB: DB<Game> = new DB(path.join(".", "db", "games.json"));
 
@@ -285,14 +285,14 @@ export class Game {
         const team1Permissions: OverwriteResolvable[] = [
             {
                 id: this.guild.id,
-                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+                deny: [PermissionFlagsBits.Connect]
             },
         ];
 
         const team2Permissions: OverwriteResolvable[] = [
             {
                 id: this.guild.id,
-                deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect]
+                deny: [PermissionFlagsBits.Connect]
             },
         ];
 

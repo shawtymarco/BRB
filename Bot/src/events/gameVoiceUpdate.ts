@@ -10,11 +10,11 @@ import {
     TextChannel,
     VoiceChannel
 } from "discord.js";
-import { dconfig } from "../config";
-import { APIEndpoints, Request } from "../api";
-import { EmbedUtil } from "../core/EmbedUtil";
-import { CacheUtil } from "../core/CacheUtil";
-import { Game, gamesDB } from "../core/GameCore";
+import {dconfig} from "../config";
+import {APIEndpoints, Request} from "../api";
+import {EmbedUtil} from "../core/EmbedUtil";
+import {CacheUtil} from "../core/CacheUtil";
+import {Game, gamesDB} from "../core/GameCore";
 
 const activeCountdowns = new Map<string, NodeJS.Timeout>();
 
@@ -33,7 +33,6 @@ module.exports = {
             dconfig.channels.all4v4
         ];
 
-        // Determine which channel to act on (either joined or left)
         const chId = joinedChannelId ?? leftChannelId;
         if (!relevantChannels.includes(chId)) return;
 
@@ -129,19 +128,31 @@ module.exports = {
         }
 
         const timeout = setTimeout(async () => {
+            // Double-check if all members are still in the VC
             const finalChannel = newState.guild.channels.cache.get(chId);
             const finalMembers = finalChannel?.members;
 
-            if (finalMembers?.size === requiredSize) {
-                await initGameChannel(newState.guild, finalMembers, teamSize, numTeams);
+            if (!finalMembers || finalMembers.size !== requiredSize) {
+                if (alertsChannel) {
+                    alertsChannel.send({
+                        content: finalMembers?.map(member => `<@${member.id}>`).join(" ") || "Everyone",
+                        embeds: [EmbedUtil.create({
+                            type: "no",
+                            description: `Game queue cancelled because someone left the VC.`,
+                        })]
+                    });
+                }
+                activeCountdowns.delete(chId);
+                return;
             }
 
+            await initGameChannel(newState.guild, finalMembers, teamSize, numTeams);
             activeCountdowns.delete(chId);
         }, 5000);
 
         activeCountdowns.set(chId, timeout);
-    },
-};
+    }
+}
 
 const initGameChannel = async (guild: Guild, members: Collection<string, GuildMember>, teamSize: number, teamCount: number) => {
     // INIT MC GAME
@@ -151,7 +162,7 @@ const initGameChannel = async (guild: Guild, members: Collection<string, GuildMe
     const permissionOverwrites: OverwriteResolvable[] = [
         {
             id: guild.id,
-            deny: [PermissionFlagsBits.ViewChannel]
+            deny: [PermissionFlagsBits.Connect]
         },
     ];
 
