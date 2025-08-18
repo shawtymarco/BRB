@@ -229,6 +229,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				}
 			case game.Running:
 				suddenDeathTicker := time.NewTicker(700 * time.Millisecond)
+				g.World().Exec(func(tx *world.Tx) {
+					for e := range tx.Players() {
+						sendRunningScoreboard(e.(*player.Player), g, stages[0])
+					}
+				})
 				if g.WinningTeam() != nil {
 					suddenDeathTicker.Stop()
 
@@ -328,15 +333,8 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 
 					g.SetStage(game.Ending)
 				} else {
-					currentStage := stages[0]
-
-					g.World().Exec(func(tx *world.Tx) {
-						for e := range tx.Players() {
-							sendRunningScoreboard(e.(*player.Player), g, currentStage)
-						}
-					})
-
 					if g.typeGame == game.TypeBedWars {
+						currentStage := stages[0]
 						currentStage.dur -= 100 * time.Millisecond
 						if currentStage.dur == 0 {
 							switch currentStage.action {
@@ -417,6 +415,11 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 				}
 			case game.Ending:
+				g.World().Exec(func(tx *world.Tx) {
+					for e := range tx.Players() {
+						sendRunningScoreboard(e.(*player.Player), g, stages[0])
+					}
+				})
 				time.AfterFunc(5*time.Second, func() {
 					g.SetStage(game.Terminated)
 				})
