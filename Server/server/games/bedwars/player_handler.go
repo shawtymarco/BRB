@@ -84,147 +84,150 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		tx.AddEntity(pl.H())
 	})
 
-	pl.SetGameMode(world.GameModeSurvival)
-	pl.Inventory().Clear()
-	pl.Armour().Clear()
+	go pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+		pl = e.(*player.Player)
+		pl.SetGameMode(world.GameModeSurvival)
+		pl.Inventory().Clear()
+		pl.Armour().Clear()
 
-	u := user.GetUser(pl)
-	u.Game = bwGame.Game
-	u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
-	switch typeGame {
-	case game.TypeBedWars:
-		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDWARS</yellow></bold>"))
-	case game.TypeBedFight:
-		u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDFIGHT</yellow></bold>"))
-	default:
-		panic("Unhandled gameId type")
-	}
+		u := user.GetUser(pl)
+		u.Game = bwGame.Game
+		u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
+		switch typeGame {
+		case game.TypeBedWars:
+			u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDWARS</yellow></bold>"))
+		case game.TypeBedFight:
+			u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BEDFIGHT</yellow></bold>"))
+		default:
+			panic("Unhandled gameId type")
+		}
 
-	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
+		bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
 
-	pl.Teleport(bwGame.MapConfig().SpawnPoint)
+		pl.Teleport(bwGame.MapConfig().SpawnPoint)
 
-	chestHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		nil,
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			s, isSword := stack.Item().(item.Sword)
-			_, isTool := stack.Item().(item.Tool)
-			if isSword && s.Tier == item.ToolTierWood || !isSword && isTool {
-				ctx.Cancel()
+		chestHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+			nil,
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				s, isSword := stack.Item().(item.Sword)
+				_, isTool := stack.Item().(item.Tool)
+				if isSword && s.Tier == item.ToolTierWood || !isSword && isTool {
+					ctx.Cancel()
+				}
+			},
+			nil,
+		}}
+		pl.EnderChestInventory().Handle(chestHandler)
+		updateMenu := func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
+			tx2 := ctx.Val().(*player.Player).Tx()
+			openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
+			b := tx2.Block(*openedPos.Load())
+			if shop := activeItemShops[pl.UUID()]; shop != nil {
+				if _, ok := b.(block.Air); ok {
+					go func() {
+						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+
+						it22, _ := shop.inv.Item(22)
+						isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
+							_, ok := stack.Item().(item.Shears)
+							return ok
+						}) && it22.Empty()
+						it43, _ := shop.inv.Item(43)
+						isQuickBuy := !it43.Empty()
+
+						if isTools {
+							shop.inv.Clear()
+							for i, it := range shop.Tools() {
+								_ = shop.inv.SetItem(i, it)
+							}
+						} else if isQuickBuy {
+							shop.inv.Clear()
+							for i, it := range shop.itemShopDashboard(true) {
+								_ = shop.inv.SetItem(i, it)
+							}
+						}
+					}()
+				}
 			}
-		},
-		nil,
-	}}
-	pl.EnderChestInventory().Handle(chestHandler)
-	updateMenu := func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
-		tx2 := ctx.Val().(*player.Player).Tx()
-		openedPos := utils.FetchPrivateField[atomic.Pointer[cube.Pos]](utils.Session(pl), "openedPos")
-		b := tx2.Block(*openedPos.Load())
-		if shop := activeItemShops[pl.UUID()]; shop != nil {
-			if _, ok := b.(block.Air); ok {
-				go func() {
-					pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {})
+			if c, ok := b.(block.Chest); ok {
+				chestInv := c.Inventory(tx2, *openedPos.Load())
+				chestInv.Handle(chestHandler)
+			}
+		}
 
-					it22, _ := shop.inv.Item(22)
-					isTools := shop.inv.ContainsItemFunc(1, func(stack item.Stack) bool {
-						_, ok := stack.Item().(item.Shears)
-						return ok
-					}) && it22.Empty()
-					it43, _ := shop.inv.Item(43)
-					isQuickBuy := !it43.Empty()
+		pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				updateMenu(ctx, slot, stack, inv)
 
-					if isTools {
-						shop.inv.Clear()
-						for i, it := range shop.Tools() {
-							_ = shop.inv.SetItem(i, it)
-						}
-					} else if isQuickBuy {
-						shop.inv.Clear()
-						for i, it := range shop.itemShopDashboard(true) {
-							_ = shop.inv.SetItem(i, it)
-						}
+				p := ctx.Val().(*player.Player)
+				if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
+					go func() {
+						p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+							_, _ = e.(*player.Player).Inventory().AddItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
+						})
+					}()
+				}
+			},
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				updateMenu(ctx, slot, stack, inv)
+
+				p := ctx.Val().(*player.Player)
+				if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
+					oldStack := utils.Panics(inv.Item(slot))
+					if oldS, ok := oldStack.Item().(item.Sword); ok && oldS.Tier == item.ToolTierWood {
+						ctx.Cancel()
+						return
 					}
-				}()
-			}
-		}
-		if c, ok := b.(block.Chest); ok {
-			chestInv := c.Inventory(tx2, *openedPos.Load())
-			chestInv.Handle(chestHandler)
-		}
-	}
 
-	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			updateMenu(ctx, slot, stack, inv)
-
-			p := ctx.Val().(*player.Player)
-			if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
-				go func() {
-					p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-						_, _ = e.(*player.Player).Inventory().AddItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
-					})
-				}()
-			}
-		},
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			updateMenu(ctx, slot, stack, inv)
-
-			p := ctx.Val().(*player.Player)
-			if s, ok := stack.Item().(item.Sword); ok && s.Tier != item.ToolTierWood {
-				oldStack := utils.Panics(inv.Item(slot))
-				if oldS, ok := oldStack.Item().(item.Sword); ok && oldS.Tier == item.ToolTierWood {
+					go func() {
+						p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+							_ = e.(*player.Player).Inventory().RemoveItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
+						})
+					}()
+				}
+			},
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				updateMenu(ctx, slot, stack, inv)
+				_, ok := stack.Item().(item.Tool)
+				if ok {
 					ctx.Cancel()
 					return
 				}
+			},
+		}})
+		plUI := utils.FetchPrivateField[*inventory.Inventory](pl, "ui")
+		plUI.Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				if slot == 50 {
+					ctx.Cancel()
+				}
+			},
+			func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
+				if slot >= 28 && slot <= 31 {
+					ctx.Cancel()
+				}
+			},
+			nil,
+		}})
+		pl.Handle(PlayerHandler{game: bwGame})
 
-				go func() {
-					p.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
-						_ = e.(*player.Player).Inventory().RemoveItem(item.NewStack(item.Sword{Tier: item.ToolTierWood}, 1))
-					})
-				}()
+		if bwGame.Stage() == game.Running {
+			for _, s := range bwGame.rejoiningPlayerInventories[pl.UUID()] {
+				_, _ = pl.Inventory().AddItem(s)
 			}
-		},
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			updateMenu(ctx, slot, stack, inv)
-			_, ok := stack.Item().(item.Tool)
-			if ok {
-				ctx.Cancel()
-				return
-			}
-		},
-	}})
-	plUI := utils.FetchPrivateField[*inventory.Inventory](pl, "ui")
-	plUI.Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			if slot == 50 {
-				ctx.Cancel()
-			}
-		},
-		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
-			if slot >= 28 && slot <= 31 {
-				ctx.Cancel()
-			}
-		},
-		nil,
-	}})
-	pl.Handle(PlayerHandler{game: bwGame})
+			delete(bwGame.rejoiningPlayerInventories, pl.UUID())
 
-	if bwGame.Stage() == game.Running {
-		for _, s := range bwGame.rejoiningPlayerInventories[pl.UUID()] {
-			_, _ = pl.Inventory().AddItem(s)
+			armourStacks := bwGame.rejoiningPlayerArmour[pl.UUID()]
+			pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+			delete(bwGame.rejoiningPlayerArmour, pl.UUID())
+
+			pl.Hurt(20, entity.VoidDamageSource{})
+		} else {
+			bwGame.ForEachActivePlayer(func(pl *player.Player) {
+				pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
+			}, tx)
 		}
-		delete(bwGame.rejoiningPlayerInventories, pl.UUID())
-
-		armourStacks := bwGame.rejoiningPlayerArmour[pl.UUID()]
-		pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
-		delete(bwGame.rejoiningPlayerArmour, pl.UUID())
-
-		pl.Hurt(20, entity.VoidDamageSource{})
-	} else {
-		bwGame.ForEachActivePlayer(func(pl *player.Player) {
-			pl.Message(text.Colourf(language.Translate(pl).Game.JoinGame, database.LobbyNameDisplay.Name(u.Data), len(bwGame.OriginalPlayers()), teamSize*teamCount))
-		}, tx)
-	}
+	})
 }
 
 func (h PlayerHandler) HandleQuit(pl *player.Player) {
