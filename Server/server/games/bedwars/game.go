@@ -657,7 +657,8 @@ func (b *BedWars) Punish(u *user.User, _ *world.Tx) (before, after int) {
 		u.Data.Statistics.ELO -= 45
 	}
 
-	after = max(u.Data.Statistics.ELO, 0)
+	u.Data.Statistics.ELO = max(u.Data.Statistics.ELO, 0)
+	after = u.Data.Statistics.ELO
 
 	if b.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Losses++
