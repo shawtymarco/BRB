@@ -14,6 +14,7 @@ import (
 	"server/server/utils"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -50,7 +51,10 @@ import (
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
-var blocksPlaced = make(map[string]world.Block)
+var (
+	blocksPlaced = make(map[string]world.Block)
+	blocksMu     sync.RWMutex
+)
 
 type PlayerHandler struct {
 	player.NopHandler
@@ -630,7 +634,9 @@ func (h PlayerHandler) HandleBlockPlace(ctx *player.Context, pos cube.Pos, b wor
 		return
 	}
 
+	blocksMu.Lock()
 	blocksPlaced[vec3ToString(pos.Vec3())] = b
+	blocksMu.Unlock()
 
 	if t, ok := b.(block.TNT); ok {
 		ctx.Cancel()
@@ -666,11 +672,20 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 	_, isPlank := b.(block.Planks)
 	bb, isBed := b.(bed.Bed)
 
-	if h.game.Stage() < game.Running || (!isBed && (h.game.typeGame == game.TypeBedWars || !isEndstone && !isPlank) && blocksPlaced[vec3ToString(pos.Vec3())] == nil) {
+	blocksMu.RLock()
+	_, playerPlaced := blocksPlaced[vec3ToString(pos.Vec3())]
+	blocksMu.RUnlock()
+
+	if h.game.Stage() < game.Running || (!isBed && (h.game.typeGame == game.TypeBedWars || !isEndstone && !isPlank) && !playerPlaced) {
 		pl.Message(text.Colourf(language.Translate(pl).BedWars.Error.CannotBreakMap))
 		ctx.Cancel()
-	} else {
+		return
+	}
+
+	if !isEndstone && !isPlank {
+		blocksMu.Lock()
 		blocksPlaced[vec3ToString(pos.Vec3())] = nil
+		blocksMu.Unlock()
 	}
 
 	if isEndstone || isPlank {
@@ -692,7 +707,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 			bedColor = text.Colourf("<green>Green Bed</green>")
 		case item.ColourYellow():
 			teamIndex = 3
-			bedColor = text.Colourf("<yellow>Yellow Bed</yello>")
+			bedColor = text.Colourf("<yellow>Yellow Bed</yellow>")
 		}
 
 		if h.game.PlayerTeam(pl).ID() == teamIndex {
@@ -722,7 +737,10 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		}
 
 		h.game.playBedBrokenSound(pl.Tx())
-		pl.Message(text.Colourf(language.Translate(pl).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Colour()).Name(u.Data)))
+		for e := range pl.Tx().Players() {
+			p := e.(*player.Player)
+			p.Message(text.Colourf(language.Translate(p).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Colour()).Name(u.Data)))
+		}
 		return
 	}
 }

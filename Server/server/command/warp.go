@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/df-mc/dragonfly/server/entity/effect"
 	"server/server"
 	"server/server/games/bedwars"
 	"server/server/language"
@@ -42,6 +43,10 @@ func (r WarpCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 				for p := range server.MCServer.Players(nil) {
 					ut := user.GetUser(p)
 					if (ut.Game == nil || ut.Game.ID() != bwGame.ID()) && ut.Data.IsRegistered() && slices.Contains(bwGame.UsersToJoin, ut.Data.UserId) {
+						p.Inventory().Clear()
+						p.Armour().Clear()
+						p.Heal(20, effect.InstantHealingSource{})
+
 						p.Handler().HandleQuit(p)
 						bedwars.Join(p, p.Tx(), bwGame.TeamSize, bwGame.TeamCount, bwGame.Type(), false, bwGame)
 						p.Message(text.Colourf(language.Translate(p).Commands.Success.YouGotWarped))
