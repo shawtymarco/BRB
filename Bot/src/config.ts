@@ -25,7 +25,7 @@ export const dconfig = {
     },
 
     channels: {
-        register: "1234811561647013909",
+        register: "1406955689561030797",
         touchAlerts: "1234129493535228046",
         touch2v2: "1339305887084318820",
         touch3v3: "1336343043283881984",
