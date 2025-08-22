@@ -1,12 +1,13 @@
 package command
 
 import (
-	"github.com/df-mc/dragonfly/server/entity/effect"
 	"server/server"
 	"server/server/games/bedwars"
 	"server/server/language"
 	"server/server/user"
 	"slices"
+
+	"github.com/df-mc/dragonfly/server/entity/effect"
 
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"

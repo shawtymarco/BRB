@@ -63,6 +63,7 @@ module.exports = {
             }
 
             Game.refreshMemberNickname(newState.member);
+            Game.refreshMemberRank(newState.member);
 
             if (isTouch && !res.isTouch) {
                 CacheUtil.getChannel(newState.guild, alertsId).send({

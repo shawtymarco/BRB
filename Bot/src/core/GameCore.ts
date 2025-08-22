@@ -440,4 +440,73 @@ export class Game {
         const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${member.user.id}`);
         member.setNickname(`${res.data.Statistics.ELO} 〣 ${res.data.Username}`).catch(() => { });
     }
+
+    static async refreshMemberRank(member: GuildMember) {
+        const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${member.user.id}`);
+        await member.roles.add(this.getEloRank(res.data.Statistics.ELO));
+    }
+
+    static getEloRank(elo: number): string {
+        if (elo < 100) {
+            return dconfig.roles.bronze;
+        }
+
+        if (elo < 200) {
+            return dconfig.roles.silver;
+        }
+
+        if (elo < 300) {
+            return dconfig.roles.gold;
+        }
+
+        if (elo < 400) {
+            return dconfig.roles.platinum;
+        }
+
+        if (elo < 500) {
+            return dconfig.roles.diamond;
+        }
+
+        if (elo < 600) {
+            return dconfig.roles.emerald;
+        }
+
+        if (elo < 700) {
+            return dconfig.roles.sapphire;
+        }
+
+        if (elo < 800) {
+            return dconfig.roles.ruby;
+        }
+
+        if (elo < 900) {
+            return dconfig.roles.crystal;
+        }
+
+        if (elo < 1000) {
+            return dconfig.roles.opal;
+        }
+
+        if (elo < 1200) {
+            return dconfig.roles.amethyst;
+        }
+
+        if (elo < 1400) {
+            return dconfig.roles.obsidian;
+        }
+
+        if (elo < 1600) {
+            return dconfig.roles.aventurine;
+        }
+
+        if (elo < 1800) {
+            return dconfig.roles.quartz;
+        }
+
+        if (elo < 2000) {
+            return dconfig.roles.topaz;
+        }
+
+        return dconfig.roles.darkMatter;
+    }
 }

@@ -136,8 +136,11 @@ func (Handler) HandleChat(ctx *player.Context, msg *string) {
 
 	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
 
-	*msg = strings.ReplaceAll(strings.ReplaceAll(*msg, "§", ""), "%", "")
+	*msg = strings.ReplaceAll(*msg, "/", "\uE000/")
+	*msg = strings.ReplaceAll(*msg, "§", "")
+	*msg = strings.ReplaceAll(*msg, "%", "")
 	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
+	*msg = strings.ReplaceAll(*msg, "\uE000/", "/")
 
 	for p := range core.MCServer.Players(pl.Tx()) {
 		if um := user.GetUser(p); um.Game == nil || um.Game.ID() == buildffa.Game.ID() {

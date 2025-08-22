@@ -1,6 +1,6 @@
 module server
 
-go 1.24.5
+go 1.25.0
 
 require (
 	github.com/bedrock-gophers/intercept v0.2.4
@@ -16,7 +16,7 @@ require (
 	github.com/samber/lo v1.51.0
 	github.com/sandertv/gophertunnel v1.49.0
 	go.mongodb.org/mongo-driver v1.17.4
-	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 	golang.org/x/text v0.28.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
@@ -65,7 +65,7 @@ require (
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
-	google.golang.org/protobuf v1.36.7 // indirect
+	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
