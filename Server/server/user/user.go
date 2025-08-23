@@ -51,7 +51,7 @@ type User struct {
 	Data       *database.PlayerData
 	FirstTime  bool
 
-	GameInfo *GameRuntimeData
+	GameInfo GameRuntimeData
 	Game     *game.Game
 
 	LastHit   *world.EntityHandle

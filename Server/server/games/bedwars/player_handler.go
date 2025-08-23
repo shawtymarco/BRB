@@ -95,9 +95,6 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	u := user.GetUser(pl)
 	u.Game = bwGame.Game
-	if u.GameInfo == nil {
-		u.GameInfo = &user.GameRuntimeData{}
-	}
 	u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
 	switch typeGame {
 	case game.TypeBedWars:
