@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 1 * time.Second
+const startingInDurationBW = 20 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 10 * time.Minute
 
@@ -546,12 +546,12 @@ func (b *BedWars) Maps() []string {
 	if b.typeGame == game.TypeBedWars {
 		return []string{
 			"BW-Aquarium",
-			//"BW-Archway",
-			//"BW-Boletum",
-			//"BW-Invasion",
-			//"BW-Katsu",
-			//"BW-Lectus",
-			//"BW-Planet98",
+			"BW-Archway",
+			"BW-Boletum",
+			"BW-Invasion",
+			"BW-Katsu",
+			"BW-Lectus",
+			"BW-Planet98",
 		}
 	}
 	return []string{
