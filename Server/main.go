@@ -79,6 +79,7 @@ func main() {
 	conf := utils.Panics(c.Config(log))
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
+	conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
 	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
 	//	v486.New(true),
@@ -86,19 +87,20 @@ func main() {
 
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
-	utils.SetServer(srv)
-	srv.Listen()
 	srv.World().StopWeatherCycle()
 	srv.World().StopRaining()
 	srv.World().StopThundering()
 	srv.World().StopTime()
 	srv.World().Handle(listener.WorldHandler{})
 	srv.CloseOnProgramEnd()
+	srv.Listen()
+	intercept.Start(srv)
+	utils.SetServer(srv)
 	core.MCServer = srv
 
-	//srv.World().Exec(func(tx *world.Tx) {
-	//	initBots(tx)
-	//})
+	srv.World().Exec(func(tx *world.Tx) {
+		initBots(tx)
+	})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {
@@ -115,8 +117,8 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	//bw := bedwars.NewBedWars(game.TypeBedWars, 1, 2, false)
-	//bw.UsersToJoin = []string{"436765918169792524", "1381057370033229855"}
+	bw := bedwars.NewBedWars(game.TypeBedWars, 2, 2, false)
+	bw.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1163341419189112892", "919498122940547072"}
 
 	<-srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}
@@ -125,7 +127,6 @@ func main() {
 	})
 
 	for pl := range srv.Accept() {
-		intercept.Intercept(pl)
 		u := user.GetUser(pl)
 
 		allData := utils.Panics(core.Database.FindAllPlayers())

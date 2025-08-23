@@ -349,6 +349,12 @@ export class Game {
     async terminateGame(data: any) {
         const waitingRoom = CacheUtil.getChannel(this.guild, dconfig.channels.waitingRoom);
 
+        for (const [, member] of await this.members()) {
+            Game.refreshMemberNickname(member);
+            Game.refreshMemberRank(member);
+        }
+        
+
         if (this.thread()) {
             this.thread().setLocked(true);
             this.thread().setArchived(true);
@@ -443,7 +449,7 @@ export class Game {
 
     static async refreshMemberRank(member: GuildMember) {
         const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${member.user.id}`);
-        await member.roles.add(this.getEloRank(res.data.Statistics.ELO));
+        await member.roles.add(this.getEloRank(res.data.Statistics.ELO)).catch(() => {});
     }
 
     static getEloRank(elo: number): string {

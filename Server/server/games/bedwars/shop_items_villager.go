@@ -2,14 +2,15 @@ package bedwars
 
 import (
 	"server/server/game"
-	"server/server/inv"
-	inv2 "server/server/inv"
+	"server/server/listener"
 	"server/server/living"
 	"server/server/user"
 	"server/server/utils"
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/bedrock-gophers/inv/inv"
 
 	"github.com/samber/lo"
 
@@ -89,7 +90,7 @@ func SendItemShopUI(shop *ItemShop, fromLobby bool) {
 
 	var qbSlot int
 
-	menuInv.Handle(inv2.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	menuInv.Handle(listener.ChestUIHandler{Inventory: menuInv, Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, _ *inventory.Inventory) {
 			ctx.Cancel()
 

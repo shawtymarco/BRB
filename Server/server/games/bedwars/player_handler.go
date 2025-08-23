@@ -6,7 +6,6 @@ import (
 	"server/server/blocks/bed"
 	"server/server/database"
 	"server/server/game"
-	"server/server/inv"
 	"server/server/language"
 	"server/server/listener"
 	"server/server/living"
@@ -17,6 +16,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/bedrock-gophers/inv/inv"
 
 	"github.com/df-mc/dragonfly/server/item/potion"
 
@@ -94,6 +95,9 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	u := user.GetUser(pl)
 	u.Game = bwGame.Game
+	if u.GameInfo == nil {
+		u.GameInfo = &user.GameRuntimeData{}
+	}
 	u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
 	switch typeGame {
 	case game.TypeBedWars:
@@ -106,7 +110,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 	bwGame.AddPlayerToTeam(pl, teamSize, typeGame)
 
-	chestHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	chestHandler := listener.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		nil,
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			s, isSword := stack.Item().(item.Sword)
@@ -155,7 +159,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		}
 	}
 
-	pl.Inventory().Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	pl.Inventory().Handle(listener.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			updateMenu(ctx, slot, stack, inv)
 
@@ -196,7 +200,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		},
 	}})
 	plUI := utils.FetchPrivateField[*inventory.Inventory](pl, "ui")
-	plUI.Handle(inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	plUI.Handle(listener.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			if slot == 50 {
 				ctx.Cancel()

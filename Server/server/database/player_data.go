@@ -223,5 +223,5 @@ func (g Games) TotalWins() int {
 }
 
 func (g Games) TotalKills() int {
-	return g.BedWars.Kills + g.BedFight.Kills + g.BuildFFA.Kills
+	return g.BedWars.FinalKills + g.BedWars.Kills + g.BedFight.Kills + g.BuildFFA.Kills
 }

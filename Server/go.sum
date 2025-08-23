@@ -1,5 +1,9 @@
 github.com/bedrock-gophers/intercept v0.2.4 h1:uLuUdT/1XEQoozExbvgUt8DwYkYkljdFh+XIFC1Fzb4=
 github.com/bedrock-gophers/intercept v0.2.4/go.mod h1:UlhMbzIqx/jQyeSBF9QQwROUCcp5Vhvs0QhK959a87I=
+github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4 h1:4nagpysyHKI87v5eNcIeDT8/i5ubzpQR/6k7yCiP2+Q=
+github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4/go.mod h1:JJubl+cmpuN9y1T0BqeAK6h2cumdZD/IQ86AFZsus4c=
+github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299 h1:K1I5O/1YPtbP4phCZ+I4V/ONKV62IM6d/ilOV3talOQ=
+github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299/go.mod h1:UiAt2VwW7Z4K2GY99LT2W7Osa0xitvGpRr6jeBcNOXA=
 github.com/bedrock-gophers/unsafe v0.1.0 h1:vBq9KBD2rYAGrKQJtQNRpx2VhUiV2KAQFuxSzNGZZN8=
 github.com/bedrock-gophers/unsafe v0.1.0/go.mod h1:PBvWHoSHnYJhwS+hqmYQJMzmnBzRyPcAPJ6l47DJdow=
 github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 h1:/G0ghZwrhou0Wq21qc1vXXMm/t/aKWkALWwITptKbE0=

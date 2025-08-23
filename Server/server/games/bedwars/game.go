@@ -49,9 +49,9 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 20 * time.Second
+const startingInDurationBW = 1 * time.Second
 const startingInDurationBF = 3 * time.Second
-const maxWaitingDuration = 5 * time.Minute
+const maxWaitingDuration = 10 * time.Minute
 
 var Games = make(map[uuid.UUID]*BedWars)
 var GamesToTerminate = make(map[uuid.UUID]*GameData)
@@ -429,7 +429,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 				<-g.World().Exec(func(tx *world.Tx) {
 					g.ForEachOriginalPlayer(func(pl *player.Player) {
 						u := user.GetUser(pl)
-						u.GameInfo = user.GameRuntimeData{}
+						u.GameInfo.BedWarsInfo = user.BedWarsInfo{}
 					}, tx)
 
 					for e := range tx.Players() {
@@ -546,12 +546,12 @@ func (b *BedWars) Maps() []string {
 	if b.typeGame == game.TypeBedWars {
 		return []string{
 			"BW-Aquarium",
-			"BW-Archway",
-			"BW-Boletum",
-			"BW-Invasion",
-			"BW-Katsu",
-			"BW-Lectus",
-			"BW-Planet98",
+			//"BW-Archway",
+			//"BW-Boletum",
+			//"BW-Invasion",
+			//"BW-Katsu",
+			//"BW-Lectus",
+			//"BW-Planet98",
 		}
 	}
 	return []string{

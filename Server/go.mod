@@ -3,7 +3,7 @@ module server
 go 1.25.0
 
 require (
-	github.com/bedrock-gophers/intercept v0.2.4
+	github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4
 	github.com/bedrock-gophers/unsafe v0.1.0
 	github.com/df-mc/atomic v1.10.0
 	github.com/df-mc/dragonfly v0.10.6-0.20250812035922-b7aa3a4b058d
@@ -22,6 +22,7 @@ require (
 )
 
 require (
+	github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299 // indirect
 	github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect

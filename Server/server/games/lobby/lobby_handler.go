@@ -5,7 +5,6 @@ import (
 	"server/server/database"
 	"server/server/font"
 	"server/server/games/buildffa"
-	"server/server/inv"
 	"server/server/itemutil/stacks"
 	"server/server/listener"
 	"server/server/user"
@@ -51,7 +50,7 @@ func Join(pl *player.Player) {
 	}
 
 	pl.Handle(Handler{})
-	invHandler := inv.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
+	invHandler := listener.ChestUIHandler{Inventory: pl.Inventory(), Funcs: []func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory){
 		func(ctx *event.Context[inventory.Holder], slot int, stack item.Stack, inv *inventory.Inventory) {
 			ctx.Cancel()
 		},
@@ -110,6 +109,7 @@ func Join(pl *player.Player) {
 			u.Scoreboard.Set(11, text.Colourf("<yellow>▌</yellow> <white>Total Wins:</white> <green>%v</green>", u.Data.Games.TotalWins()))
 			u.Scoreboard.Set(12, "§e")
 			u.Scoreboard.Set(13, font.Transform(core.IP))
+
 			u.SendScoreboard(7)
 
 			time.Sleep(1 * time.Second)

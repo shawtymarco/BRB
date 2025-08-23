@@ -51,7 +51,7 @@ type User struct {
 	Data       *database.PlayerData
 	FirstTime  bool
 
-	GameInfo GameRuntimeData
+	GameInfo *GameRuntimeData
 	Game     *game.Game
 
 	LastHit   *world.EntityHandle
@@ -367,7 +367,12 @@ func (u *User) AddItemWithHBConfig(preferredSlot int, it item.Stack) (n int, err
 }
 
 func (u *User) SendScoreboard(numOfSpaces int) {
+	if utils.Session(u.pl) == session.Nop {
+		return
+	}
+
 	u.Scoreboard.Set(0, text.Colourf("%v%v", strings.Repeat(" ", numOfSpaces), font.Transform("SEASON 1")))
+	u.pl.RemoveScoreboard()
 	u.pl.SendScoreboard(u.Scoreboard)
 }
 
@@ -407,8 +412,8 @@ func (u *User) RefreshCape() {
 }
 
 type GameRuntimeData struct {
-	BedWarsInfo
-	BuildFFAInfo
+	BedWarsInfo  BedWarsInfo
+	BuildFFAInfo BuildFFAInfo
 }
 
 type BedWarsInfo struct {

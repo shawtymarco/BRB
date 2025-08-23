@@ -1,4 +1,4 @@
-package inv
+package listener
 
 import (
 	"github.com/df-mc/dragonfly/server/event"
