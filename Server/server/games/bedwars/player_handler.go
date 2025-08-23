@@ -569,7 +569,7 @@ func (PlayerHandler) HandleHeldSlotChange(ctx *player.Context, from, to int) {
 	pl := ctx.Val()
 	u := user.GetUser(pl)
 	if time.Now().Sub(u.LastHitAt) <= time.Duration(core.Config.Pvp.HitRegistration)*time.Millisecond {
-		u.IsCooldownActive(user.NoPVP, time.Duration(core.Config.Pvp.HitRegistration/2)*time.Millisecond, false, true, false)
+		u.IsCooldownActive(user.NoPVP, 150*time.Millisecond, false, true, false)
 	}
 }
 
