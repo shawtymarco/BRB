@@ -4,9 +4,9 @@ go 1.25.0
 
 require (
 	github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4
-	github.com/bedrock-gophers/unsafe v0.1.0
+	github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299
 	github.com/df-mc/atomic v1.10.0
-	github.com/df-mc/dragonfly v0.10.6-0.20250812035922-b7aa3a4b058d
+	github.com/df-mc/dragonfly v0.10.6-0.20250817203556-60bcf6b7432b
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-gl/mathgl v1.2.0
 	github.com/google/uuid v1.6.0
@@ -22,7 +22,7 @@ require (
 )
 
 require (
-	github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299 // indirect
+	github.com/bedrock-gophers/unsafe v0.1.0 // indirect
 	github.com/brentp/intintmap v0.0.0-20190211203843-30dc0ade9af9 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
@@ -49,6 +49,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
 	github.com/onsi/gomega v1.37.0 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sandertv/go-raknet v1.14.3-0.20250525005230-991ee492a907 // indirect
