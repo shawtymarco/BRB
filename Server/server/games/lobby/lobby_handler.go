@@ -4,12 +4,10 @@ import (
 	core "server/server"
 	"server/server/database"
 	"server/server/font"
-	"server/server/games/buildffa"
 	"server/server/itemutil/stacks"
 	"server/server/listener"
 	"server/server/user"
 	"server/server/utils"
-	"strings"
 	"time"
 
 	"github.com/df-mc/dragonfly/server/entity/effect"
@@ -124,30 +122,30 @@ func (Handler) HandleQuit(pl *player.Player) {
 	user.Save(pl)
 }
 
-func (Handler) HandleChat(ctx *player.Context, msg *string) {
-	ctx.Cancel()
-
-	pl := ctx.Val()
-	u := user.GetUser(pl)
-
-	if listener.CheckChatCoolDown(pl) {
-		return
-	}
-
-	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
-
-	*msg = strings.ReplaceAll(*msg, "/", "\uE000/")
-	*msg = strings.ReplaceAll(*msg, "§", "")
-	*msg = strings.ReplaceAll(*msg, "%", "")
-	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
-	*msg = strings.ReplaceAll(*msg, "\uE000/", "/")
-
-	for p := range core.MCServer.Players(pl.Tx()) {
-		if um := user.GetUser(p); um.Game == nil || um.Game.ID() == buildffa.Game.ID() {
-			p.Message(*msg)
-		}
-	}
-}
+//func (Handler) HandleChat(ctx *player.Context, msg *string) {
+//	ctx.Cancel()
+//
+//	pl := ctx.Val()
+//	u := user.GetUser(pl)
+//
+//	if listener.CheckChatCoolDown(pl) {
+//		return
+//	}
+//
+//	msgColor := lo.If(u.Data.Rank() <= database.Booster, "white").Else("grey")
+//
+//	*msg = strings.ReplaceAll(*msg, "/", "\uE000/")
+//	*msg = strings.ReplaceAll(*msg, "§", "")
+//	*msg = strings.ReplaceAll(*msg, "%", "")
+//	*msg = text.Colourf("%v<grey>:</grey> <%v>%v</%v>", database.LobbyNameDisplay.Name(u.Data), msgColor, *msg, msgColor)
+//	*msg = strings.ReplaceAll(*msg, "\uE000/", "/")
+//
+//	for p := range core.MCServer.Players(pl.Tx()) {
+//		if um := user.GetUser(p); um.Game == nil || um.Game.ID() == buildffa.Game.ID() {
+//			p.Message(*msg)
+//		}
+//	}
+//}
 
 func (Handler) HandleMove(ctx *player.Context, newPos mgl64.Vec3, newRot cube.Rotation) {
 	pl := ctx.Val()
