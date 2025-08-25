@@ -547,12 +547,12 @@ func (b *BedWars) Type() game.TypeGame {
 func (b *BedWars) Maps() []string {
 	if b.typeGame == game.TypeBedWars {
 		return []string{
-			//"BW-Aquarium",
-			//"BW-Archway",
-			//"BW-Boletum",
-			//"BW-Invasion",
-			//"BW-Katsu",
-			//"BW-Lectus",
+			"BW-Aquarium",
+			"BW-Archway",
+			"BW-Boletum",
+			"BW-Invasion",
+			"BW-Katsu",
+			"BW-Lectus",
 			"BW-Planet98",
 		}
 	}

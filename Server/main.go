@@ -28,7 +28,6 @@ import (
 
 	"github.com/bedrock-gophers/intercept/intercept"
 
-	"github.com/df-mc/dragonfly/server/block/cube"
 	"github.com/df-mc/dragonfly/server/entity"
 	"github.com/go-gl/mathgl/mgl64"
 	"github.com/sandertv/gophertunnel/minecraft/text"
@@ -81,10 +80,6 @@ func main() {
 	conf.ReadOnlyWorld = true
 	conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
-	//multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
-	//	v486.New(true),
-	//})
-
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
 	srv.World().StopWeatherCycle()
@@ -122,8 +117,9 @@ func main() {
 
 	<-srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}
-		tx.Block(cube.PosFromVec3(txtPos))
 		tx.AddEntity(entity.NewText(text.Colourf("<green>Welcome to BRBW!</green>\n<grey>The #1 Ranked Bedwars server on Bedrock</grey>\n§0\n<white>Join our Discord!.</white>\n<aqua>discord.gg/brbw</aqua>"), txtPos))
+		l := world.NewLoader(1, tx.World(), world.NopViewer{})
+		l.Move(tx, txtPos)
 	})
 
 	for pl := range srv.Accept() {

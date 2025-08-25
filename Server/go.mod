@@ -3,7 +3,7 @@ module server
 go 1.25.0
 
 require (
-	github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4
+	github.com/bedrock-gophers/intercept v0.2.5-0.20250825150433-783d65702223
 	github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299
 	github.com/df-mc/atomic v1.10.0
 	github.com/df-mc/dragonfly v0.10.6-0.20250817203556-60bcf6b7432b
