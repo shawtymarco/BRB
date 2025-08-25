@@ -3,7 +3,6 @@ package proxy
 import (
 	"github.com/sandertv/gophertunnel/minecraft/resource"
 	"os"
-	"path"
 )
 
 var packsContentKeys = map[string]string{
@@ -12,7 +11,7 @@ var packsContentKeys = map[string]string{
 }
 
 func ParsePacks() []*resource.Pack {
-	dir := path.Join(".", "resources")
+	dir := "resources"
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		panic(err)
