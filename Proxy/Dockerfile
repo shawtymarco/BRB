@@ -27,7 +27,7 @@ WORKDIR /proxy
 
 COPY --chown=1000:1000 --from=build /app/proxy-executable .
 COPY --chown=1000:1000 config.toml .
-COPY --chown=1000:1000 resources .
+COPY --chown=1000:1000 resources ./resources
 
 RUN chown -R proxy:proxy /proxy
 
