@@ -3,7 +3,6 @@ services:
     build: ./Proxy
     volumes:
       - .:/Production
-      - shared_resources:/shared/resources
     restart: unless-stopped
     tty: true
     stdin_open: true
@@ -18,7 +17,6 @@ services:
     volumes:
       - .:/Production
       - ./certs:/certs:ro
-      - shared_resources:/shared/resources
     restart: unless-stopped
     tty: true
     stdin_open: true
@@ -40,4 +38,3 @@ services:
 
 volumes:
   mongo:
-  shared_resources:

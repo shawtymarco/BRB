@@ -1,0 +1,25 @@
+{
+  "format_version": "1.10.0",
+  "render_controllers": {
+    "controller.render.generator_block": {
+      "arrays": {
+        "textures": {
+          "Array.block_types": [
+            "texture.air",
+            "texture.diamond",
+            "texture.emerald"
+          ]
+        }
+      },
+      "geometry": "geometry.default",
+      "materials": [
+        {
+          "*": "material.default"
+        }
+      ],
+      "textures": [
+        "Array.block_types[q.variant]"
+      ]
+    }
+  }
+}
