@@ -84,10 +84,11 @@ func main() {
 	conf := utils.Panics(c.Config(log))
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
+	conf.Listeners = intercept.WrapListeners(conf.Listeners)
+
 	multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
 		v486.New(true),
 	})
-	conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
