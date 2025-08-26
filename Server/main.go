@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/akmalfairuz/legacy-version/legacyver"
 	"log/slog"
 	"net/http"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/akmalfairuz/legacy-version/legacyver"
 
 	"github.com/bedrock-gophers/intercept/intercept"
 
@@ -81,7 +82,7 @@ func main() {
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
 	multiversion.ListenerFunc(&conf, c.Network.Address, legacyver.All(true))
-	conf.Listeners = intercept.WrapListeners(conf.Listeners)
+	//conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
@@ -96,9 +97,9 @@ func main() {
 	utils.SetServer(srv)
 	core.MCServer = srv
 
-	srv.World().Exec(func(tx *world.Tx) {
-		initBots(tx)
-	})
+	//srv.World().Exec(func(tx *world.Tx) {
+	//	initBots(tx)
+	//})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {

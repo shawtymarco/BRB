@@ -1,13 +1,4 @@
 services:
-  proxy:
-    build: ./Proxy
-    volumes:
-      - .:/Production
-    restart: unless-stopped
-    tty: true
-    stdin_open: true
-    ports:
-      - "19132:19132/udp"
   mc:
     build: ./Server
     environment:
@@ -21,10 +12,10 @@ services:
     tty: true
     stdin_open: true
     ports:
+      - "19132:19132/udp"
       - "8080:8080"
       - "6060:6060"
     depends_on:
-      - proxy
       - mongo
 
   mongo:

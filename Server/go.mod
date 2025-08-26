@@ -31,7 +31,7 @@ require (
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/df-mc/goleveldb v1.1.9 // indirect
 	github.com/df-mc/worldupgrader v1.0.19 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -70,3 +70,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
+
+replace github.com/sandertv/go-raknet => github.com/tedacmc/tedac-raknet v0.0.6
+
+replace github.com/sandertv/gophertunnel => github.com/TedacMC/tedac-gophertunnel v0.0.46
+
+replace github.com/akmalfairuz/legacy-version => github.com/Studgi/legacy-version v1.6.1-0.20250826023228-6e3ebdad014d
