@@ -82,7 +82,7 @@ func main() {
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
 	multiversion.ListenerFunc(&conf, c.Network.Address, legacyver.All(true))
-	//conf.Listeners = intercept.WrapListeners(conf.Listeners)
+	conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
