@@ -1,4 +1,13 @@
 services:
+  proxy:
+    build: ./Proxy
+    volumes:
+      - .:/Production
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    ports:
+      - "19132:19132/udp"
   mc:
     build: ./Server
     environment:
