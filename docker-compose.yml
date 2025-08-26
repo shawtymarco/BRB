@@ -15,6 +15,7 @@ services:
       - "8080:8080"
       - "6060:6060"
     depends_on:
+      - proxy
       - mongo
 
   mongo:
