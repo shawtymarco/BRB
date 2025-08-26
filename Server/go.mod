@@ -3,6 +3,7 @@ module server
 go 1.25.0
 
 require (
+	github.com/akmalfairuz/legacy-version v1.6.0
 	github.com/bedrock-gophers/intercept v0.2.5-0.20250825150433-783d65702223
 	github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299
 	github.com/df-mc/atomic v1.10.0
@@ -49,9 +50,7 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/muhammadmuzzammil1998/jsonc v1.0.0 // indirect
 	github.com/onsi/gomega v1.37.0 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sandertv/go-raknet v1.14.3-0.20250525005230-991ee492a907 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

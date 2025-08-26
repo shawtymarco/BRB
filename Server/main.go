@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/akmalfairuz/legacy-version/legacyver"
 	"log/slog"
 	"net/http"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"server/server/language"
 	"server/server/listener"
 	"server/server/living/npc"
+	"server/server/multiversion"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
@@ -78,6 +80,7 @@ func main() {
 	conf := utils.Panics(c.Config(log))
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
+	multiversion.ListenerFunc(&conf, c.Network.Address, legacyver.All(true))
 	conf.Listeners = intercept.WrapListeners(conf.Listeners)
 
 	intercept.Hook(listener.PacketHandler{})

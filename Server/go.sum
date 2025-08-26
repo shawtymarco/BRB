@@ -1,5 +1,5 @@
-github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4 h1:4nagpysyHKI87v5eNcIeDT8/i5ubzpQR/6k7yCiP2+Q=
-github.com/bedrock-gophers/intercept v0.2.5-0.20250531015042-758008aeb9d4/go.mod h1:JJubl+cmpuN9y1T0BqeAK6h2cumdZD/IQ86AFZsus4c=
+github.com/akmalfairuz/legacy-version v1.6.0 h1:EPHbbTa4fCxflrG5uK8bkVAfW6yJ1t4FPOcSz0a2eis=
+github.com/akmalfairuz/legacy-version v1.6.0/go.mod h1:tgacrHooIhGvN5dxYCcBtCkk8Iz8LQM7svJq89BBIFk=
 github.com/bedrock-gophers/intercept v0.2.5-0.20250825150433-783d65702223 h1:04gCZoPjNtE+Pccm/CXPrAcjv9Kc7BjtS5haCZ7YUvM=
 github.com/bedrock-gophers/intercept v0.2.5-0.20250825150433-783d65702223/go.mod h1:JJubl+cmpuN9y1T0BqeAK6h2cumdZD/IQ86AFZsus4c=
 github.com/bedrock-gophers/inv v0.3.1-0.20250705174753-b89c54617299 h1:K1I5O/1YPtbP4phCZ+I4V/ONKV62IM6d/ilOV3talOQ=
@@ -22,8 +22,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/df-mc/atomic v1.10.0 h1:0ZuxBKwR/hxcFGorKiHIp+hY7hgY+XBTzhCYD2NqSEg=
 github.com/df-mc/atomic v1.10.0/go.mod h1:Gw9rf+rPIbydMjA329Jn4yjd/O2c/qusw3iNp4tFGSc=
-github.com/df-mc/dragonfly v0.10.6-0.20250812035922-b7aa3a4b058d h1:c3fvPVtnCqOKM3102HpBef8Uso6Mkr07vh4kEP8onBc=
-github.com/df-mc/dragonfly v0.10.6-0.20250812035922-b7aa3a4b058d/go.mod h1:1B3NiEGWj0S9U4QlsL58HPvnmgPlaFCm/pCVWdnrMH0=
 github.com/df-mc/dragonfly v0.10.6-0.20250817203556-60bcf6b7432b h1:i3nfD4EFsuIZJfod6W9/lovMw8rzwCjGHRVKOBu1nXo=
 github.com/df-mc/dragonfly v0.10.6-0.20250817203556-60bcf6b7432b/go.mod h1:1B3NiEGWj0S9U4QlsL58HPvnmgPlaFCm/pCVWdnrMH0=
 github.com/df-mc/goleveldb v1.1.9 h1:ihdosZyy5jkQKrxucTQmN90jq/2lUwQnJZjIYIC/9YU=
@@ -94,8 +92,6 @@ github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+W
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.37.0 h1:CdEG8g0S133B4OswTDC/5XPSzE1OeP29QOioj2PID2Y=
 github.com/onsi/gomega v1.37.0/go.mod h1:8D9+Txp43QWKhM24yyOBEdpkzN8FvJyAwecBgsU4KU0=
-github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
-github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
 github.com/pelletier/go-toml/v2 v2.2.4/go.mod h1:2gIqNv+qfxSVS7cM2xJQKtLSTLUE9V8t9Stt+h56mCY=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
