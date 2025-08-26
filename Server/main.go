@@ -18,7 +18,6 @@ import (
 	"server/server/language"
 	"server/server/listener"
 	"server/server/living/npc"
-	"server/server/multiversion"
 	"server/server/user"
 	"server/server/utils"
 	"server/server/worldmanager"
@@ -26,9 +25,6 @@ import (
 	"strings"
 	"time"
 	"unsafe"
-
-	v486 "github.com/didntpot/multiversion/multiversion/protocols/v486"
-	"github.com/sandertv/gophertunnel/minecraft"
 
 	"github.com/bedrock-gophers/intercept/intercept"
 
@@ -47,8 +43,6 @@ import (
 	_ "net/http/pprof"
 	_ "server/server/api"
 	_ "server/server/lobbyitems"
-
-	_ "github.com/didntpot/multiversion/multiversion/protocols"
 )
 
 func main() {
@@ -85,10 +79,6 @@ func main() {
 	conf.Entities = conf.Entities.Config().New([]world.EntityType{&bedwars.GeneratorBlockType{}})
 	conf.ReadOnlyWorld = true
 	conf.Listeners = intercept.WrapListeners(conf.Listeners)
-
-	multiversion.ListenerFunc(&conf, c.Network.Address, []minecraft.Protocol{
-		v486.New(true),
-	})
 
 	intercept.Hook(listener.PacketHandler{})
 	srv := conf.New()
