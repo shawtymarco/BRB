@@ -219,7 +219,9 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 		delete(bwGame.rejoiningPlayerInventories, pl.UUID())
 
 		armourStacks := bwGame.rejoiningPlayerArmour[pl.UUID()]
-		pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+		if len(armourStacks) > 0 {
+			pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+		}
 		delete(bwGame.rejoiningPlayerArmour, pl.UUID())
 
 		pl.Hurt(20, entity.VoidDamageSource{})
