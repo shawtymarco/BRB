@@ -471,8 +471,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 	if g.PlayerTeam(pl).Status == game.BedBroken {
 		finalKill = text.Colourf("<bold><aqua>FINAL KILL!</aqua></bold>")
 		g.PlayerTeam(pl).RemovePlayerFromActive(pl)
-		pl.Inventory().Clear()
-		pl.Armour().Clear()
+		go pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+			p := e.(*player.Player)
+			p.Inventory().Clear()
+			p.Armour().Clear()
+		})
+
 		if ua != nil {
 			ua.GameInfo.BedWarsInfo.FinalKills++
 			if g.typeGame == game.TypeBedWars {
@@ -559,7 +563,9 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}
 	}
 
-	pl.Inventory().Clear()
+	go pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+		e.(*player.Player).Inventory().Clear()
+	})
 
 	if g.typeGame == game.TypeBedWars {
 		u.Data.Games.BedWars.Deaths++
