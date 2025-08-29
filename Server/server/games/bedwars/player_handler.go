@@ -2,6 +2,7 @@ package bedwars
 
 import (
 	"fmt"
+	"github.com/df-mc/dragonfly/server/cmd"
 	core "server/server"
 	"server/server/blocks/bed"
 	"server/server/database"
@@ -807,6 +808,11 @@ func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 			}
 		}
 	}
+}
+
+func (PlayerHandler) HandleCommandExecution(ctx *player.Context, command cmd.Command, args []string) {
+	pl := ctx.Val()
+	fmt.Println(pl.Name(), " executed the command: /", command.Name(), " ", strings.Join(args, " "))
 }
 
 func split(pl *player.Player, genPlayers []*player.Player, h PlayerHandler) {

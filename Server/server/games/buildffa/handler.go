@@ -2,6 +2,7 @@ package buildffa
 
 import (
 	"fmt"
+	"github.com/df-mc/dragonfly/server/cmd"
 	"image/color"
 	core "server/server"
 	"server/server/blocks/bed"
@@ -299,6 +300,11 @@ func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 
 func (Handler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
+}
+
+func (Handler) HandleCommandExecution(ctx *player.Context, command cmd.Command, args []string) {
+	pl := ctx.Val()
+	fmt.Println(pl.Name(), " executed the command: /", command.Name(), " ", strings.Join(args, " "))
 }
 
 func giveKit(pl *player.Player) {

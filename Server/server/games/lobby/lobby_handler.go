@@ -1,6 +1,8 @@
 package lobby
 
 import (
+	"fmt"
+	"github.com/df-mc/dragonfly/server/cmd"
 	core "server/server"
 	"server/server/database"
 	"server/server/font"
@@ -192,4 +194,9 @@ func (Handler) HandleStartBreak(ctx *player.Context, pos cube.Pos) {
 
 func (Handler) HandleItemUse(ctx *player.Context) {
 	listener.HandleItemUse(ctx)
+}
+
+func (Handler) HandleCommandExecution(ctx *player.Context, command cmd.Command, args []string) {
+	pl := ctx.Val()
+	fmt.Println(pl.Name(), " executed the command: /", command.Name(), " ", strings.Join(args, " "))
 }
