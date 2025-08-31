@@ -9,6 +9,7 @@ func RegisterCommands() {
 	// Global Commands
 	cmd.Register(cmd.New("hub", "To teleport back to hub", nil, HubCommand{}))
 	cmd.Register(cmd.New("ping", "To check a specific player's ping", nil, PingCommand{}))
+	cmd.Register(cmd.New("indicator", "To check a specific player's device", nil, IndicatorCommand{}))
 	cmd.Register(cmd.New("whisper", "To send a private message to the specified player", []string{"w", "tell", "msg"}, WhisperCommand{}))
 	cmd.Register(cmd.New("reply", "To reply privately to the last player that messaged you", []string{"r"}, ReplyCommand{}))
 	cmd.Register(cmd.New("link", "To link your minecraft account with your discord account", nil, LinkCommand{}))

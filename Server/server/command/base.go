@@ -28,6 +28,7 @@ const (
 	Mute
 	Ban
 	Alias
+	Indicator
 
 	SetRole
 	ChangeCape
@@ -72,13 +73,13 @@ var rankPermissions = map[database.Rank][]Permission{
 	database.Owner:     {Sudo, GameMode},
 	database.Manager:   {SetRole},
 	database.Admin:     {ResetStats, ChangeCape},
-	database.Moderator: {Alias, Ban},
+	database.Moderator: {Alias, Ban, Indicator},
 	database.Helper:    {Mute},
 	database.Prime:     {Nick, ClaimELO},
 	database.Premium:   {Fly, Spectate},
 	database.Media:     {},
 	database.Booster:   {},
-	database.Player:    {},
+	database.Player:    {Indicator},
 }
 
 type ArgumentPlayer string
