@@ -32,6 +32,14 @@ module.exports = {
                             type: "no",
                             description: "Please wait your turn to pick a teammate"
                         })], flags: MessageFlags.Ephemeral});
+                    } else if (interaction.values.some(id => game.team1Ids.includes(id) || game.team2Ids.includes(id))) {
+                        await game.updateCaptainPickingMessage();
+                        interaction.reply({
+                            embeds: [EmbedUtil.create({
+                                type: "no",
+                                description: "This player has already been picked. Pick someone else!"
+                            })], flags: MessageFlags.Ephemeral
+                        });
                     } else {
                         await game.updateCaptainPickingMessage();
                         interaction.reply({

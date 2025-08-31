@@ -2,7 +2,6 @@ package bedwars
 
 import (
 	"fmt"
-	"github.com/df-mc/dragonfly/server/cmd"
 	core "server/server"
 	"server/server/blocks/bed"
 	"server/server/database"
@@ -17,6 +16,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/cmd"
 
 	"github.com/bedrock-gophers/inv/inv"
 
@@ -221,7 +222,9 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 
 		armourStacks := bwGame.rejoiningPlayerArmour[pl.UUID()]
 		if len(armourStacks) > 0 {
-			pl.Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+			go pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
+				e.(*player.Player).Armour().Set(armourStacks[0], armourStacks[1], armourStacks[2], armourStacks[3])
+			})
 		}
 		delete(bwGame.rejoiningPlayerArmour, pl.UUID())
 
@@ -487,11 +490,12 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			}
 		}
 	} else {
+		oldGameId := u.Game.ID()
 		go func() {
 			i := 3
 			ticker := time.NewTicker(time.Second)
 			for range ticker.C {
-				if team := g.PlayerTeam(pl); team != nil {
+				if team := g.PlayerTeam(pl); team != nil && u.Game.ID() == oldGameId {
 					if i == 0 {
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 							p := e.(*player.Player)

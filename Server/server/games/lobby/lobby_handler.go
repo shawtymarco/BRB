@@ -2,7 +2,6 @@ package lobby
 
 import (
 	"fmt"
-	"github.com/df-mc/dragonfly/server/cmd"
 	core "server/server"
 	"server/server/database"
 	"server/server/font"
@@ -13,6 +12,8 @@ import (
 	"server/server/utils"
 	"strings"
 	"time"
+
+	"github.com/df-mc/dragonfly/server/cmd"
 
 	"github.com/df-mc/dragonfly/server/entity/effect"
 

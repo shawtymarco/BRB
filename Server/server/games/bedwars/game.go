@@ -443,9 +443,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 					}
 
 					for e := range tx.Entities() {
-						if e.H().Type() == entity.ItemType {
-							_ = e.Close()
-						}
+						_ = e.Close()
 					}
 				})
 
@@ -850,7 +848,25 @@ func sendRunningScoreboard(pl *player.Player, g *BedWars, stage *stage) {
 		u.Scoreboard.Set(i, "§1")
 		i++
 	}
-	for _, t := range g.Teams() {
+
+	var orderedTeams []*game.Team
+	teams := g.Teams()
+
+	// Create a map for easy lookup
+	teamMap := make(map[string]*game.Team)
+	for _, t := range teams {
+		teamMap[t.Colour()] = t
+	}
+
+	desiredOrder := []string{"red", "blue", "green", "yellow"}
+
+	for _, color := range desiredOrder {
+		if team, exists := teamMap[color]; exists {
+			orderedTeams = append(orderedTeams, team)
+		}
+	}
+
+	for _, t := range orderedTeams {
 		var statusStr string
 		switch t.Status {
 		case game.BedExists:

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"server/server/game"
 	"server/server/games/bedwars"
 	"server/server/language"
 	"server/server/user"
@@ -18,9 +19,8 @@ type JoinCommand struct {
 func (r JoinCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 	if pl, ok := src.(*player.Player); ok {
 		u := user.GetUser(pl)
-
 		for _, g := range bedwars.Games {
-			if slices.Contains(g.UsersToJoin, u.Data.UserId) {
+			if g.Type() == game.TypeBedWars && slices.Contains(g.UsersToJoin, u.Data.UserId) {
 				pl.Handler().HandleQuit(pl)
 				bedwars.Join(pl, pl.Tx(), g.TeamSize, g.TeamCount, g.Type(), false, g)
 				return

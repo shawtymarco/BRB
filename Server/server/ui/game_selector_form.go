@@ -1,11 +1,10 @@
 package ui
 
 import (
+	"github.com/sandertv/gophertunnel/minecraft/text"
 	"server/server/game"
 	"server/server/games/bedwars"
 	"server/server/games/buildffa"
-
-	"github.com/sandertv/gophertunnel/minecraft/text"
 
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/player/form"
