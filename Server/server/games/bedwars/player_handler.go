@@ -57,6 +57,9 @@ import (
 var (
 	blocksPlaced = make(map[string]world.Block)
 	blocksMu     sync.RWMutex
+
+	droppedItems  map[*world.EntityHandle]bool
+	droppedItemMu sync.RWMutex
 )
 
 type PlayerHandler struct {
@@ -803,12 +806,14 @@ func (h PlayerHandler) HandleItemPickup(ctx *player.Context, i *item.Stack) {
 	}
 
 	if _, ok := i.Item().(item.Emerald); !ok && h.game.typeGame == game.TypeBedWars {
-		gen := h.game.NearestGenerator(pl.Position(), Iron)
-		if gen != nil {
-			genPlayers := gen.PlayersWithin(pl.Tx())
-			if len(genPlayers) > 1 && !i.Empty() {
-				ctx.Cancel()
-				split(pl, genPlayers, h)
+		if v, ok := (*i).Value("gen_splitting"); ok && v.(bool) {
+			gen := h.game.NearestGenerator(pl.Position(), Iron)
+			if gen != nil {
+				genPlayers := gen.PlayersWithin(pl.Tx())
+				if len(genPlayers) > 1 && !i.Empty() {
+					ctx.Cancel()
+					split(pl, genPlayers, h)
+				}
 			}
 		}
 	}
@@ -840,7 +845,7 @@ func split(pl *player.Player, genPlayers []*player.Player, h PlayerHandler) {
 }
 
 func pickUp(pl *player.Player, ent *entity.Ent, stack item.Stack, closeEnt bool, tx *world.Tx) {
-	_, _ = pl.Inventory().AddItem(stack)
+	_, _ = pl.Inventory().AddItem(stack.WithValue("gen_splitting", false))
 
 	collector, ok := world.Entity(pl).(entity.Collector)
 	if !ok {

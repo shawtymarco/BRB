@@ -25,6 +25,7 @@ type GeneratorSettings struct {
 	Game   *BedWars
 
 	Resource Resource
+	GenSplit bool
 	Name     string
 	Tier     int
 
@@ -38,6 +39,11 @@ func (gs GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockTyp
 		t.Team = gs.Game.NearestTeam(pos)
 	}
 
+	drop := item.NewStack(gs.Resource.Item(), 1)
+	if gs.GenSplit {
+		drop = drop.WithValue("gen_splitting", true)
+	}
+
 	conf := living.Config{
 		EntityType: t,
 		MaxHealth:  1,
@@ -47,7 +53,7 @@ func (gs GeneratorSettings) New(pos mgl64.Vec3, tx *world.Tx) *GeneratorBlockTyp
 			Drag:              0,
 			DragBeforeGravity: false,
 		},
-		Drops: []living.Drop{living.NewDropWithStack(item.NewStack(gs.Resource.Item(), 1))},
+		Drops: []living.Drop{living.NewDropWithStack(drop)},
 	}
 
 	gb := tx.AddEntity(world.EntitySpawnOpts{Position: pos.Add(mgl64.Vec3{0, 2, 0})}.New(conf.EntityType, conf)).(*GeneratorBlockType)
@@ -111,7 +117,9 @@ func (b *GeneratorBlockType) ResourcesWithin(tx *world.Tx) []*entity.Ent {
 	for e := range tx.Entities() {
 		if ent, ok := e.(*entity.Ent); ok && utils.Distance(b.Position(), e.Position()) <= 4 && e.H().Type() == entity.ItemType {
 			if beh, ok := ent.Behaviour().(*entity.ItemBehaviour); ok && beh.Item().Item() == b.Resource.Item() {
-				res = append(res, ent)
+				if v, ok := beh.Item().Value("gen_splitting"); ok && v.(bool) {
+					res = append(res, ent)
+				}
 			}
 		}
 	}

@@ -392,5 +392,9 @@ func getCost(s item.Stack) (resource Resource, cost int) {
 
 func canAfford(pl *player.Player, s item.Stack) bool {
 	resource, cost := getCost(s)
-	return pl.Inventory().ContainsItem(item.NewStack(resource.Item(), cost))
+	n1, _ := resource.Item().EncodeItem()
+	return pl.Inventory().ContainsItemFunc(cost, func(stack item.Stack) bool {
+		n2, _ := stack.Item().EncodeItem()
+		return n1 == n2
+	})
 }

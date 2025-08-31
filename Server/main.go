@@ -97,9 +97,9 @@ func main() {
 	utils.SetServer(srv)
 	core.MCServer = srv
 
-	//srv.World().Exec(func(tx *world.Tx) {
-	//	initBots(tx)
-	//})
+	srv.World().Exec(func(tx *world.Tx) {
+		initBots(tx)
+	})
 
 	worldsRoot := path.Join(".", "server", "worlds")
 	for _, entry := range utils.Panics(os.ReadDir(worldsRoot)) {
@@ -116,8 +116,8 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	//bw := bedwars.NewBedWars(game.TypeBedWars, 2, 2, false)
-	//bw.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1163341419189112892", "919498122940547072"}
+	bw := bedwars.NewBedWars(game.TypeBedWars, 2, 2, false)
+	bw.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1163341419189112892", "919498122940547072"}
 
 	<-srv.World().Exec(func(tx *world.Tx) {
 		txtPos := mgl64.Vec3{-36.5, 99.0, -143.5}

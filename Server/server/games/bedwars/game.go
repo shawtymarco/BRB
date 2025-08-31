@@ -49,7 +49,7 @@ import (
 	"github.com/df-mc/dragonfly/server/player"
 )
 
-const startingInDurationBW = 20 * time.Second
+const startingInDurationBW = 1 * time.Second
 const startingInDurationBF = 3 * time.Second
 const maxWaitingDuration = 10 * time.Minute
 
@@ -495,6 +495,7 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 			GeneratorSettings{
 				Game:      b,
 				Resource:  Iron,
+				GenSplit:  true,
 				Tier:      1,
 				Cap:       48,
 				SpawnRate: 400 * time.Millisecond,
@@ -502,6 +503,7 @@ func (b *BedWars) initBedWarsFeatures(tx *world.Tx) {
 			GeneratorSettings{
 				Game:      b,
 				Resource:  Gold,
+				GenSplit:  true,
 				Tier:      1,
 				Cap:       12,
 				SpawnRate: 4 * time.Second,
@@ -710,7 +712,11 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 
 	if canAfford(pl, s) {
 		resource, cost := getCost(s)
-		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
+		n1, _ := resource.Item().EncodeItem()
+		_ = pl.Inventory().RemoveItemFunc(cost, func(stack item.Stack) bool {
+			n2, _ := stack.Item().EncodeItem()
+			return n1 == n2
+		})
 
 		addItem := func() bool {
 			if n, err := u.AddItemWithHBConfig(-1, s.WithLore().WithValue("resource", nil).WithValue("cost", nil)); err != nil {
@@ -783,7 +789,11 @@ func (b *BedWars) buyItem(pl *player.Player, s item.Stack) bool {
 func (b *BedWars) buyUpgrade(pl *player.Player, s item.Stack) bool {
 	if canAfford(pl, s) {
 		resource, cost := getCost(s)
-		_ = pl.Inventory().RemoveItem(item.NewStack(resource.Item(), cost))
+		n1, _ := resource.Item().EncodeItem()
+		_ = pl.Inventory().RemoveItemFunc(cost, func(stack item.Stack) bool {
+			n2, _ := stack.Item().EncodeItem()
+			return n1 == n2
+		})
 		return true
 	}
 	return false
