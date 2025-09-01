@@ -498,7 +498,7 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 			i := 3
 			ticker := time.NewTicker(time.Second)
 			for range ticker.C {
-				if team := g.PlayerTeam(pl); team != nil && u.Game.ID() == oldGameId {
+				if team := g.PlayerTeam(pl); team != nil && u.Game != nil && u.Game.ID() == oldGameId {
 					if i == 0 {
 						pl.H().ExecWorld(func(tx *world.Tx, e world.Entity) {
 							p := e.(*player.Player)
