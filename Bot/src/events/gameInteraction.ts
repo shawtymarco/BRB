@@ -101,6 +101,24 @@ module.exports = {
                         });
                         game.mapSelectMessageId = selectMsg.id;
                         await gamesDB.save();
+                    } else {
+                        const cancelMsgId = game.cancelVoteMessageId;
+                        if (cancelMsgId) {
+                            const orig = await thread.messages.fetch(cancelMsgId).catch(() => null);
+                            if (orig) {
+                                const disabledRow = new ActionRowBuilder().addComponents(
+                                    new (require('discord.js').ButtonBuilder)().setCustomId('cancel_yes').setLabel('Yes').setStyle(require('discord.js').ButtonStyle.Success).setDisabled(true),
+                                    new (require('discord.js').ButtonBuilder)().setCustomId('cancel_no').setLabel('No').setStyle(require('discord.js').ButtonStyle.Danger).setDisabled(true),
+                                );
+                                await orig.edit({ components: [disabledRow as any] }).catch(() => {});
+                            }
+                        }
+                        await thread.send({ embeds: [EmbedUtil.create({ type: 'yes', description: 'Void vote accepted. Game will be voided now.' })] });
+                        game.cancelVoteStarted = false;
+                        game.cancelVoteAgreeUserIds = [];
+                        game.cancelVoteDisagreeUserIds = [];
+                        await gamesDB.save();
+                        await game.terminateGame();
                     } 
                 } else if (agreeCount === 0 && (agreeList.length + disagreeList.length) >= totalPlayers) {
                     await thread.send({ embeds: [EmbedUtil.create({ type: 'no', description: isMapVote ? 'Map vote rejected.' : 'Void vote rejected.' })] });

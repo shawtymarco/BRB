@@ -57,6 +57,41 @@ export async function execute(interaction: CommandInteraction) {
     game.cancelVoteMessageId = msg.id;
     await gamesDB.save();
 
+    const timeoutMs = 45_000;
+    setTimeout(async () => {
+        const latest = gamesDB.data.get(thread.id);
+        if (!latest || !latest.cancelVoteStarted) return;
+        const thresholds: Record<number, number> = { 2: 3, 3: 4, 4: 6 };
+        const required = thresholds[latest.teamSize] ?? 3;
+        const agreeCount = latest.cancelVoteAgreeUserIds.length;
+
+        if (latest.cancelVoteMessageId) {
+            const voteMsg = await thread.messages.fetch(latest.cancelVoteMessageId).catch(() => null);
+            if (voteMsg) {
+                const disabled = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                    new ButtonBuilder().setCustomId('cancel_yes').setLabel('Yes').setStyle(ButtonStyle.Success).setDisabled(true),
+                    new ButtonBuilder().setCustomId('cancel_no').setLabel('No').setStyle(ButtonStyle.Danger).setDisabled(true),
+                );
+                await voteMsg.edit({ components: [disabled] }).catch(() => {});
+            }
+        }
+
+        if (agreeCount >= required) {
+            await thread.send({ embeds: [EmbedUtil.create({ type: 'yes', description: 'Void vote accepted. Game will be voided now.' })] });
+            latest.cancelVoteStarted = false;
+            latest.cancelVoteAgreeUserIds = [];
+            latest.cancelVoteDisagreeUserIds = [];
+            await gamesDB.save();
+            await game.terminateGame();
+        } else {
+            await thread.send({ embeds: [EmbedUtil.create({ type: 'no', description: 'Void vote timed out and was rejected.' })] });
+            latest.cancelVoteStarted = false;
+            latest.cancelVoteAgreeUserIds = [];
+            latest.cancelVoteDisagreeUserIds = [];
+            await gamesDB.save();
+        }
+    }, timeoutMs);
+
     await interaction.reply({
         embeds: [EmbedUtil.create({ type: 'yes', description: 'Cancel vote started.' })],
         flags: MessageFlags.Ephemeral
