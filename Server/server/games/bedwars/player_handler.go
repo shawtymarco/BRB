@@ -79,7 +79,7 @@ func Join(pl *player.Player, tx *world.Tx, teamSize int, teamCount int, typeGame
 	}
 
 	if bwGame == nil {
-		bwGame = NewBedWars(typeGame, teamSize, teamCount, isCustom)
+		bwGame = NewBedWars(typeGame, teamSize, teamCount, isCustom, "")
 	}
 
 	core.Players[pl.UUID()] = pl.Name()

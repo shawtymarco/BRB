@@ -112,7 +112,9 @@ module.exports = {
                 const game = gamesDB.data.get(thread.id);
                 if (!game) return;
                 const chosen = interaction.values[0];
-                await thread.send({ embeds: [EmbedUtil.create({ type: 'yes', description: `Selected map: ${chosen}.` })] });
+                (game as any).selectedMap = chosen;
+                await gamesDB.save();
+                await thread.send({ embeds: [EmbedUtil.create({ type: 'yes', description: `Selected map: ${chosen}. This map will be used for game creation.` })] });
                 await (interaction as StringSelectMenuInteraction).reply({ embeds: [EmbedUtil.create({ type: 'yes', description: 'Map selection recorded.' })], flags: MessageFlags.Ephemeral });
             }
         }

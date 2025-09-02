@@ -48,8 +48,9 @@ func initGetRequests(rg *gin.RouterGroup) {
 		teamSize, _ := strconv.Atoi(c.Query("teamSize"))
 		teamCount, _ := strconv.Atoi(c.Query("teamCount"))
 		isCustom := lo.If(c.Query("custom") == "1", true).Else(false)
+		desiredMap := c.Query("map")
 
-		g := bedwars.NewBedWars(game.TypeBedWars, teamSize, teamCount, isCustom)
+		g := bedwars.NewBedWars(game.TypeBedWars, teamSize, teamCount, isCustom, desiredMap)
 
 		c.JSON(http.StatusOK, gin.H{
 			"id": g.ID().String(),

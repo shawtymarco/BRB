@@ -27,7 +27,7 @@ export class Game {
     team2Ids: string[] = [];
     teamPickingMessageId: string | null = null;
     step: number = 0;
-    // it doesnt do anything at the
+    selectedMap: string | null = null;
     mapVoteStarted: boolean = false;
     mapVoteAgreeUserIds: string[] = [];
     mapVoteDisagreeUserIds: string[] = [];

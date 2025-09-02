@@ -76,7 +76,7 @@ type BedWars struct {
 	rejoiningPlayerArmour      map[uuid.UUID][]item.Stack
 }
 
-func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool) *BedWars {
+func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bool, desiredMap string) *BedWars {
 	newId := uuid.New()
 	startInDur := lo.If(typeGame == game.TypeBedWars, startingInDurationBW).Else(startingInDurationBF)
 	Games[newId] = &BedWars{
@@ -91,6 +91,21 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		rejoiningPlayerArmour:      make(map[uuid.UUID][]item.Stack),
 	}
 	g := Games[newId]
+
+	if desiredMap != "" {
+		lowerDesired := strings.ToLower(desiredMap)
+		for i, candidate := range g.Maps() {
+			if strings.EqualFold(candidate, desiredMap) {
+				g.mapIndex = i
+				break
+			}
+			cfg, ok := game.Maps[fmt.Sprintf("./maps/%v", candidate)]
+			if ok && strings.ToLower(cfg.Name) == lowerDesired {
+				g.mapIndex = i
+				break
+			}
+		}
+	}
 
 	g.mapIndex = rand.Intn(len(g.Maps()))
 	mapName := g.Maps()[g.mapIndex]

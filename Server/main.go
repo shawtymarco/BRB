@@ -116,7 +116,7 @@ func main() {
 	}.NewManager())
 
 	buildffa.NewBuildFFA()
-	bw := bedwars.NewBedWars(game.TypeBedWars, 2, 2, false)
+	bw := bedwars.NewBedWars(game.TypeBedWars, 2, 2, false, "")
 	bw.UsersToJoin = []string{"436765918169792524", "1381057370033229855", "1163341419189112892", "919498122940547072"}
 
 	<-srv.World().Exec(func(tx *world.Tx) {

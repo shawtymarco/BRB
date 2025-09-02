@@ -76,7 +76,7 @@ func (d DuelAcceptCommand) Run(src cmd.Source, o *cmd.Output, tx *world.Tx) {
 
 		ut.PendingDuelRequestTo = nil
 
-		b := bedwars.NewBedWars(game.TypeBedFight, 1, 2, false)
+		b := bedwars.NewBedWars(game.TypeBedFight, 1, 2, false, "")
 		bedwars.Join(pl, tx, 1, 2, game.TypeBedFight, false, b)
 		bedwars.Join(target, tgtTx, 1, 2, game.TypeBedFight, false, b)
 	}))
