@@ -1,4 +1,4 @@
-import { CommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { APIEndpoints, Request } from "../../api";
 import { dconfig } from "../../config";
 import { CacheUtil } from "../../core/CacheUtil";
@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
     .setDescription("To unregister your Discord account from your MC account")
     .addMentionableOption(option => option.setName("member").setDescription("Input member you want to unregister").setRequired(true));
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
     const member = interaction.options.get("member")?.member as GuildMember;
     const res = await Request.get(`${APIEndpoints.GET_REGISTERED_PLAYER}/${member.user.id}`);
     if (!res.registered) {

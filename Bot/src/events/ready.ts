@@ -29,7 +29,7 @@ function detectServerRestart() {
             } else if (currentTime !== initialTime) {
                 console.log("⚠️ Server restart detected!");
                 gamesDB.data.map(game => {
-                    game.terminateGame(null);
+                    game.terminateGame(game);
                 })
                 initialTime = currentTime;
             }

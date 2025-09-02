@@ -27,6 +27,17 @@ export class Game {
     team2Ids: string[] = [];
     teamPickingMessageId: string | null = null;
     step: number = 0;
+    // it doesnt do anything at the
+    mapVoteStarted: boolean = false;
+    mapVoteAgreeUserIds: string[] = [];
+    mapVoteDisagreeUserIds: string[] = [];
+    mapVoteMessageId: string | null = null;
+    mapSelectMessageId: string | null = null;
+
+    cancelVoteStarted: boolean = false;
+    cancelVoteAgreeUserIds: string[] = [];
+    cancelVoteDisagreeUserIds: string[] = [];
+    cancelVoteMessageId: string | null = null;
 
     constructor(
         public id: string,
@@ -346,7 +357,7 @@ export class Game {
         await gamesDB.save();
     }
 
-    async terminateGame(data: any) {
+    async terminateGame(game: any) {
         const waitingRoom = CacheUtil.getChannel(this.guild, dconfig.channels.waitingRoom);
 
         for (const [, member] of await this.members()) {
@@ -389,16 +400,16 @@ export class Game {
         }, 3000);
 
         let embed;
-        if (data) {
+        if (game) {
             embed = new EmbedBuilder()
                 .setColor(0x2f3136)
                 .setTitle(`#${this.id.slice(0, 4).toUpperCase()} - Bedrock Ranked Bedwars`)
                 .addFields(
                     { name: "Game:", value: `#${this.id}`, inline: true },
-                    { name: "Duration:", value: Game.formatDuration(data.Duration), inline: true },
-                    { name: "MVP(s):", value: data.MVPs.map(m => `<@${m}>`).join(" "), inline: false },
-                    { name: "Winning Team", value: Game.formatTeam(data.WinningTeam), inline: false },
-                    { name: "Losing Team", value: Game.formatTeam(data.LosingTeam), inline: false },
+                    { name: "Duration:", value: Game.formatDuration(game.Duration), inline: true },
+                    { name: "MVP(s):", value: game.MVPs.map(m => `<@${m}>`).join(" "), inline: false },
+                    { name: "Winning Team", value: Game.formatTeam(game.WinningTeam), inline: false },
+                    { name: "Losing Team", value: Game.formatTeam(game.LosingTeam), inline: false },
                 );
         } else {
             embed = new EmbedBuilder()

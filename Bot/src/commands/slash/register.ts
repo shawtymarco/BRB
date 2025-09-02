@@ -1,4 +1,4 @@
-import { CommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { APIEndpoints, Request } from "../../api";
 import { dconfig } from "../../config";
 import { EmbedUtil } from "../../core/EmbedUtil";
@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
     .setDescription("To link your Discord account with your MC account")
     .addStringOption(option => option.setName("code").setDescription("Input code shown after executing the command /link in-game").setMaxLength(4).setRequired(true));
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
     const member = interaction.member as GuildMember;
     const code = interaction.options.get("code");
     const res = await Request.post(APIEndpoints.VERIFY, { userId: member.user.id, code: code?.value });
