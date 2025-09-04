@@ -26,9 +26,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             embeds: [
                 {
                     color: 0x2f3136,
-                    title: `#${anyGame.id.slice(0,4).toUpperCase()} Game (Scored)`,
+                    title: `Game ${anyGame.id.slice(0,4).toUpperCase()} (Scored)`,
                     fields: [
-                        { name: 'Game', value: `#${anyGame.id}`, inline: true },
+                        { name: 'Game', value: `${anyGame.id.slice(0,4).toUpperCase()}`, inline: true },
                         ...(typeof anyGame?.Duration === 'number' ? [{ name: 'Duration', value: GameModel.formatDuration(anyGame.Duration), inline: true }] : []),
                         ...(hasMVPs ? [{ name: 'MVP(s)', value: anyGame.MVPs.map((m: string) => `<@${m}>`).join(' ') || '—', inline: false }] : []),
                         ...(hasWinners ? [{ name: 'Winners', value: GameModel.formatTeam(anyGame.WinningTeam) || '—', inline: false }] : []),
@@ -51,9 +51,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         embeds: [
             {
                 color: 0x2f3136,
-                title: `#${(game as any).id.slice(0,4).toUpperCase()} Game`,
+                title: `Game ${(game as any).id.slice(0,4).toUpperCase()}`,
                 fields: [
-                    { name: 'Game', value: `#${(game as any).id}`, inline: true },
+                    { name: 'Game', value: `${(game as any).id.slice(0,4).toUpperCase()}`, inline: true },
                     { name: 'Team Size', value: `${game.teamSize}v${game.teamSize}`, inline: true },
                     { name: 'Phase', value: phase, inline: true },
                     ...(isPicking
