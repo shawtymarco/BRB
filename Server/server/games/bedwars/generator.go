@@ -202,24 +202,26 @@ func (b *GeneratorBlockType) updateTier() {
 	case Iron:
 		switch genTier {
 		case 1:
-			b.SpawnRate = 1000 * time.Millisecond
+			b.SpawnRate = 700 * time.Millisecond
 			b.Cap = 64
 		case 2:
-			b.SpawnRate = 1000 * time.Millisecond
+			b.SpawnRate = 500 * time.Millisecond
 		case 3:
+			b.SpawnRate = 500 * time.Millisecond
 		case 4:
-			b.SpawnRate = 1000 * time.Millisecond
+			b.SpawnRate = 350 * time.Millisecond
 		}
 	case Gold:
 		switch genTier {
 		case 1:
-			b.SpawnRate = 4000 * time.Millisecond
+			b.SpawnRate = 2650 * time.Millisecond
 			b.Cap = 16
 		case 2:
-			b.SpawnRate = 4000 * time.Millisecond
+			b.SpawnRate = 2000 * time.Millisecond
 		case 3:
+			b.SpawnRate = 2000 * time.Millisecond
 		case 4:
-			b.SpawnRate = 4000 * time.Millisecond
+			b.SpawnRate = 1350 * time.Millisecond
 		}
 	case Emerald:
 		if genTier == 4 {
