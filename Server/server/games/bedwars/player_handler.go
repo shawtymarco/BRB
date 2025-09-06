@@ -461,7 +461,11 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 		}
 	}
 	pl.Heal(pl.MaxHealth(), effect.InstantHealingSource{})
+
+	topOfWorld := mgl64.Vec3{pl.Position().X(), float64(g.MapConfig().HeightLimit - 1), pl.Position().Z()}
+	pl.Teleport(topOfWorld)
 	pl.SetGameMode(world.GameModeSpectator)
+
 	for _, v := range pl.Tx().Viewers(pl.Position()) {
 		s := v.(*session.Session)
 		utils.WritePacket(s, &packet.MobArmourEquipment{EntityRuntimeID: utils.EntityRuntimeID(s, pl)})
