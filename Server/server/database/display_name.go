@@ -26,7 +26,7 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 
 	var teamColourStr string
 	if nc.TeamColour != "" {
-		teamColourStr = fmt.Sprintf("<bold><%v>%v</%v></bold> ", nc.TeamColour, strings.ToUpper(string([]rune(nc.TeamColour)[0])), nc.TeamColour)
+		teamColourStr = fmt.Sprintf("<bold><%v>[%v]</%v></bold> ", nc.TeamColour, strings.ToUpper(nc.TeamColour), nc.TeamColour)
 	}
 
 	r := pd.Rank()
@@ -69,3 +69,11 @@ var BedWarsNameDisplay = func(teamColour string) nameConfig {
 	return nameConfig{TeamColour: teamColour, Health: true}
 }
 var BuildFFANameDisplay = nameConfig{Health: true}
+
+func TeamColoredName(pd *PlayerData, teamColour string) string {
+	n := pd.Username
+	if pd.Cosmetics.Nickname != "" {
+		n = pd.Cosmetics.Nickname
+	}
+	return text.Colourf("<%v>%v</%v>", teamColour, n, teamColour)
+}

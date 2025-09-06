@@ -551,14 +551,14 @@ func onDeath(g *BedWars, pl *player.Player, u *user.User, ua *user.User) {
 
 	g.ForEachActivePlayer(func(p *player.Player) {
 		if ua == nil {
-			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.BedWarsNameDisplay(g.PlayerTeam(pl).Colour()).Name(u.Data), finalKill))
+			p.Message(text.Colourf(language.Translate(p).BedWars.VoidDeath, database.TeamColoredName(u.Data, g.PlayerTeam(pl).Colour()), finalKill))
 		} else {
 			c1 := g.PlayerTeam(pl).Colour()
 			c2 := g.PlayerTeam(ua.Player()).Colour()
 			p.Message(text.Colourf(
 				language.Translate(p).BedWars.KilledBy,
-				database.BedWarsNameDisplay(c1).Name(u.Data),
-				database.BedWarsNameDisplay(c2).Name(ua.Data),
+				database.TeamColoredName(u.Data, c1),
+				database.TeamColoredName(ua.Data, c2),
 				finalKill,
 			))
 		}
@@ -758,7 +758,7 @@ func (h PlayerHandler) HandleBlockBreak(ctx *player.Context, pos cube.Pos, drops
 		h.game.playBedBrokenSound(pl.Tx())
 		for e := range pl.Tx().Players() {
 			p := e.(*player.Player)
-			p.Message(text.Colourf(language.Translate(p).BedWars.BedBreak, bedColor, database.BedWarsNameDisplay(h.game.PlayerTeam(pl).Colour()).Name(u.Data)))
+			p.Message(text.Colourf(language.Translate(p).BedWars.BedBreak, bedColor, database.TeamColoredName(u.Data, h.game.PlayerTeam(pl).Colour())))
 		}
 		return
 	}
