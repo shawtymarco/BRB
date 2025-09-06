@@ -2,10 +2,12 @@ package database
 
 import (
 	"fmt"
+	"math"
 	"server/server/font"
 	"strconv"
 	"strings"
 
+	"github.com/df-mc/dragonfly/server/player"
 	"github.com/sandertv/gophertunnel/minecraft/text"
 )
 
@@ -13,6 +15,7 @@ type nameConfig struct {
 	Rank       bool
 	ELO        bool
 	TeamColour string
+	Health     bool
 }
 
 func (nc nameConfig) Name(pd *PlayerData) string {
@@ -40,7 +43,29 @@ func (nc nameConfig) Name(pd *PlayerData) string {
 	return text.Colourf("%v%v<grey>%v</grey>", eloStr, teamColourStr, n)
 }
 
-var LobbyNameDisplay = nameConfig{Rank: true, ELO: true}
-var BedWarsNameDisplay = func(teamColour string) nameConfig {
-	return nameConfig{TeamColour: teamColour}
+func (nc nameConfig) NameWithHealth(pd *PlayerData, pl *player.Player) string {
+	baseName := nc.Name(pd)
+
+	if !nc.Health {
+		return baseName
+	}
+
+	health := pl.Health()
+	hearts := int(math.Ceil(health))
+
+	if hearts < 0 {
+		hearts = 0
+	} else if hearts > 20 {
+		hearts = 20
+	}
+
+	healthStr := fmt.Sprintf("<red>%d❤</red>", hearts)
+
+	return text.Colourf("%v\n%v", baseName, healthStr)
 }
+
+var LobbyNameDisplay = nameConfig{Rank: true, ELO: true, Health: false}
+var BedWarsNameDisplay = func(teamColour string) nameConfig {
+	return nameConfig{TeamColour: teamColour, Health: true}
+}
+var BuildFFANameDisplay = nameConfig{Health: true}

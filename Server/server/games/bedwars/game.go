@@ -140,6 +140,13 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 		}
 		ticker := time.NewTicker(100 * time.Millisecond)
 		for range ticker.C {
+			g.World().Exec(func(tx *world.Tx) {
+				g.ForEachActivePlayer(func(pl *player.Player) {
+					u := user.GetUser(pl)
+					pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).NameWithHealth(u.Data, pl))
+				}, tx)
+			})
+
 			switch g.Stage() {
 			case game.Waiting:
 				if len(g.OriginalPlayers()) == teamSize*teamCount {
@@ -213,7 +220,7 @@ func NewBedWars(typeGame game.TypeGame, teamSize int, teamCount int, isCustom bo
 								u := user.GetUser(pl)
 								team := g.PlayerTeam(pl)
 
-								pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).Name(u.Data))
+								pl.SetNameTag(database.BedWarsNameDisplay(u.Game.PlayerTeam(pl).Colour()).NameWithHealth(u.Data, pl))
 								pl.Teleport(g.MapConfig().TeamSpawnPoints[team.ID()])
 								giveKit(pl, g)
 

@@ -66,7 +66,7 @@ func Join(pl *player.Player, tx *world.Tx) {
 	u.Game = Game.Game
 	u.Scoreboard = scoreboard.New(text.Colourf("<bold><yellow>BUILD FFA</yellow></bold>"))
 
-	pl.SetNameTag(database.LobbyNameDisplay.Name(u.Data))
+	pl.SetNameTag(database.BuildFFANameDisplay.NameWithHealth(u.Data, pl))
 
 	tx.RemoveEntity(pl)
 

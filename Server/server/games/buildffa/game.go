@@ -2,6 +2,7 @@ package buildffa
 
 import (
 	"server/server"
+	"server/server/database"
 	"server/server/font"
 	"server/server/game"
 	"server/server/listener"
@@ -40,6 +41,11 @@ func NewBuildFFA() {
 	go func() {
 		for range time.NewTicker(250 * time.Millisecond).C {
 			Game.World().Exec(func(tx *world.Tx) {
+				Game.ForEachActivePlayer(func(pl *player.Player) {
+					u := user.GetUser(pl)
+					pl.SetNameTag(database.BuildFFANameDisplay.NameWithHealth(u.Data, pl))
+				}, tx)
+
 				var users []*user.User
 				Game.ForEachActivePlayer(func(pl *player.Player) {
 					users = append(users, user.GetUser(pl))
